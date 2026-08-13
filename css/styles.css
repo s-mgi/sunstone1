@@ -108,19 +108,15 @@ section{position:relative;scroll-margin-top:70px;}
   padding:0 clamp(40px,4.8vw,76px) 0 24px;
 }
 
-.brand{display:flex;align-items:center;gap:14px;}
-/* The mark keeps its true brand colour (copper) at all times — it's the
-   actual Sunstone Towns sunrise mark, not a silhouette that flips white/ink. */
-.brand__mark{width:44px;height:44px;color:var(--copper-light);flex-shrink:0;
-  filter:drop-shadow(0 1px 3px rgba(0,0,0,.35));
+.brand{display:flex;align-items:center;}
+/* Uses the exact brand file (assets/sunstonelogo.svg) untouched — its own
+   colours and wordmark, no recolouring or text overrides. */
+.brand__logo{display:block;width:210px;height:auto;flex-shrink:0;
+  filter:drop-shadow(0 1px 3px rgba(0,0,0,.3));
   transition:transform .6s var(--ease);}
-.brand:hover .brand__mark{transform:translateY(-2px);}
-.brand__name{font-family:var(--serif);font-size:23px;letter-spacing:.2em;line-height:1;color:var(--ink);
-  text-shadow:0 1px 10px rgba(248,245,240,.55),0 1px 2px rgba(248,245,240,.4);}
-.brand__sub{display:block;font-size:9.5px;letter-spacing:.38em;margin-top:5px;color:var(--muted);
-  text-shadow:0 1px 8px rgba(248,245,240,.5);}
+.brand:hover .brand__logo{transform:translateY(-2px);}
 
-.site-header.is-stuck .header__brand-col .brand__mark{filter:none;}
+.site-header.is-stuck .header__brand-col .brand__logo{filter:none;}
 
 .nav{display:flex;align-items:center;gap:52px;}
 .nav a{position:relative;font-size:14px;font-weight:400;letter-spacing:.1em;text-transform:uppercase;
@@ -348,7 +344,13 @@ section{position:relative;scroll-margin-top:70px;}
   background:linear-gradient(100deg,var(--ink) 0%,var(--ink) 40%,rgba(23,22,17,.75) 62%,rgba(23,22,17,.32) 100%);}
 .register__inner{position:relative;z-index:1;display:grid;grid-template-columns:.7fr 1.3fr;gap:clamp(32px,5vw,64px);align-items:start;}
 
-.register__head .brand__mark{width:30px;height:30px;color:var(--copper-light);margin-bottom:18px;filter:none;}
+/* Logo keeps its own ink/copper colouring — a light backing plate is added
+   here only so it stays legible over the dark register photo. This does not
+   alter the logo file itself. */
+.register__head .brand{display:inline-flex;background:var(--cream);
+  padding:14px 20px;border-radius:6px;margin-bottom:22px;
+  box-shadow:0 6px 20px rgba(0,0,0,.25);}
+.register__head .brand__logo{width:160px;height:auto;filter:none;}
 .register__head h2{color:#fff;}
 .register__head .rule{margin-left:0;margin-top:16px;}
 .register__head .lede{color:rgba(248,245,240,.6);max-width:320px;font-size:14.5px;margin-top:16px;}
@@ -392,9 +394,12 @@ section{position:relative;scroll-margin-top:70px;}
 
 /* 14. FOOTER --------------------------------------------------------------- */
 .site-footer{background:var(--ink);color:rgba(248,245,240,.66);padding:clamp(30px,3.4vw,42px) 0 22px;}
-.site-footer .brand__mark{width:30px;height:30px;color:var(--copper-light);}
-.site-footer .brand__name{color:var(--cream);}
-.site-footer .brand__sub{color:rgba(248,245,240,.42);}
+/* Same rationale as the register section — a light plate keeps the logo's
+   own ink-coloured wordmark legible on the dark footer, without touching
+   the logo file's colours. */
+.site-footer .brand{display:inline-flex;background:var(--cream);
+  padding:12px 18px;border-radius:6px;}
+.site-footer .brand__logo{width:150px;height:auto;}
 .footer__top{display:grid;grid-template-columns:1.3fr .9fr .8fr .8fr .8fr 1fr;gap:24px;
   padding-bottom:24px;border-bottom:1px solid var(--line-dark);align-items:start;}
 .footer__col h4{font-size:9.5px;letter-spacing:.15em;text-transform:uppercase;color:rgba(248,245,240,.75);margin-bottom:11px;}
@@ -443,8 +448,7 @@ section{position:relative;scroll-margin-top:70px;}
 @media (max-width:680px){
   :root{--gutter:20px;}
   .header__brand-col{padding-left:20px;}
-  .brand__mark{width:36px;height:36px;}
-  .brand__name{font-size:18px;}
+  .brand__logo{width:160px;}
   .header__nav-col{padding-right:20px;}
   .nav{gap:16px;}
   .nav a{font-size:10px;}
