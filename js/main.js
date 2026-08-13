@@ -153,6 +153,11 @@
 
     mapEl.addEventListener('click', function () { map.scrollWheelZoom.enable(); });
     mapEl.addEventListener('mouseleave', function () { map.scrollWheelZoom.disable(); });
+
+    /* The map's height now matches the amenity list's rendered height
+       (CSS grid stretch), so re-measure after fonts/images settle. */
+    window.addEventListener('load', function () { map.invalidateSize(); });
+    window.addEventListener('resize', function () { map.invalidateSize(); });
   }
 
   /* 5. FORM ---------------------------------------------------------------- */
