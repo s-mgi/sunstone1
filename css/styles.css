@@ -263,9 +263,10 @@ section{position:relative;scroll-margin-top:70px;}
   border-bottom:1px solid var(--line);transition:background .3s var(--ease);flex:none;
 }
 .map-section__list li:last-child{border-bottom:0;}
-.map-section__list-group{padding:11px 16px 6px;font-family:var(--sans);font-size:var(--fs-1);
-  font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--copper);
-  background:var(--cream);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:1;}
+.map-section__list-group{padding:9px 16px;font-family:var(--sans);font-size:var(--fs-1);
+  font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:#fff;
+  background:var(--copper);border-bottom:1px solid var(--copper);
+  position:sticky;top:0;z-index:2;}
 .map-section__list li:hover{background:var(--cream-deep);}
 .map-section__list li.is-active{background:var(--ink);}
 .map-section__list li.is-active .map-item__text strong,
@@ -289,6 +290,8 @@ section{position:relative;scroll-margin-top:70px;}
 .map-pin-icon--grocery{background:#D79B5B;}
 .map-pin-icon--school{background:#7A4A24;}
 .map-pin-icon--hospital{background:#96612F;}
+.map-pin-icon--dining{background:#B4703A;}
+.map-pin-icon--rec{background:#8C6A3F;}
 
 .map-section__map-wrap{position:relative;height:100%;}
 #sunstoneMap{
@@ -305,11 +308,18 @@ section{position:relative;scroll-margin-top:70px;}
 .leaflet-popup-content-wrapper{background:var(--ink);color:var(--cream);border-radius:2px;}
 .leaflet-popup-content{font-family:var(--sans);font-size:var(--fs-3);line-height:1.5;margin:11px 14px;}
 .leaflet-popup-content strong{font-family:var(--serif);font-size:var(--fs-4);font-weight:400;display:block;margin-bottom:2px;}
+.leaflet-popup-content .pop-addr{display:block;color:rgba(248,245,240,.68);font-size:var(--fs-2);line-height:1.45;}
 .leaflet-popup-tip{background:var(--ink);}
+.map-tip.leaflet-tooltip{background:var(--ink);color:#fff;border:0;border-radius:2px;
+  font-family:var(--sans);font-size:var(--fs-2);letter-spacing:.04em;padding:5px 9px;box-shadow:0 4px 14px rgba(23,22,17,.3);}
+.map-tip.leaflet-tooltip-top:before{border-top-color:var(--ink);}
 .leaflet-popup-close-button{color:rgba(248,245,240,.6)!important;}
 
 /* Upright pin markers — a circular badge with a small pointer tail, never rotated */
-.map-pin{position:relative;width:34px;height:44px;}
+/* Height is exactly circle(30) + tail overhang(6) = 36px, so the tail's
+   tip lines up pixel-exactly with the marker's iconAnchor. Changing these
+   numbers means updating iconSize/iconAnchor in js/main.js to match. */
+.map-pin{position:relative;width:34px;height:36px;}
 .map-pin__circle{
   position:absolute;top:0;left:2px;width:30px;height:30px;border-radius:50%;
   border:2.5px solid #fff;box-shadow:0 4px 12px rgba(0,0,0,.35);
@@ -328,6 +338,8 @@ section{position:relative;scroll-margin-top:70px;}
 .map-pin--grocery .map-pin__circle{background:#D79B5B;}
 .map-pin--school .map-pin__circle{background:#7A4A24;}
 .map-pin--hospital .map-pin__circle{background:#96612F;}
+.map-pin--dining .map-pin__circle{background:#B4703A;}
+.map-pin--rec .map-pin__circle{background:#8C6A3F;}
 
 /* 11. COMMUNITY ---------------------------------------------------------------*/
 .community{display:grid;grid-template-columns:1.15fr 1fr;min-height:auto;background:var(--cream-deep);}
