@@ -225,17 +225,25 @@
     }).addTo(map);
 
     function makeIcon(a) {
+      /* The development's own pin ("Sunstone Towns") is deliberately bigger
+         and carries the brand mark instead of a generic glyph, so it reads
+         as the anchor point of the map at a glance instead of blending in
+         with the amenity pins around it. */
+      var isSite = a.modifier === 'site';
       return L.divIcon({
         className: 'map-pin map-pin--' + a.modifier,
-        html:
-          '<span class="map-pin__circle"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + a.svg + '</svg></span>' +
-          '<span class="map-pin__tail"></span>',
-        /* Must match .map-pin in styles.css: the 36px box puts the tail's
-           tip exactly on the coordinate, so popups and tooltips sit centred
-           directly above the pin instead of floating away from it. */
-        iconSize: [34, 36],
-        iconAnchor: [17, 36],
-        popupAnchor: [0, -34]
+        html: isSite
+          ? '<span class="map-pin__circle"><img class="map-pin__logo" src="assets/favicon.svg" alt=""></span>' +
+            '<span class="map-pin__tail"></span>'
+          : '<span class="map-pin__circle"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + a.svg + '</svg></span>' +
+            '<span class="map-pin__tail"></span>',
+        /* Must match .map-pin/.map-pin--site in styles.css: the box height
+           puts the tail's tip exactly on the coordinate, so popups and
+           tooltips sit centred directly above the pin instead of floating
+           away from it. */
+        iconSize: isSite ? [52, 55] : [34, 36],
+        iconAnchor: isSite ? [26, 55] : [17, 36],
+        popupAnchor: isSite ? [0, -46] : [0, -34]
       });
     }
 
@@ -279,11 +287,15 @@
         '<span class="map-item__text"><strong>' + a.title + '</strong><span>' + a.addr + '</span></span>';
       listEl.appendChild(li);
 
+      var tipOpts = a.modifier === 'site'
+        ? { direction: 'top', offset: [0, -46], opacity: 1, className: 'map-tip' }
+        : TIP_OPTS;
       a.marker = L.marker(a.coords, { icon: makeIcon(a), title: decode(a.title) })
         .addTo(map)
         .bindPopup('<strong>' + a.title + '</strong><span class="pop-addr">' + a.addr + '</span>')
-        .bindTooltip(decode(a.title), TIP_OPTS);
+        .bindTooltip(decode(a.title), tipOpts);
       a.marker._tipText = decode(a.title);
+      a.marker._tipOpts = tipOpts;
       a.marker.on('click', function () { setActive(a.key); });
     });
 
@@ -297,7 +309,7 @@
     });
     map.on('popupclose', function (e) {
       var m = e.popup._source;
-      if (m && m._tipText && !m.getTooltip()) { m.bindTooltip(m._tipText, TIP_OPTS); }
+      if (m && m._tipText && !m.getTooltip()) { m.bindTooltip(m._tipText, m._tipOpts || TIP_OPTS); }
     });
 
     var listItems = listEl.querySelectorAll('li[data-amenity]');
