@@ -303,9 +303,9 @@ section{position:relative;scroll-margin-top:70px;}
    the individual entries underneath stay on their original white/cream
    styling untouched. */
 .map-section__list-group{padding:9px 16px;font-family:var(--sans);font-size:var(--fs-1);
-  font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--ink);
+  font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:#fff;
   background:var(--copper-light);border-bottom:1px solid var(--copper-light);
-  cursor:pointer;transition:background .3s var(--ease), color .3s var(--ease);
+  cursor:pointer;transition:background .3s var(--ease);
   position:sticky;top:0;z-index:2;justify-content:space-between;}
 .map-section__list-group:hover,
 .map-section__list-group.is-open{background:var(--copper);border-bottom-color:var(--copper);color:#fff;}
@@ -504,15 +504,13 @@ section{position:relative;scroll-margin-top:70px;}
 .footer__top{display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:32px;
   padding-bottom:24px;border-bottom:1px solid var(--line-dark);align-items:start;}
 .footer__col--brand{display:flex;flex-direction:column;align-items:center;text-align:center;}
-.footer__col--brand .brand--footer{margin-bottom:22px;}
 .footer__col h4{font-size:var(--fs-1);letter-spacing:.15em;text-transform:uppercase;color:rgba(248,245,240,.75);
   margin-bottom:11px;padding-bottom:9px;border-bottom:1px solid rgba(215,155,91,.25);}
 /* Recolour the Edenbrook raster mark to solid white for the dark footer
    (brightness(0) then invert flips any opaque pixel to white; transparency
-   is preserved). */
-/* Matches the Sunstone Towns wordmark's width above it (.brand--footer
-   .brand__logo--landscape) so the two logos read as the same size. */
-.footer__edenbrook-logo{display:block;width:320px;height:auto;margin:0 auto;
+   is preserved). Sits in the footer's bottom row now, beside the copyright
+   line, so it's sized to that row rather than to match the wordmark above. */
+.footer__edenbrook-logo{display:block;width:120px;height:auto;
   filter:brightness(0) invert(1);opacity:.92;}
 .footer__col a,.footer__col p{display:block;font-size:var(--fs-2);margin-bottom:8px;color:rgba(248,245,240,.62);
   transition:color .4s var(--ease);}
@@ -522,7 +520,7 @@ section{position:relative;scroll-margin-top:70px;}
   display:flex;align-items:center;justify-content:center;color:rgba(248,245,240,.7);
   transition:background .45s var(--ease), border-color .45s var(--ease), color .45s var(--ease), transform .45s var(--ease);}
 .social a:hover{background:var(--copper);border-color:var(--copper);color:#fff;transform:translateY(-3px);}
-.footer__base{display:flex;justify-content:flex-start;align-items:center;gap:14px;flex-wrap:wrap;
+.footer__base{display:flex;justify-content:center;align-items:center;gap:14px;flex-wrap:wrap;
   padding-top:16px;font-size:var(--fs-1);letter-spacing:.03em;color:rgba(248,245,240,.36);line-height:1.5;}
 
 /* 15. RESPONSIVE ------------------------------------------------------------*/
@@ -602,3 +600,24 @@ section{position:relative;scroll-margin-top:70px;}
   .thanks{padding:120px 0 60px;}
   .thanks__logo{width:170px;}
 }
+
+/* 18. LEGAL PAGE (Privacy Policy & Terms of Use) ----------------------------- */
+.legal{background:var(--cream);padding:clamp(140px,14vw,170px) 0 clamp(60px,7vw,90px);}
+.legal__inner{max-width:820px;}
+.legal__head{margin-bottom:clamp(32px,4vw,48px);}
+.legal__head h1{color:var(--ink);font-size:clamp(36px,4.2vw,58px);}
+.legal__head .rule{margin-top:20px;}
+.legal__body h2{
+  font-family:var(--serif);font-weight:400;text-transform:none;letter-spacing:.005em;
+  font-size:clamp(24px,2.6vw,32px);color:var(--ink);margin:44px 0 16px;
+}
+.legal__body h2:first-child{margin-top:0;}
+.legal__body h3{
+  font-family:var(--sans);font-weight:500;font-size:var(--fs-3);letter-spacing:.1em;
+  text-transform:uppercase;color:var(--copper);margin:28px 0 10px;
+}
+.legal__body p{font-size:var(--fs-4);line-height:1.75;color:var(--muted);margin-bottom:14px;}
+.legal__body ul{margin:0 0 14px 22px;}
+.legal__body ul li{font-size:var(--fs-4);line-height:1.75;color:var(--muted);margin-bottom:6px;}
+.legal__fine{font-size:var(--fs-3);color:var(--muted-soft);margin-top:24px;}
+.legal__inner > .link-arrow{margin-top:20px;}
