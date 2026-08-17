@@ -298,35 +298,28 @@ section{position:relative;scroll-margin-top:70px;}
   border-bottom:1px solid var(--line);transition:background .3s var(--ease);flex:none;
 }
 .map-section__list li:last-child{border-bottom:0;}
+/* Directory group titles are light-copper "buttons" with dark text at
+   rest, switching to the darker copper with white text on hover/open —
+   the individual entries underneath stay on their original white/cream
+   styling untouched. */
 .map-section__list-group{padding:9px 16px;font-family:var(--sans);font-size:var(--fs-1);
-  font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:#fff;
-  /* A touch lighter than the base --copper so the directory headings feel
-     less heavy against the white list, without borrowing --copper-light
-     (which is tuned for use on dark backgrounds elsewhere on the site). */
-  background:#C4854A;border-bottom:1px solid #C4854A;
+  font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--ink);
+  background:var(--copper-light);border-bottom:1px solid var(--copper-light);
+  cursor:pointer;transition:background .3s var(--ease), color .3s var(--ease);
   position:sticky;top:0;z-index:2;justify-content:space-between;}
+.map-section__list-group:hover,
+.map-section__list-group.is-open{background:var(--copper);border-bottom-color:var(--copper);color:#fff;}
 /* Directory groups start collapsed and expand on click (except the
    development itself, which is left open by default) — the chevron
    rotates to show open/closed state. */
 .map-section__list-chevron{flex-shrink:0;transition:transform .3s var(--ease);}
 .map-section__list-group.is-open .map-section__list-chevron{transform:rotate(180deg);}
 .map-section__list li.is-collapsed{display:none;}
-/* Directory entries read as light-copper "buttons" at rest and switch to
-   the darker copper with white text on hover, rather than the plain
-   white/cream states used elsewhere in the list. */
-.map-section__list li[data-amenity]{background:var(--copper-light);}
-.map-section__list li[data-amenity] .map-item__text strong,
-.map-section__list li[data-amenity] .map-item__text span{color:var(--ink);}
-.map-section__list li[data-amenity]:hover{background:var(--copper);}
-.map-section__list li[data-amenity]:hover .map-item__text strong,
-.map-section__list li[data-amenity]:hover .map-item__text span{color:#fff;}
+.map-section__list li:hover{background:var(--cream-deep);}
 .map-section__list li.is-active{background:var(--ink);}
 .map-section__list li.is-active .map-item__text strong,
 .map-section__list li.is-active .map-item__text span{color:#fff;}
 .map-section__list li.is-active .map-item__text span{color:rgba(248,245,240,.6);}
-.map-section__list li.is-active:hover{background:var(--ink);}
-.map-section__list li.is-active:hover .map-item__text strong{color:#fff;}
-.map-section__list li.is-active:hover .map-item__text span{color:rgba(248,245,240,.6);}
 
 .map-item__text{display:flex;flex-direction:column;gap:2px;min-width:0;}
 .map-item__text strong{font-size:var(--fs-4);font-weight:500;letter-spacing:.02em;color:var(--ink);
@@ -512,13 +505,14 @@ section{position:relative;scroll-margin-top:70px;}
   padding-bottom:24px;border-bottom:1px solid var(--line-dark);align-items:start;}
 .footer__col--brand{display:flex;flex-direction:column;align-items:center;text-align:center;}
 .footer__col--brand .brand--footer{margin-bottom:22px;}
-.footer__col--brand h4{margin-top:0;}
 .footer__col h4{font-size:var(--fs-1);letter-spacing:.15em;text-transform:uppercase;color:rgba(248,245,240,.75);
   margin-bottom:11px;padding-bottom:9px;border-bottom:1px solid rgba(215,155,91,.25);}
 /* Recolour the Edenbrook raster mark to solid white for the dark footer
    (brightness(0) then invert flips any opaque pixel to white; transparency
    is preserved). */
-.footer__edenbrook-logo{display:block;width:190px;height:auto;margin:0 auto;
+/* Matches the Sunstone Towns wordmark's width above it (.brand--footer
+   .brand__logo--landscape) so the two logos read as the same size. */
+.footer__edenbrook-logo{display:block;width:320px;height:auto;margin:0 auto;
   filter:brightness(0) invert(1);opacity:.92;}
 .footer__col a,.footer__col p{display:block;font-size:var(--fs-2);margin-bottom:8px;color:rgba(248,245,240,.62);
   transition:color .4s var(--ease);}
