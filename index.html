@@ -17,7 +17,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
-<link rel="stylesheet" href="css/styles.css?v=4">
+<link rel="stylesheet" href="css/styles.css?v=5">
 </head>
 <body>
 
@@ -43,8 +43,25 @@
 
 <!-- ============================= HERO ============================= -->
 <section class="hero-split" id="hero">
-  <div class="hero-split__media">
-    <img src="assets/images/hero.jpg" alt="A GO train passing the wooded trail network beside Sunstone Towns" loading="eager">
+  <div class="hero-split__media hero-slider" id="heroSlider">
+    <div class="hero-slider__track">
+      <div class="hero-slider__slide is-active">
+        <img src="assets/images/hero.jpg" alt="A GO train passing the wooded trail network beside Sunstone Towns" loading="eager">
+      </div>
+      <div class="hero-slider__slide">
+        <img src="assets/images/hero-2.jpg" alt="Vaughan Mills shopping and entertainment centre near Sunstone Towns" loading="lazy">
+      </div>
+    </div>
+    <button type="button" class="hero-slider__arrow hero-slider__arrow--prev" aria-label="Previous image">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+    </button>
+    <button type="button" class="hero-slider__arrow hero-slider__arrow--next" aria-label="Next image">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+    </button>
+    <div class="hero-slider__dots">
+      <button type="button" class="hero-slider__dot is-active" aria-label="Show image 1"></button>
+      <button type="button" class="hero-slider__dot" aria-label="Show image 2"></button>
+    </div>
   </div>
   <div class="hero-split__panel">
     <h1>A Brighter<br>Way Home.</h1>
@@ -344,12 +361,12 @@
     </div>
 
     <div class="footer__base">
-      <span>© 2026 Edenbrook Homes.<br>All rights reserved.</span>
+      <span>© 2026 Edenbrook Homes. All rights reserved.</span>
     </div>
   </div>
 </footer>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-<script src="js/main.js?v=4"></script>
+<script src="js/main.js?v=5"></script>
 </body>
 </html>

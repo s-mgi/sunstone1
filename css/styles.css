@@ -149,8 +149,32 @@ section{position:relative;scroll-margin-top:70px;}
 .hero-split__media{position:relative;overflow:hidden;}
 .hero-split__media img{width:100%;height:100%;object-fit:cover;transform:scale(1.06);
   animation:heroIn 2.2s var(--ease-out) both;}
-.hero-split__media::before{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.3),rgba(0,0,0,0) 30%);}
+/* Explicit z-index so the darkening gradient still sits above the photo
+   (and now above the slider track) while the slider's own controls stay
+   above the gradient so they're clickable. */
+.hero-split__media::before{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.3),rgba(0,0,0,0) 30%);z-index:1;}
 @keyframes heroIn{from{transform:scale(1.16);opacity:.5;}to{transform:scale(1.06);opacity:1;}}
+
+/* Hero slider — two images cross-fading in the same frame the single hero
+   photo used to occupy, with arrows + dots for manual control. */
+.hero-slider__track{position:relative;width:100%;height:100%;z-index:0;}
+.hero-slider__slide{position:absolute;inset:0;opacity:0;transition:opacity 1.1s var(--ease);}
+.hero-slider__slide.is-active{opacity:1;}
+.hero-slider__arrow{
+  position:absolute;top:50%;transform:translateY(-50%);z-index:3;
+  width:42px;height:42px;border-radius:50%;border:1px solid rgba(255,255,255,.5);
+  background:rgba(23,22,17,.35);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+  color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;
+  transition:background .35s var(--ease), border-color .35s var(--ease);
+}
+.hero-slider__arrow:hover{background:var(--copper);border-color:var(--copper);}
+.hero-slider__arrow--prev{left:20px;}
+.hero-slider__arrow--next{right:20px;}
+.hero-slider__dots{position:absolute;left:50%;bottom:24px;transform:translateX(-50%);
+  display:flex;gap:8px;z-index:3;}
+.hero-slider__dot{width:7px;height:7px;border-radius:50%;border:0;padding:0;cursor:pointer;
+  background:rgba(255,255,255,.45);transition:background .3s var(--ease), transform .3s var(--ease);}
+.hero-slider__dot.is-active{background:#fff;transform:scale(1.3);}
 
 .hero-split__panel{
   display:flex;flex-direction:column;justify-content:center;gap:14px;
@@ -287,16 +311,28 @@ section{position:relative;scroll-margin-top:70px;}
 .map-section__list-chevron{flex-shrink:0;transition:transform .3s var(--ease);}
 .map-section__list-group.is-open .map-section__list-chevron{transform:rotate(180deg);}
 .map-section__list li.is-collapsed{display:none;}
-.map-section__list li:hover{background:var(--cream-deep);}
+/* Directory entries read as light-copper "buttons" at rest and switch to
+   the darker copper with white text on hover, rather than the plain
+   white/cream states used elsewhere in the list. */
+.map-section__list li[data-amenity]{background:var(--copper-light);}
+.map-section__list li[data-amenity] .map-item__text strong,
+.map-section__list li[data-amenity] .map-item__text span{color:var(--ink);}
+.map-section__list li[data-amenity]:hover{background:var(--copper);}
+.map-section__list li[data-amenity]:hover .map-item__text strong,
+.map-section__list li[data-amenity]:hover .map-item__text span{color:#fff;}
 .map-section__list li.is-active{background:var(--ink);}
 .map-section__list li.is-active .map-item__text strong,
 .map-section__list li.is-active .map-item__text span{color:#fff;}
 .map-section__list li.is-active .map-item__text span{color:rgba(248,245,240,.6);}
+.map-section__list li.is-active:hover{background:var(--ink);}
+.map-section__list li.is-active:hover .map-item__text strong{color:#fff;}
+.map-section__list li.is-active:hover .map-item__text span{color:rgba(248,245,240,.6);}
 
 .map-item__text{display:flex;flex-direction:column;gap:2px;min-width:0;}
 .map-item__text strong{font-size:var(--fs-4);font-weight:500;letter-spacing:.02em;color:var(--ink);
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.map-item__text span{font-size:var(--fs-3);color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:color .3s var(--ease);}
+.map-item__text span{font-size:var(--fs-3);color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  transition:color .3s var(--ease);}
 
 .map-pin-icon{width:30px;height:30px;border-radius:50%;flex-shrink:0;
   display:flex;align-items:center;justify-content:center;color:#fff;border:2px solid #fff;
@@ -363,7 +399,7 @@ section{position:relative;scroll-margin-top:70px;}
   top:0;left:4px;width:44px;height:44px;border-width:3px;overflow:hidden;
   background:var(--ink);box-shadow:0 6px 16px rgba(0,0,0,.4);
 }
-.map-pin__logo{width:100%;height:100%;object-fit:cover;}
+.map-pin__logo{width:74%;height:74%;object-fit:contain;}
 .map-pin--site .map-pin__tail{
   top:44px;left:20px;border-left-width:6px;border-right-width:6px;border-top-width:11px;
 }
@@ -469,12 +505,12 @@ section{position:relative;scroll-margin-top:70px;}
 /* Real landscape logo file (assets/sunstonelogo-landscape.svg /
    -white-text.svg) — used in the header, register section and footer. */
 .brand__logo--landscape{width:250px;height:auto;}
-.brand--footer .brand__logo--landscape{width:270px;}
+.brand--footer .brand__logo--landscape{width:320px;}
 /* Brand column is wider (it carries the logo) and the remaining three
    link columns are kept perfectly even so the footer reads as one tidy row. */
 .footer__top{display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:32px;
   padding-bottom:24px;border-bottom:1px solid var(--line-dark);align-items:start;}
-.footer__col--brand{display:flex;flex-direction:column;}
+.footer__col--brand{display:flex;flex-direction:column;align-items:center;text-align:center;}
 .footer__col--brand .brand--footer{margin-bottom:22px;}
 .footer__col--brand h4{margin-top:0;}
 .footer__col h4{font-size:var(--fs-1);letter-spacing:.15em;text-transform:uppercase;color:rgba(248,245,240,.75);
@@ -482,7 +518,7 @@ section{position:relative;scroll-margin-top:70px;}
 /* Recolour the Edenbrook raster mark to solid white for the dark footer
    (brightness(0) then invert flips any opaque pixel to white; transparency
    is preserved). */
-.footer__edenbrook-logo{display:block;width:158px;height:auto;
+.footer__edenbrook-logo{display:block;width:190px;height:auto;margin:0 auto;
   filter:brightness(0) invert(1);opacity:.92;}
 .footer__col a,.footer__col p{display:block;font-size:var(--fs-2);margin-bottom:8px;color:rgba(248,245,240,.62);
   transition:color .4s var(--ease);}
