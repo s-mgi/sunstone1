@@ -205,39 +205,32 @@ section{position:relative;scroll-margin-top:70px;}
 /* 10. SETTING ---------------------------------------------------------------*/
 .setting{background:var(--cream);padding:clamp(46px,5.2vw,64px) 0;}
 .setting h2{color:var(--ink);margin:0 0 14px;}
-.setting__row{
-  display:grid;grid-template-columns:.62fr 1fr .5fr .9fr;gap:clamp(18px,2.2vw,26px);align-items:center;
+
+/* Head row — title/lede on the left, the 3 stats on the right. */
+.setting__head{
+  display:flex;align-items:flex-end;justify-content:space-between;gap:clamp(24px,4vw,60px);
+  margin-bottom:clamp(32px,4vw,48px);flex-wrap:wrap;
 }
-/* List + images sit on the left, the heading/copy sits on the right */
-.setting__list{order:1;}
-.setting__main{order:2;}
-.setting__thumbs{order:3;}
-.setting__intro{order:4;}
-.setting__intro .lede{font-size:var(--fs-4);line-height:1.7;max-width:250px;}
-.setting__list{list-style:none;display:flex;flex-direction:column;gap:0;position:relative;}
-.setting__list li{display:flex;align-items:flex-start;gap:12px;padding:11px 0;position:relative;}
-.setting__list li:not(:last-child)::after{
-  content:'';position:absolute;left:13px;top:38px;width:1px;height:calc(100% - 16px);background:var(--line);
-}
+.setting__intro .lede{font-size:var(--fs-4);line-height:1.7;max-width:320px;}
+
+.setting__list{list-style:none;display:flex;gap:clamp(20px,3vw,40px);position:relative;flex-wrap:wrap;}
+.setting__list li{display:flex;align-items:flex-start;gap:12px;position:relative;}
 .setting__num{font-family:var(--serif);font-size:var(--fs-3);color:var(--copper);border:1px solid var(--copper);
   border-radius:50%;width:26px;height:26px;flex-shrink:0;display:flex;align-items:center;justify-content:center;
   background:var(--cream);position:relative;z-index:1;}
 .setting__list strong{display:block;font-size:var(--fs-2);font-weight:500;letter-spacing:.08em;text-transform:uppercase;margin-bottom:3px;}
 .setting__list span{font-size:var(--fs-4);color:var(--muted);line-height:1.4;}
 
-.setting__main{overflow:hidden;border-radius:1px;position:relative;}
-.setting__main img{width:100%;height:100%;object-fit:cover;min-height:190px;max-height:260px;transition:transform 1.3s var(--ease);}
-.setting__main:hover img{transform:scale(1.06);}
-.setting__thumbs{display:flex;flex-direction:column;gap:10px;height:100%;}
-.setting__thumbs .setting__photo{flex:1;}
-.setting__thumbs img{width:100%;height:100%;object-fit:cover;border-radius:1px;
+/* Photo row — 3 images, full width, between this section and "Everything Nearby." */
+.setting__photos{display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(8px,1vw,14px);}
+.setting__photo{position:relative;overflow:hidden;border-radius:1px;}
+.setting__photo img{display:block;width:100%;height:clamp(240px,26vw,360px);object-fit:cover;
   transition:transform 1.3s var(--ease);}
-.setting__thumbs img:hover{transform:scale(1.06);}
+.setting__photo:hover img{transform:scale(1.06);}
 
 /* Hover caption — identifies each photo in "Close to What Counts." */
-.setting__photo{position:relative;overflow:hidden;}
 .setting__photo-tag{
-  position:absolute;left:0;right:0;bottom:0;padding:14px 16px 12px;
+  position:absolute;left:0;right:0;bottom:0;padding:16px 18px 14px;
   font-family:var(--sans);font-size:var(--fs-2);font-weight:500;letter-spacing:.14em;text-transform:uppercase;color:#fff;
   background:linear-gradient(180deg,rgba(23,22,17,0) 0%,rgba(23,22,17,.72) 100%);
   opacity:0;transform:translateY(8px);
@@ -424,7 +417,11 @@ section{position:relative;scroll-margin-top:70px;}
   padding-bottom:24px;border-bottom:1px solid var(--line-dark);align-items:start;}
 .footer__col h4{font-size:var(--fs-1);letter-spacing:.15em;text-transform:uppercase;color:rgba(248,245,240,.75);
   margin-bottom:11px;padding-bottom:9px;border-bottom:1px solid rgba(215,155,91,.25);}
-.footer__edenbrook-logo{display:block;width:158px;height:auto;}
+/* Recolour the Edenbrook raster mark to solid white for the dark footer
+   (brightness(0) then invert flips any opaque pixel to white; transparency
+   is preserved). */
+.footer__edenbrook-logo{display:block;width:158px;height:auto;
+  filter:brightness(0) invert(1);opacity:.92;}
 .footer__col a,.footer__col p{display:block;font-size:var(--fs-2);margin-bottom:8px;color:rgba(248,245,240,.62);
   transition:color .4s var(--ease);}
 .footer__col a:hover{color:var(--copper-light);}
@@ -453,9 +450,7 @@ section{position:relative;scroll-margin-top:70px;}
   .vision__media{order:-1;aspect-ratio:16/9;max-width:100%;}
   .homes__grid{grid-template-columns:1fr 1fr;}
   .homes__side{grid-column:1/-1;aspect-ratio:16/9;}
-  .setting__row{grid-template-columns:1fr 1fr;}
-  .setting__intro{grid-column:1/-1;}
-  .setting__list li::after{display:none;}
+  .setting__head{flex-direction:column;align-items:flex-start;}
   .map-section__frame{grid-template-columns:1fr;}
   .map-section__list{flex-direction:row;flex-wrap:wrap;}
   .map-section__list li{flex:1 1 220px;border-bottom:1px solid var(--line);}
@@ -475,11 +470,43 @@ section{position:relative;scroll-margin-top:70px;}
   .hero-split__specs{gap:16px;}
   .homes__grid{grid-template-columns:1fr;}
   .homes__thumbs{grid-template-columns:1fr 1fr;}
-  .setting__row{grid-template-columns:1fr;}
+  .setting__photos{grid-template-columns:1fr;}
+  .setting__list{flex-direction:column;gap:16px;}
   .map-section__list{flex-direction:column;}
   .map-section__list li{flex:none;}
   .form__row{grid-template-columns:1fr;}
   .footer__top{grid-template-columns:1fr 1fr;gap:26px;}
   .gallery__head{align-items:flex-start;}
   .gallery__strip figure{width:78vw;}
+}
+
+/* 17. THANK-YOU PAGE --------------------------------------------------------- */
+.thanks{position:relative;min-height:100svh;display:flex;align-items:center;
+  padding:140px 0 80px;overflow:hidden;background:var(--ink);}
+.thanks__bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.4;}
+.thanks::before{content:'';position:absolute;inset:0;
+  background:linear-gradient(180deg,rgba(21,20,15,.55),rgba(21,20,15,.88) 70%,var(--ink) 100%);}
+.thanks__inner{position:relative;z-index:1;display:flex;justify-content:center;}
+.thanks__card{
+  max-width:600px;width:100%;text-align:center;background:rgba(23,22,17,.55);
+  border:1px solid rgba(215,155,91,.22);border-radius:4px;
+  padding:clamp(40px,6vw,64px) clamp(28px,5vw,56px);
+  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+}
+.thanks__logo{width:200px;height:auto;margin:0 auto 28px;}
+.thanks__check{
+  display:flex;align-items:center;justify-content:center;
+  width:52px;height:52px;border-radius:50%;margin:0 auto 22px;
+  background:var(--copper);color:#fff;
+}
+.thanks__card h1{color:#fff;font-size:clamp(38px,4.6vw,64px);}
+.thanks__card .rule{margin:20px auto 22px;}
+.thanks__card .lede{color:rgba(248,245,240,.75);max-width:440px;margin:0 auto;}
+.thanks__note{font-size:var(--fs-3);color:rgba(248,245,240,.5);margin-top:14px;}
+.thanks__actions{display:flex;flex-direction:column;align-items:center;gap:18px;margin-top:32px;}
+.thanks__actions .link-arrow{color:var(--copper-light);border-bottom-color:rgba(215,155,91,.35);}
+.thanks__actions .link-arrow:hover{border-color:var(--copper-light);}
+@media (max-width:680px){
+  .thanks{padding:120px 0 60px;}
+  .thanks__logo{width:170px;}
 }
