@@ -445,6 +445,15 @@
   if (form) {
     form.addEventListener('submit', function (e) {
       e.preventDefault();
+      /* Every field is required except Comments — enforce that before
+         treating the submission as successful. The form has novalidate
+         so the browser doesn't block submission on its own; checkValidity
+         does the same check, and reportValidity surfaces the native
+         "please fill this in" bubble on the first empty required field. */
+      if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+      }
       form.classList.add('is-sent');
       /* Swap this for a real POST to your CRM/form endpoint, then redirect
          on success. For now, send visitors straight to the thank-you page. */

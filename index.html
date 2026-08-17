@@ -272,18 +272,18 @@
         </div>
         <div class="field">
           <label for="phone">Phone Number</label>
-          <input id="phone" type="tel" name="phone" autocomplete="tel">
+          <input id="phone" type="tel" name="phone" autocomplete="tel" required>
         </div>
       </div>
 
       <div class="form__row">
         <div class="field">
           <label for="postal">Postal Code</label>
-          <input id="postal" type="text" name="postal" autocomplete="postal-code">
+          <input id="postal" type="text" name="postal" autocomplete="postal-code" required>
         </div>
         <div class="field">
           <label for="timeframe">Purchase Timeframe</label>
-          <select id="timeframe" name="timeframe">
+          <select id="timeframe" name="timeframe" required>
             <option value="">Select an option</option>
             <option>Immediately</option>
             <option>Within 6 months</option>
@@ -295,7 +295,7 @@
 
       <div class="field">
         <label for="howHeard">How Did You Hear About Us?</label>
-        <input id="howHeard" type="text" name="source" placeholder="Google, referral, signage, social media...">
+        <input id="howHeard" type="text" name="source" placeholder="Google, referral, signage, social media..." required>
       </div>
 
       <div class="field">
@@ -358,6 +358,6 @@
 </footer>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-<script src="js/main.js?v=7"></script>
+<script src="js/main.js?v=8"></script>
 </body>
 </html>
