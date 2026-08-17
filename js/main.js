@@ -239,6 +239,8 @@
       });
     }
 
+    var TIP_OPTS = { direction: 'top', offset: [0, -34], opacity: 1, className: 'map-tip' };
+
     /* Build the scrollable sidebar list (grouped by category) and drop a
        marker for every entry in one pass. */
     var lastCategory = null;
@@ -268,8 +270,22 @@
       a.marker = L.marker(a.coords, { icon: makeIcon(a), title: decode(a.title) })
         .addTo(map)
         .bindPopup('<strong>' + a.title + '</strong><span class="pop-addr">' + a.addr + '</span>')
-        .bindTooltip(decode(a.title), { direction: 'top', offset: [0, -34], opacity: 1, className: 'map-tip' });
+        .bindTooltip(decode(a.title), TIP_OPTS);
+      a.marker._tipText = decode(a.title);
       a.marker.on('click', function () { setActive(a.key); });
+    });
+
+    /* A selected pin already shows its full popup, so the hover label is
+       redundant there — and it renders straight over the popup, which looks
+       broken. Drop the tooltip while a pin's popup is open and restore it
+       once the popup closes (including via the popup's own close button). */
+    map.on('popupopen', function (e) {
+      var m = e.popup._source;
+      if (m && m.getTooltip()) { m.closeTooltip(); m.unbindTooltip(); }
+    });
+    map.on('popupclose', function (e) {
+      var m = e.popup._source;
+      if (m && m._tipText && !m.getTooltip()) { m.bindTooltip(m._tipText, TIP_OPTS); }
     });
 
     var listItems = listEl.querySelectorAll('li[data-amenity]');
