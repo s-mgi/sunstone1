@@ -27,6 +27,36 @@
   }
   window.addEventListener('scroll', onScroll, { passive: true });
 
+  /* MOBILE NAV TOGGLE ------------------------------------------------------
+     Hamburger button shows/hides the dropdown nav panel below ~1100px,
+     where the inline nav no longer fits. */
+  var navToggle = document.getElementById('navToggle');
+  var siteNav = document.getElementById('siteNav');
+  if (navToggle && siteNav) {
+    function closeNav() {
+      siteNav.classList.remove('is-open');
+      navToggle.setAttribute('aria-expanded', 'false');
+      navToggle.setAttribute('aria-label', 'Open menu');
+    }
+    function openNav() {
+      siteNav.classList.add('is-open');
+      navToggle.setAttribute('aria-expanded', 'true');
+      navToggle.setAttribute('aria-label', 'Close menu');
+    }
+    navToggle.addEventListener('click', function () {
+      if (siteNav.classList.contains('is-open')) closeNav(); else openNav();
+    });
+    siteNav.querySelectorAll('a').forEach(function (a) {
+      a.addEventListener('click', closeNav);
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') closeNav();
+    });
+    window.addEventListener('resize', function () {
+      if (window.innerWidth > 1100) closeNav();
+    });
+  }
+
   /* 2. SCROLL REVEALS ------------------------------------------------------ */
   var revealTargets = document.querySelectorAll('[data-reveal]');
 
@@ -169,13 +199,12 @@
       { key:'mall-hillcrest', category:'Shopping Centres', coords:[43.854655,-79.436394], modifier:'shop', svg:mallSvg, zoom:13, title:'Hillcrest Mall', addr:'9350 Yonge St, Richmond Hill' },
 
       { key:'dine-opa',        category:'Dining &amp; Caf&eacute;s', coords:[43.862741,-79.485780], modifier:'dining', svg:forkSvg, zoom:14, title:'OPA! of Greece', addr:'1450 Major Mackenzie Dr W, Maple' },
-      { key:'dine-teresas',    category:'Dining &amp; Caf&eacute;s', coords:[43.852615,-79.485582], modifier:'dining', svg:forkSvg, zoom:14, title:'Teresa&rsquo;s Italian Eatery &amp; Deli', addr:'9720 Dufferin St, Vaughan' },
       { key:'dine-tims',       category:'Dining &amp; Caf&eacute;s', coords:[43.860875,-79.487503], modifier:'dining', svg:forkSvg, zoom:14, title:'Tim Hortons', addr:'9954 Dufferin St, Maple' },
       { key:'dine-mcd',        category:'Dining &amp; Caf&eacute;s', coords:[43.859713,-79.502081], modifier:'dining', svg:forkSvg, zoom:14, title:'McDonald&rsquo;s', addr:'1900 Major Mackenzie Dr W, Vaughan' },
       { key:'dine-starbucks',  category:'Dining &amp; Caf&eacute;s', coords:[43.849748,-79.460373], modifier:'dining', svg:forkSvg, zoom:14, title:'Starbucks', addr:'9360 Bathurst St, Vaughan' },
       { key:'dine-symposium',  category:'Dining &amp; Caf&eacute;s', coords:[43.851482,-79.459617], modifier:'dining', svg:forkSvg, zoom:14, title:'Symposium Caf&eacute; Restaurant', addr:'9342 Bathurst St, Vaughan' },
-      { key:'dine-sunset',     category:'Dining &amp; Caf&eacute;s', coords:[43.851482,-79.459617], modifier:'dining', svg:forkSvg, zoom:14, title:'Sunset Grill', addr:'9342 Bathurst St, Vaughan' },
-      { key:'dine-kinton',     category:'Dining &amp; Caf&eacute;s', coords:[43.835692,-79.509474], modifier:'dining', svg:forkSvg, zoom:14, title:'Kinton Ramen', addr:'9222 Keele St, Vaughan' },
+      { key:'dine-sunset',     category:'Dining &amp; Caf&eacute;s', coords:[43.828600,-79.541000], modifier:'dining', svg:forkSvg, zoom:14, title:'Sunset Grill', addr:'3255 Rutherford Rd, Vaughan' },
+      { key:'dine-kinton',     category:'Dining &amp; Caf&eacute;s', coords:[43.798000,-79.549000], modifier:'dining', svg:forkSvg, zoom:14, title:'Kinton Ramen', addr:'8099 Weston Rd, Vaughan' },
       { key:'dine-state',      category:'Dining &amp; Caf&eacute;s', coords:[43.845487,-79.554807], modifier:'dining', svg:forkSvg, zoom:13, title:'State &amp; Main Kitchen + Bar', addr:'3584 Major Mackenzie Dr W, Vaughan' },
       { key:'dine-keg',        category:'Dining &amp; Caf&eacute;s', coords:[43.829406,-79.539422], modifier:'dining', svg:forkSvg, zoom:14, title:'The Keg Steakhouse + Bar', addr:'3300 Rutherford Rd, Vaughan' },
       { key:'dine-dennys',     category:'Dining &amp; Caf&eacute;s', coords:[43.834153,-79.520928], modifier:'dining', svg:forkSvg, zoom:14, title:'Denny&rsquo;s', addr:'2610 Rutherford Rd, Vaughan' },

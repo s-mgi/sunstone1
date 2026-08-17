@@ -17,7 +17,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
-<link rel="stylesheet" href="css/styles.css?v=9">
+<link rel="stylesheet" href="css/styles.css?v=15">
 </head>
 <body>
 
@@ -32,11 +32,16 @@
     </div>
 
     <div class="header__nav-col">
-      <nav class="nav" aria-label="Primary">
+      <nav class="nav" id="siteNav" aria-label="Primary">
         <a href="#homes">Homes</a>
         <a href="#setting">The Setting</a>
         <a href="#register">Register</a>
       </nav>
+      <button type="button" class="nav-toggle" id="navToggle" aria-label="Open menu" aria-expanded="false" aria-controls="siteNav">
+        <span class="nav-toggle__bar"></span>
+        <span class="nav-toggle__bar"></span>
+        <span class="nav-toggle__bar"></span>
+      </button>
     </div>
   </div>
 </header>
@@ -243,7 +248,7 @@
       <div class="brand brand--light">
         <img class="brand__logo brand__logo--stacked" src="assets/sunstonelogo-white-text.svg" alt="Sunstone Towns">
       </div>
-      <h2>Be First<br>in Line.</h2>
+      <h2>Be First<br class="register__break"> in Line.</h2>
       <div class="rule rule--left"></div>
       <p class="lede">Register for priority access to floorplans, pricing and updates.</p>
     </div>
@@ -335,17 +340,16 @@
       </div>
 
       <div class="footer__col">
-        <h4>Homes</h4>
-        <a href="#homes">Layouts</a>
-        <a href="#homes">Features &amp; Finishes</a>
-        <a href="#homes">Sustainability</a>
+        <h4>Explore</h4>
+        <a href="#homes">The Homes</a>
+        <a href="#setting">The Setting</a>
+        <a href="#community">The Community</a>
       </div>
 
       <div class="footer__col">
-        <h4>The Setting</h4>
-        <a href="#setting">Location</a>
-        <a href="#setting">Amenities</a>
-        <a href="#setting">Getting Here</a>
+        <h4>Get Started</h4>
+        <a href="#map">Amenities Map</a>
+        <a href="#register">Register Interest</a>
       </div>
 
       <div class="footer__col footer__col--last">
@@ -353,18 +357,18 @@
         <div class="social">
           <a href="https://www.instagram.com/edenbrookhomes" target="_blank" rel="noopener" aria-label="Instagram"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.6" cy="6.4" r="1"/></svg></a>
         </div>
-        <p><a href="privacy-policy.html">Privacy Policy</a></p>
       </div>
     </div>
 
     <div class="footer__base">
+      <span class="footer__copyright">&copy; 2026 Edenbrook Homes. All rights reserved.</span>
       <img class="footer__edenbrook-logo" src="assets/edenbrooklogo.avif" alt="Edenbrook Homes">
-      <span>© 2026 Edenbrook Homes. All rights reserved.</span>
+      <a href="privacy-policy.html" class="footer__legal-link">Privacy Policy</a>
     </div>
   </div>
 </footer>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-<script src="js/main.js?v=5"></script>
+<script src="js/main.js?v=7"></script>
 </body>
 </html>
