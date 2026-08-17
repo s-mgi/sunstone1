@@ -211,7 +211,8 @@ section{position:relative;scroll-margin-top:70px;}
   display:flex;align-items:flex-end;justify-content:space-between;gap:clamp(24px,4vw,60px);
   margin-bottom:clamp(32px,4vw,48px);flex-wrap:wrap;
 }
-.setting__intro .lede{font-size:var(--fs-4);line-height:1.7;max-width:320px;}
+.setting__intro{flex:1 1 520px;}
+.setting__intro .lede{font-size:var(--fs-4);line-height:1.7;max-width:480px;}
 
 .setting__list{list-style:none;display:flex;gap:clamp(20px,3vw,40px);position:relative;flex-wrap:wrap;}
 .setting__list li{display:flex;align-items:flex-start;gap:12px;position:relative;}

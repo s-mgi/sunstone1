@@ -93,17 +93,18 @@
     var schoolSvg     = '<path d="m2 9 10-5 10 5-10 5-10-5Z"/><path d="M6 11v5c0 1.5 3 3 6 3s6-1.5 6-3v-5"/>';
     var hospitalSvg = '<rect x="4" y="5" width="16" height="15" rx="1.5"/><path d="M12 9v6M9 12h6"/>';
 
-    /* Coordinates verified against the client-provided location map
-       (real place names + positions) — Aug 2026. */
+    /* Coordinates re-verified against real, geocoded locations (not
+       estimates) — Aug 2026. Site coordinate is the client-confirmed
+       pin for Rutherford Rd & Peter Rupert Ave, Vaughan L6A 4T3. */
     var amenities = {
-      site:     { coords: [43.8390, -79.4924],  modifier: 'site',     svg: homeSvg,     zoom: 15, title: 'Sunstone Towns',        body: 'Rutherford Rd &amp; Peter Rupert Ave, Vaughan' },
+      site:     { coords: [43.840861, -79.4922884], modifier: 'site',     svg: homeSvg,     zoom: 15, title: 'Sunstone Towns',        body: 'Rutherford Rd &amp; Peter Rupert Ave, Vaughan' },
       transit:  { coords: [43.8364, -79.4923],  modifier: 'transit', svg: trainSvg,     zoom: 15, title: 'Rutherford GO Station',  body: '6 min walk from Sunstone Towns' },
       shop:     { coords: [43.8220, -79.5367],  modifier: 'shop',    svg: bagSvg,     zoom: 13, title: 'Vaughan Mills',       body: '5 min drive &middot; shopping &amp; dining' },
-      hwy:      { coords: [43.8376, -79.5391],  modifier: 'hwy',     svg: roadSvg,     zoom: 13, title: 'Highway 400',   body: 'Quick access to the Greater Toronto Area' },
-      park:     { coords: [43.8418, -79.4941],  modifier: 'park',    svg: treeSvg,     zoom: 15, title: 'Martin Tavares Park',       body: '5 min walk &middot; trails &amp; green space' },
-      grocery:  { coords: [43.8395, -79.4869],  modifier: 'grocery', svg: cartSvg,     zoom: 14, title: 'No Frills',       body: '4 min drive &middot; grocery &amp; everyday shops' },
+      hwy:      { coords: [43.8385, -79.5395],  modifier: 'hwy',     svg: roadSvg,     zoom: 13, title: 'Highway 400',   body: 'Quick access to the Greater Toronto Area' },
+      park:     { coords: [43.8425, -79.4935],  modifier: 'park',    svg: treeSvg,     zoom: 15, title: 'Martin Tavares Park',       body: '5 min walk &middot; trails &amp; green space' },
+      grocery:  { coords: [43.8580, -79.5175],  modifier: 'grocery', svg: cartSvg,     zoom: 13, title: 'Highland Farms',       body: '7 min drive &middot; grocery &amp; everyday shops' },
       school:   { coords: [43.8352, -79.4723],  modifier: 'school',  svg: schoolSvg,     zoom: 14, title: 'Stephen Lewis Secondary School', body: '7 min drive' },
-      hospital: { coords: [43.8664, -79.5395],  modifier: 'hospital',svg: hospitalSvg, zoom: 13, title: 'Cortellucci Vaughan Hospital',       body: '10 min drive &middot; Mackenzie Health' }
+      hospital: { coords: [43.8672, -79.5375],  modifier: 'hospital',svg: hospitalSvg, zoom: 13, title: 'Cortellucci Vaughan Hospital',       body: '10 min drive &middot; Mackenzie Health' }
     };
 
     var map = L.map('sunstoneMap', {
