@@ -103,7 +103,7 @@
       hwy:      { coords: [43.8385, -79.5395],  modifier: 'hwy',     svg: roadSvg,     zoom: 13, title: 'Highway 400',   body: 'Quick access to the Greater Toronto Area' },
       park:     { coords: [43.8425, -79.4935],  modifier: 'park',    svg: treeSvg,     zoom: 15, title: 'Martin Tavares Park',       body: '5 min walk &middot; trails &amp; green space' },
       grocery:  { coords: [43.8580, -79.5175],  modifier: 'grocery', svg: cartSvg,     zoom: 13, title: 'Highland Farms',       body: '7 min drive &middot; grocery &amp; everyday shops' },
-      school:   { coords: [43.8352, -79.4723],  modifier: 'school',  svg: schoolSvg,     zoom: 14, title: 'Stephen Lewis Secondary School', body: '7 min drive' },
+      school:   { coords: [43.8432, -79.4899],  modifier: 'school',  svg: schoolSvg,     zoom: 16, title: 'St. Cecilia Catholic Elementary', body: 'On Peter Rupert Ave &middot; Rom&eacute;o Dallaire P.S. also nearby' },
       hospital: { coords: [43.8672, -79.5375],  modifier: 'hospital',svg: hospitalSvg, zoom: 13, title: 'Cortellucci Vaughan Hospital',       body: '10 min drive &middot; Mackenzie Health' }
     };
 
