@@ -75,8 +75,13 @@ section{position:relative;scroll-margin-top:70px;}
   border-bottom:1px solid rgba(180,113,47,.35);padding-bottom:5px;transition:border-color .4s var(--ease);
 }
 .link-arrow:hover{border-color:var(--copper);}
-.link-arrow .arw{transition:transform .4s var(--ease);}
+.link-arrow .arw{display:inline-block;transition:transform .4s var(--ease);}
 .link-arrow:hover .arw{transform:translateX(4px);}
+/* Some buttons use an upturned arrow (rotated to 45deg) to feel more like an
+   "explore" action; on hover it should straighten out and point right, same
+   as every other arrow button, so the hover feel is consistent site-wide. */
+.link-arrow .arw--up{transform:rotate(-45deg);}
+.link-arrow:hover .arw--up{transform:rotate(0deg) translateX(4px);}
 
 .btn{
   display:inline-flex;align-items:center;justify-content:center;gap:10px;
@@ -116,15 +121,21 @@ section{position:relative;scroll-margin-top:70px;}
   padding:0 clamp(40px,4.8vw,76px) 0 24px;
 }
 
-.brand{display:flex;align-items:center;}
-/* Uses the exact brand file (assets/sunstonelogo.svg) untouched — its own
-   colours and wordmark, no recolouring or text overrides. */
+.brand{display:flex;align-items:center;position:relative;}
+/* Uses the exact brand files (assets/sunstonelogo-landscape*.svg) untouched —
+   their own colours and wordmark, no recolouring or text overrides. Two
+   copies are stacked (white-text on top of the header, dark-text once
+   scrolled) and crossfaded, since the header floats transparent over the
+   hero image on load and a dark wordmark disappears into it. */
 .brand__logo{display:block;width:210px;height:auto;flex-shrink:0;
   filter:drop-shadow(0 1px 3px rgba(0,0,0,.3));
-  transition:transform .6s var(--ease);}
+  transition:transform .6s var(--ease), opacity .5s var(--ease);}
 .brand:hover .brand__logo{transform:translateY(-2px);}
 
-.site-header.is-stuck .header__brand-col .brand__logo{filter:none;}
+.brand__logo--dark{position:absolute;top:0;left:0;opacity:0;filter:none;}
+.brand__logo--white{opacity:1;}
+.site-header.is-stuck .brand__logo--dark{opacity:1;}
+.site-header.is-stuck .brand__logo--white{opacity:0;}
 
 .nav{display:flex;align-items:center;gap:52px;}
 .nav a{position:relative;font-size:var(--fs-4);font-weight:400;letter-spacing:.1em;text-transform:uppercase;
@@ -266,7 +277,13 @@ section{position:relative;scroll-margin-top:70px;}
 .map-section__list-group{padding:9px 16px;font-family:var(--sans);font-size:var(--fs-1);
   font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:#fff;
   background:var(--copper);border-bottom:1px solid var(--copper);
-  position:sticky;top:0;z-index:2;}
+  position:sticky;top:0;z-index:2;justify-content:space-between;}
+/* Directory groups start collapsed and expand on click (except the
+   development itself, which is left open by default) — the chevron
+   rotates to show open/closed state. */
+.map-section__list-chevron{flex-shrink:0;transition:transform .3s var(--ease);}
+.map-section__list-group.is-open .map-section__list-chevron{transform:rotate(180deg);}
+.map-section__list li.is-collapsed{display:none;}
 .map-section__list li:hover{background:var(--cream-deep);}
 .map-section__list li.is-active{background:var(--ink);}
 .map-section__list li.is-active .map-item__text strong,
@@ -293,7 +310,13 @@ section{position:relative;scroll-margin-top:70px;}
 .map-pin-icon--dining{background:#B4703A;}
 .map-pin-icon--rec{background:#8C6A3F;}
 
-.map-section__map-wrap{position:relative;height:100%;}
+.map-section__map-wrap{position:relative;height:100%;z-index:0;}
+/* Leaflet's own zoom-control/attribution layer defaults to z-index:1000,
+   which floats above our fixed header (z-index:200) once you scroll past
+   it. Cap every Leaflet layer well below the header so nothing from the
+   map can ever render on top of it. */
+.leaflet-pane,.leaflet-top,.leaflet-bottom,.leaflet-control{z-index:20!important;}
+.leaflet-popup-pane{z-index:30!important;}
 #sunstoneMap{
   width:100%;height:100%;min-height:400px;border-radius:2px;
   border:1px solid var(--line);box-shadow:0 20px 46px rgba(23,22,17,.14);
@@ -434,7 +457,7 @@ section{position:relative;scroll-margin-top:70px;}
    -white-text.svg) — used in the header, register section and footer. */
 .brand__logo--landscape{width:250px;height:auto;}
 .brand--footer .brand__logo--landscape{width:270px;}
-.footer__top{display:grid;grid-template-columns:1.3fr .9fr .8fr .8fr .8fr 1fr;gap:24px;
+.footer__top{display:grid;grid-template-columns:1.3fr .9fr .8fr .8fr 1fr;gap:32px;
   padding-bottom:24px;border-bottom:1px solid var(--line-dark);align-items:start;}
 .footer__col h4{font-size:var(--fs-1);letter-spacing:.15em;text-transform:uppercase;color:rgba(248,245,240,.75);
   margin-bottom:11px;padding-bottom:9px;border-bottom:1px solid rgba(215,155,91,.25);}

@@ -250,18 +250,30 @@
       return d.value;
     }
 
+    /* Directory groups are collapsed by default and expand on click — only
+       the development itself ("Sunstone Towns") starts open, since that's
+       the one thing the client wants visible without any interaction. */
+    function slugify(s) { return s.toLowerCase().replace(/&[a-z]+;/g, '').replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''); }
+
     amenities.forEach(function (a) {
+      var groupSlug = slugify(a.category);
+      var isSiteGroup = a.category === 'Sunstone Towns';
       if (a.category !== lastCategory) {
         var groupHeading = document.createElement('li');
-        groupHeading.className = 'map-section__list-group';
-        groupHeading.textContent = decode(a.category);
+        groupHeading.className = 'map-section__list-group' + (isSiteGroup ? ' is-open' : '');
+        groupHeading.setAttribute('data-group-toggle', groupSlug);
+        groupHeading.setAttribute('role', 'button');
+        groupHeading.setAttribute('tabindex', '0');
+        groupHeading.setAttribute('aria-expanded', isSiteGroup ? 'true' : 'false');
+        groupHeading.innerHTML = '<span>' + decode(a.category) + '</span><svg class="map-section__list-chevron" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>';
         listEl.appendChild(groupHeading);
         lastCategory = a.category;
       }
 
       var li = document.createElement('li');
       li.setAttribute('data-amenity', a.key);
-      if (a.key === 'site') li.className = 'is-active';
+      li.setAttribute('data-group', groupSlug);
+      li.className = (a.key === 'site' ? 'is-active' : '') + (isSiteGroup ? '' : ' is-collapsed');
       li.innerHTML =
         '<span class="map-pin-icon map-pin-icon--' + a.modifier + '"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + a.svg + '</svg></span>' +
         '<span class="map-item__text"><strong>' + a.title + '</strong><span>' + a.addr + '</span></span>';
@@ -321,6 +333,25 @@
     listItems.forEach(function (li) {
       li.addEventListener('click', function () {
         setActive(li.getAttribute('data-amenity'));
+      });
+    });
+
+    /* Toggle a directory group open/closed. Clicking (or Enter/Space on)
+       a group heading shows or hides just that category's items. */
+    var groupHeadings = listEl.querySelectorAll('li[data-group-toggle]');
+    function toggleGroup(heading) {
+      var slug = heading.getAttribute('data-group-toggle');
+      var open = !heading.classList.contains('is-open');
+      heading.classList.toggle('is-open', open);
+      heading.setAttribute('aria-expanded', open ? 'true' : 'false');
+      listEl.querySelectorAll('li[data-group="' + slug + '"]').forEach(function (item) {
+        item.classList.toggle('is-collapsed', !open);
+      });
+    }
+    groupHeadings.forEach(function (heading) {
+      heading.addEventListener('click', function () { toggleGroup(heading); });
+      heading.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleGroup(heading); }
       });
     });
 
