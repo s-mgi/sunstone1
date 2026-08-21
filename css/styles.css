@@ -427,9 +427,9 @@ section{position:relative;scroll-margin-top:70px;}
 .map-pin--rec .map-pin__circle{background:#8C6A3F;}
 
 /* 11. COMMUNITY ---------------------------------------------------------------*/
-.community{display:grid;grid-template-columns:1.15fr 1fr;min-height:auto;background:var(--cream-deep);}
+.community{display:grid;grid-template-columns:1.15fr 1fr;min-height:clamp(460px,46vw,760px);background:var(--cream-deep);}
 .community__media{position:relative;overflow:hidden;}
-.community__media img{width:100%;height:100%;object-fit:cover;min-height:260px;max-height:380px;transition:transform 1.4s var(--ease);}
+.community__media img{width:100%;height:100%;object-fit:cover;transition:transform 1.4s var(--ease);}
 .community__media:hover img{transform:scale(1.06);}
 .community__body{display:flex;flex-direction:column;justify-content:center;padding:clamp(28px,3.4vw,52px);}
 .community__body h2{color:var(--ink);margin-bottom:16px;}
@@ -606,8 +606,8 @@ section{position:relative;scroll-margin-top:70px;}
   /* Stays a single column of entries (not a wrapping multi-column grid)
      at every width below desktop — one directory, one column. */
   .map-section__list li{border-bottom:1px solid var(--line);}
-  .community{grid-template-columns:1fr;}
-  .community__media{min-height:320px;}
+  .community{grid-template-columns:1fr;min-height:auto;}
+  .community__media{min-height:320px;height:320px;}
   .register__inner{grid-template-columns:1fr;}
   /* Centre the logo/heading/subtitle block on mobile — the desktop layout
      is left-aligned to sit beside the form, but stacked full-width it
