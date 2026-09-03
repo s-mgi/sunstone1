@@ -454,10 +454,32 @@
         form.reportValidity();
         return;
       }
-      form.classList.add('is-sent');
-      /* Swap this for a real POST to your CRM/form endpoint, then redirect
-         on success. For now, send visitors straight to the thank-you page. */
-      window.location.href = 'thank-you.html';
+
+      var submitBtn = form.querySelector('button[type="submit"]');
+      if (submitBtn) { submitBtn.disabled = true; }
+
+      var formData = new FormData(form);
+      var payload = Object.fromEntries(formData.entries());
+
+      fetch('https://api.web3forms.com/submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        body: JSON.stringify(payload)
+      })
+        .then(function (res) { return res.json(); })
+        .then(function (data) {
+          if (data.success) {
+            form.classList.add('is-sent');
+            window.location.href = 'thank-you.html';
+          } else {
+            if (submitBtn) { submitBtn.disabled = false; }
+            alert('Something went wrong submitting the form. Please try again.');
+          }
+        })
+        .catch(function () {
+          if (submitBtn) { submitBtn.disabled = false; }
+          alert('Something went wrong submitting the form. Please try again.');
+        });
     });
   }
 
