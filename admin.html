@@ -278,6 +278,8 @@ tr:hover td{ background:var(--line-soft); }
 .pf-zoom-btn:hover{ border-color:var(--gold); color:var(--gold); }
 .pf-zoom-level{ font-size:0.6875rem; color:var(--sub); min-width:2.4rem; text-align:center; }
 .pf-viewport{ height:36rem; overflow:auto; background:#0a090d; }
+p.hint{ font-size:0.8125rem; line-height:1.5; color:var(--sub); margin:0.6rem 0 0; }
+.pf-scaler.is-phone .pf-iframe{ border-radius:44px; box-shadow:0 0 0 14px #1d1b22, 0 24px 80px rgba(0,0,0,.5); } /* scaled with the frame */
 .pf-scaler{ transform-origin:top left; }
 .pf-iframe{ display:block; border:0; background:#050408; }
 
@@ -1232,7 +1234,26 @@ function setupEditFrame() {
   const frame = document.getElementById('pf-frame-edit');
   if (!frame) return;
   EDIT_FRAME.frame = frame;
-  frame.addEventListener('load', () => { EDIT_FRAME.ready = true; fitPreviewHeight('editpreview'); refreshLivePreview(currentEditSub); });
+  frame.addEventListener('load', () => {
+    EDIT_FRAME.ready = true;
+    scrollFrameTo(EDIT_ANCHORS[currentEditSub]);
+    refreshLivePreview(currentEditSub);
+  });
+}
+// The preview iframe is a real browser-sized window, so the page scrolls
+// inside it. Jump to a section without reloading (scroll-margin-top on the
+// site's sections keeps the fixed header from covering the heading).
+function scrollFrameTo(anchor) {
+  if (!anchor || !EDIT_FRAME.frame) return false;
+  let doc; try { doc = EDIT_FRAME.frame.contentDocument; } catch (e) { return false; }
+  const el = doc && doc.querySelector(anchor);
+  if (!el) return false;
+  if (anchor === '#hero') doc.defaultView.scrollTo(0, 0);
+  else el.scrollIntoView({ block: 'start' });
+  // Scroll-triggered reveals: make sure the section is visible even if the
+  // observer hasn't fired yet at this scale.
+  doc.querySelectorAll('[data-reveal]').forEach(n => n.classList.add('is-in'));
+  return true;
 }
 function refreshLivePreview(subId) {
   if (subId !== currentEditSub) return;
@@ -1265,22 +1286,11 @@ setupEditFrame();
 // scrollable viewport stops right at the page's footer instead of leaving
 // blank space below it (from the fixed device-height guess).
 function fitPreviewHeight(subId) {
+  // Kept for existing callers. The frame is no longer stretched to the full
+  // page height: that inflated the site's 100svh hero and thank-you panel.
+  // It stays at the device's real window size and scrolls inside instead.
   const pf = document.querySelector(`.preview-frame[data-preview="${subId}"]`);
-  const st = PREVIEW_STATE[subId];
-  if (!pf || !st) return;
-  const iframe = $('.pf-iframe', pf);
-  let doc; try { doc = iframe && iframe.contentDocument; } catch (e) { return; }
-  if (!doc || !doc.documentElement) return;
-  // Reset to a plain viewport-height probe first — any `100vh` (etc.) CSS
-  // in the page resolves against whatever height the iframe currently has,
-  // so measuring against a stale/oversized height gives a wrong, inflated
-  // result. Forcing the probe height first, then reading, keeps it honest.
-  const probe = PREVIEW_DEVICE_DIMS[st.device].h;
-  iframe.style.height = probe + 'px';
-  void iframe.offsetHeight; // force layout before reading scrollHeight
-  st.contentHeight = st.contentHeight || {};
-  st.contentHeight[st.device] = Math.max(doc.documentElement.scrollHeight, probe);
-  updatePreviewViewport(pf);
+  if (pf && PREVIEW_STATE[subId]) updatePreviewViewport(pf);
 }
 
 /* ---------- Edit tab accordion: one section open at a time, driving the shared preview ---------- */
@@ -1294,8 +1304,12 @@ function switchEditSection(subId) {
       : "This is the actual live site. Changes here save immediately, so this always matches what's published.";
   }
   if (EDIT_ANCHORS[subId]) {
-    EDIT_FRAME.ready = false;
-    if (EDIT_FRAME.frame) EDIT_FRAME.frame.src = '/' + EDIT_ANCHORS[subId];
+    if (EDIT_FRAME.ready && scrollFrameTo(EDIT_ANCHORS[subId])) {
+      refreshLivePreview(subId);
+    } else if (EDIT_FRAME.frame) {
+      EDIT_FRAME.ready = false;
+      EDIT_FRAME.frame.src = '/' + EDIT_ANCHORS[subId];
+    }
   }
   const pf = $('#page-homepage .preview-frame[data-preview="editpreview"]');
   if (pf && PREVIEW_STATE[pf.dataset.preview]) updatePreviewViewport(pf);
@@ -1326,7 +1340,17 @@ const PREVIEW_MAX_ZOOM = 2;
 // section in the site's CSS (it inflates to match), which is exactly what
 // was happening. The true height is measured and applied once the iframe
 // loads (see fitPreviewHeight).
-const PREVIEW_DEVICE_DIMS = { desktop: { w: 1440, h: 900 }, mobile: { w: 390, h: 800 } };
+const PREVIEW_DEVICE_DIMS = { desktop: { w: 1440, h: 900 }, mobile: { w: 390, h: 844 } };
+const PREVIEW_MAX_H = () => Math.max(420, Math.min(window.innerHeight * 0.72, 760)); // tallest the preview box gets on screen
+// "Fit" zoom: desktop fills the panel width; mobile is shown as a phone,
+// never scaled above 100% and never taller than the preview box.
+function previewFitZoom(pf, device) {
+  const viewport = $('.pf-viewport', pf);
+  const dims = PREVIEW_DEVICE_DIMS[device];
+  const byWidth = (viewport.clientWidth - (device === 'mobile' ? 32 : 0)) / dims.w;
+  if (device === 'mobile') return Math.min(1, byWidth, (PREVIEW_MAX_H() - 32) / dims.h);
+  return byWidth;
+}
 const PREVIEW_STATE = {};
 function initPreviewControls() {
   $$('.preview-frame[data-preview]').forEach(pf => {
@@ -1339,13 +1363,13 @@ function initPreviewControls() {
       st.zoom = null;
       $$('.pf-device-btn', pf).forEach(b => b.classList.toggle('active', b === btn));
       updatePreviewViewport(pf);
-      fitPreviewHeight(subId);
+      // The page reflows at the new width; jump back to the open section.
+      if (subId === 'editpreview') setTimeout(() => scrollFrameTo(EDIT_ANCHORS[currentEditSub]), 200);
     }));
     $$('.pf-zoom-btn', pf).forEach(btn => btn.addEventListener('click', () => {
       const st = PREVIEW_STATE[subId];
       const dims = PREVIEW_DEVICE_DIMS[st.device];
-      const viewport = $('.pf-viewport', pf);
-      const fit = viewport.clientWidth / dims.w;
+      const fit = previewFitZoom(pf, st.device);
       const current = st.zoom ?? fit;
       let next = btn.dataset.zoom === 'in' ? current + PREVIEW_ZOOM_STEP : current - PREVIEW_ZOOM_STEP;
       next = Math.max(PREVIEW_MIN_ZOOM, Math.min(PREVIEW_MAX_ZOOM, next));
@@ -1363,17 +1387,20 @@ function updatePreviewViewport(pf) {
   const iframe = $('.pf-iframe', pf);
   const scaler = $('.pf-scaler', pf);
   const viewport = $('.pf-viewport', pf);
-  if (!iframe || !scaler || !viewport) return;
+  if (!st || !iframe || !scaler || !viewport) return;
   const dims = PREVIEW_DEVICE_DIMS[st.device];
-  const h = (st.contentHeight && st.contentHeight[st.device]) || dims.h;
-  const fit = viewport.clientWidth / dims.w;
   const isAutoFit = st.zoom === null;
-  const zoom = st.zoom ?? fit;
+  const zoom = st.zoom ?? previewFitZoom(pf, st.device);
+  const isMobile = st.device === 'mobile';
   iframe.style.width = dims.w + 'px';
-  iframe.style.height = h + 'px';
+  iframe.style.height = dims.h + 'px';
   scaler.style.width = (dims.w * zoom) + 'px';
-  scaler.style.height = (h * zoom) + 'px';
+  scaler.style.height = (dims.h * zoom) + 'px';
   scaler.style.transform = `scale(${zoom})`;
+  scaler.style.margin = isMobile ? '16px auto' : '0';
+  scaler.classList.toggle('is-phone', isMobile);
+  const boxH = dims.h * zoom + (isMobile ? 32 : 0);
+  viewport.style.height = Math.min(boxH, PREVIEW_MAX_H() + (isAutoFit ? 0 : 200)) + 'px';
   const level = $('.pf-zoom-level', pf); if (level) level.textContent = isAutoFit ? 'Fit' : Math.round(zoom * 100) + '%';
 }
 initPreviewControls();
