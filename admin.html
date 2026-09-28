@@ -278,6 +278,40 @@ tr:hover td{ background:var(--line-soft); }
 .pf-zoom-btn:hover{ border-color:var(--gold); color:var(--gold); }
 .pf-zoom-level{ font-size:0.6875rem; color:var(--sub); min-width:2.4rem; text-align:center; }
 .pf-viewport{ height:36rem; overflow:auto; background:#0a090d; }
+.ga-toolbar{ display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:0.75rem; }
+.ga-toolbar-left, .ga-toolbar-right{ display:flex; align-items:center; gap:0.75rem; flex-wrap:wrap; }
+.ga-live{ display:inline-flex; align-items:center; gap:0.45rem; font-size:0.8125rem; font-weight:600; }
+.ga-live-dot{ width:0.5rem; height:0.5rem; border-radius:50%; background:var(--ok); box-shadow:0 0 0 3px color-mix(in srgb, var(--ok) 25%, transparent); }
+.ga-grid{ display:grid; grid-template-columns:1fr 1fr; gap:1rem; align-items:start; }
+@media (max-width:900px){ .ga-grid{ grid-template-columns:1fr; } }
+.ga-tiles{ display:grid; grid-template-columns:repeat(6,1fr); gap:1rem; margin-bottom:1rem; }
+@media (max-width:1300px){ .ga-tiles{ grid-template-columns:repeat(3,1fr); } }
+@media (max-width:700px){ .ga-tiles{ grid-template-columns:repeat(2,1fr); } }
+.ga-tile{ background:var(--card); border:1px solid var(--line); border-radius:0.4rem; padding:1rem 1.1rem; }
+.ga-tile .label{ font-size:0.75rem; color:var(--sub); text-transform:uppercase; letter-spacing:0.04em; }
+.ga-tile .value{ font-size:1.6rem; font-weight:700; line-height:1.25; margin-top:0.25rem; font-variant-numeric:tabular-nums; }
+.ga-tile .delta{ font-size:0.75rem; color:var(--sub); margin-top:0.2rem; }
+.ga-tile .delta b{ font-weight:700; }
+.ga-tile .delta.up b{ color:var(--ok); } .ga-tile .delta.down b{ color:var(--bad); }
+.ga-chart{ position:relative; height:220px; }
+.ga-chart svg{ display:block; width:100%; height:100%; overflow:visible; }
+.ga-chart .grid{ stroke:var(--line-soft); stroke-width:1; }
+.ga-chart .axis-label{ fill:var(--sub); font-size:11px; }
+.ga-chart .line{ fill:none; stroke:var(--gold); stroke-width:2; stroke-linejoin:round; stroke-linecap:round; }
+.ga-chart .area{ fill:var(--gold); opacity:0.12; }
+.ga-chart .cross{ stroke:var(--sub); stroke-width:1; stroke-dasharray:3 3; }
+.ga-chart .dot{ fill:var(--gold); stroke:var(--card); stroke-width:2; }
+.ga-tip{ position:absolute; pointer-events:none; background:var(--card); border:1px solid var(--line); border-radius:0.35rem; padding:0.5rem 0.65rem; font-size:0.75rem; line-height:1.5; box-shadow:0 8px 24px rgba(0,0,0,.25); white-space:nowrap; transform:translate(-50%, -110%); }
+.ga-tip b{ display:block; font-size:0.8125rem; }
+.ga-list{ display:flex; flex-direction:column; gap:0.55rem; }
+.ga-row{ display:grid; grid-template-columns:minmax(0,1fr) auto; gap:0.75rem; align-items:center; font-size:0.8125rem; }
+.ga-row .name{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.ga-row .num{ font-variant-numeric:tabular-nums; font-weight:600; }
+.ga-row .bar{ grid-column:1 / -1; height:4px; border-radius:2px; background:var(--line-soft); overflow:hidden; margin-top:-0.3rem; }
+.ga-row .bar span{ display:block; height:100%; border-radius:2px; background:var(--gold); opacity:0.7; }
+.ga-table-toggle{ margin-top:0.75rem; font-size:0.8125rem; color:var(--sub); }
+.ga-table-toggle summary{ cursor:pointer; }
+.ga-table-toggle table{ margin-top:0.5rem; }
 p.hint{ font-size:0.8125rem; line-height:1.5; color:var(--sub); margin:0.6rem 0 0; }
 .pf-scaler.is-phone .pf-iframe{ border-radius:44px; box-shadow:0 0 0 14px #1d1b22, 0 24px 80px rgba(0,0,0,.5); } /* scaled with the frame */
 .pf-scaler{ transform-origin:top left; }
@@ -817,6 +851,7 @@ p.hint{ font-size:0.8125rem; line-height:1.5; color:var(--sub); margin:0.6rem 0 
           <button data-sub="audit" class="active">SEO audit</button>
           <button data-sub="search">Search appearance</button>
           <button data-sub="social">Social sharing</button>
+          <button data-sub="analytics">Analytics</button>
         </div>
 
         <div class="subpage" id="sub-audit">
@@ -911,7 +946,41 @@ p.hint{ font-size:0.8125rem; line-height:1.5; color:var(--sub); margin:0.6rem 0 
           </div>
         </div>
 
-        <div class="seo-bottombar hidden" id="seo-bottombar">
+        <div class="subpage hidden" id="sub-analytics">
+          <div class="panel ga-toolbar">
+            <div class="ga-toolbar-left">
+              <span class="ga-live" id="ga-live" hidden><span class="ga-live-dot"></span><span id="ga-live-text"></span></span>
+              <span class="muted" id="ga-when" style="font-size:0.8125rem;"></span>
+            </div>
+            <div class="ga-toolbar-right">
+              <div class="pf-devicetoggle" id="ga-range">
+                <button type="button" class="pf-device-btn" data-range="7">7 days</button>
+                <button type="button" class="pf-device-btn active" data-range="28">28 days</button>
+                <button type="button" class="pf-device-btn" data-range="90">90 days</button>
+              </div>
+              <button class="btn" id="ga-refresh">Refresh</button>
+              <a class="btn" href="https://analytics.google.com/" target="_blank" rel="noopener">Open Google Analytics ↗</a>
+            </div>
+          </div>
+          <div id="ga-message" class="panel" hidden></div>
+          <div id="ga-body" hidden>
+            <div class="ga-tiles" id="ga-tiles"></div>
+            <div class="panel">
+              <div class="panel-head"><h2>Visitors per day</h2><span class="muted" style="font-size:0.8125rem;" id="ga-chart-sub"></span></div>
+              <div class="ga-chart" id="ga-chart"></div>
+              <details class="ga-table-toggle"><summary>Show as table</summary><div id="ga-daily-table"></div></details>
+            </div>
+            <div class="ga-grid">
+              <div class="panel"><div class="panel-head"><h2>How people find the site</h2><span class="muted" style="font-size:0.75rem;">Sessions</span></div><div id="ga-channels"></div></div>
+              <div class="panel"><div class="panel-head"><h2>Top sources</h2><span class="muted" style="font-size:0.75rem;">Sessions</span></div><div id="ga-sources"></div></div>
+              <div class="panel"><div class="panel-head"><h2>Top pages</h2><span class="muted" style="font-size:0.75rem;">Page views</span></div><div id="ga-pages"></div></div>
+              <div class="panel"><div class="panel-head"><h2>Devices</h2><span class="muted" style="font-size:0.75rem;">Visitors</span></div><div id="ga-devices"></div></div>
+            </div>
+            <p class="hint">Figures come from Google Analytics and refresh every 10 minutes. GA can take up to a day to finish processing recent visits, so today's numbers may still grow.</p>
+          </div>
+        </div>
+
+<div class="seo-bottombar hidden" id="seo-bottombar">
           <div class="left"><span class="status-badge clean" id="seo-status"></span><a href="#" id="seo-discard-link">Discard changes</a></div>
           <div class="right"><button class="btn" id="seo-save-draft">Save draft</button><button class="btn btn-gold" id="seo-publish">Publish changes</button></div>
         </div>
@@ -1026,7 +1095,7 @@ document.addEventListener('click', (e) => {
 function showSubtab(container, subId) {
   $$('.subtabs button', container).forEach(b => b.classList.toggle('active', b.dataset.sub === subId));
   $$('.subpage', container.parentElement).forEach(p => p.classList.toggle('hidden', p.id !== 'sub-' + subId));
-  if (container.closest('#page-seo')) updateSeoBottombarVisibility();
+  if (container.closest('#page-seo')) { updateSeoBottombarVisibility(); if (subId === 'analytics') loadAnalytics(false); }
 }
 function initSubtabs(container) {
   $$('.subtabs button', container).forEach(btn => btn.addEventListener('click', () => showSubtab(container, btn.dataset.sub)));
@@ -2282,6 +2351,142 @@ function refreshThankYouPreview() {
   const note = doc.querySelector('.thanks .thanks__note'); if (note) note.textContent = thankyouDraft.thankyou_note;
 }
 
+/* ============ ANALYTICS (SEO tab, from Google Analytics via /api/analytics) ============ */
+let gaRange = 28;
+let gaData = null;
+let gaLoading = false;
+const gaFmt = (n) => Number(n || 0).toLocaleString();
+function gaDuration(sec) { sec = Math.round(sec || 0); const m = Math.floor(sec / 60), s = sec % 60; return m ? `${m}m ${String(s).padStart(2, '0')}s` : `${s}s`; }
+function gaDate(yyyymmdd, opts) { const d = new Date(+yyyymmdd.slice(0, 4), +yyyymmdd.slice(4, 6) - 1, +yyyymmdd.slice(6, 8)); return d.toLocaleDateString(undefined, opts || { month: 'short', day: 'numeric' }); }
+const GA_CHANNEL_LABELS = { 'Organic Search': 'Google & other search', 'Direct': 'Direct (typed or bookmarked)', 'Organic Social': 'Social media', 'Paid Social': 'Paid social ads', 'Paid Search': 'Paid search ads', 'Referral': 'Links from other sites', 'Email': 'Email', 'Unassigned': 'Unassigned' };
+
+async function loadAnalytics(fresh) {
+  if (gaLoading) return;
+  gaLoading = true;
+  const msg = $('#ga-message');
+  if (!gaData) { msg.hidden = false; msg.innerHTML = '<div class="empty">Loading Google Analytics…</div>'; }
+  $('#ga-refresh').disabled = true;
+  try {
+    const res = await fetch(`/api/analytics?range=${gaRange}${fresh ? '&fresh=1' : ''}`);
+    if (res.status === 401) { location.href = '/login.html?next=' + encodeURIComponent(location.pathname); return; }
+    const data = await res.json().catch(() => ({ ok: false, error: `Request failed (${res.status})` }));
+    if (!data.ok) {
+      gaData = null;
+      $('#ga-body').hidden = true; $('#ga-live').hidden = true; $('#ga-when').textContent = '';
+      msg.hidden = false;
+      msg.innerHTML = data.configured === false
+        ? `<div class="panel-head"><h2>Connect Google Analytics</h2></div><p class="muted" style="margin:0;">${escapeHtml(data.error)} The steps are in YOUR-TURN.md.</p>`
+        : `<div class="panel-head"><h2>Couldn't load Google Analytics</h2></div><p class="msg err" style="margin:0;">${escapeHtml(data.error || 'Unknown error.')}</p>`;
+      return;
+    }
+    gaData = data;
+    msg.hidden = true;
+    renderAnalytics();
+  } catch (e) {
+    msg.hidden = false; msg.innerHTML = `<p class="msg err" style="margin:0;">Couldn't reach the analytics service: ${escapeHtml(e.message)}</p>`;
+  } finally {
+    gaLoading = false; $('#ga-refresh').disabled = false;
+  }
+}
+
+function renderAnalytics() {
+  const d = gaData; if (!d) return;
+  $('#ga-body').hidden = false;
+  if (d.realtime !== null && d.realtime !== undefined) {
+    $('#ga-live').hidden = false;
+    $('#ga-live-text').textContent = `${gaFmt(d.realtime)} on the site right now`;
+  } else $('#ga-live').hidden = true;
+  $('#ga-when').textContent = `Last ${d.range} days · updated ${new Date(d.fetchedAt).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })}`;
+
+  const c = d.totals.current, p = d.totals.previous;
+  const tiles = [
+    { label: 'Visitors', v: c.activeUsers, pv: p.activeUsers, fmt: gaFmt },
+    { label: 'New visitors', v: c.newUsers, pv: p.newUsers, fmt: gaFmt },
+    { label: 'Sessions', v: c.sessions, pv: p.sessions, fmt: gaFmt },
+    { label: 'Page views', v: c.screenPageViews, pv: p.screenPageViews, fmt: gaFmt },
+    { label: 'Engaged sessions', v: c.engagementRate, pv: p.engagementRate, fmt: (x) => Math.round(x * 100) + '%' },
+    { label: 'Avg. visit length', v: c.averageSessionDuration, pv: p.averageSessionDuration, fmt: gaDuration },
+  ];
+  $('#ga-tiles').innerHTML = tiles.map(t => {
+    let delta = '<div class="delta">No earlier data to compare</div>';
+    if (t.pv > 0) {
+      const pct = Math.round(((t.v - t.pv) / t.pv) * 100);
+      const cls = pct > 0 ? 'up' : (pct < 0 ? 'down' : '');
+      const arrow = pct > 0 ? '▲' : (pct < 0 ? '▼' : '');
+      delta = `<div class="delta ${cls}"><b>${arrow} ${Math.abs(pct)}%</b> vs prior ${d.range} days</div>`;
+    }
+    return `<div class="ga-tile"><div class="label">${t.label}</div><div class="value">${t.fmt(t.v)}</div>${delta}</div>`;
+  }).join('');
+
+  renderGaChart(d.daily);
+  $('#ga-chart-sub').textContent = `${gaFmt(c.activeUsers)} visitors`;
+  $('#ga-daily-table').innerHTML = `<table><thead><tr><th>Date</th><th>Visitors</th><th>Sessions</th><th>Page views</th></tr></thead><tbody>${
+    d.daily.slice().reverse().map(r => `<tr><td>${gaDate(r.date, { weekday: 'short', month: 'short', day: 'numeric' })}</td><td>${gaFmt(r.users)}</td><td>${gaFmt(r.sessions)}</td><td>${gaFmt(r.views)}</td></tr>`).join('')
+  }</tbody></table>`;
+
+  gaList('#ga-channels', d.channels, 'sessions', (n) => GA_CHANNEL_LABELS[n] || n);
+  gaList('#ga-sources', d.sources, 'sessions', (n) => n === '(direct)' ? 'Direct' : n);
+  gaList('#ga-pages', d.pages, 'views', (n) => n === '/' ? 'Homepage (/)' : n);
+  gaList('#ga-devices', d.devices, 'users', (n) => n.charAt(0).toUpperCase() + n.slice(1));
+}
+
+function gaList(sel, rows, key, label) {
+  const el = $(sel);
+  if (!rows || !rows.length) { el.innerHTML = '<div class="empty">No data yet for this period.</div>'; return; }
+  const max = Math.max(...rows.map(r => r[key]), 1);
+  el.innerHTML = `<div class="ga-list">${rows.map(r => `
+    <div class="ga-row"><span class="name" title="${escapeHtml(r.name)}">${escapeHtml(label(r.name))}</span><span class="num">${gaFmt(r[key])}</span>
+      <div class="bar"><span style="width:${Math.max(2, (r[key] / max) * 100)}%"></span></div></div>`).join('')}</div>`;
+}
+
+function renderGaChart(daily) {
+  const box = $('#ga-chart');
+  if (!daily || !daily.length) { box.innerHTML = '<div class="empty">No data yet for this period.</div>'; return; }
+  const W = Math.max(box.clientWidth, 300), H = box.clientHeight || 220;
+  const pad = { l: 36, r: 8, t: 10, b: 24 };
+  const iw = W - pad.l - pad.r, ih = H - pad.t - pad.b;
+  const max = Math.max(...daily.map(r => r.users));
+  const step = max <= 4 ? 1 : Math.pow(10, Math.floor(Math.log10(max / 3)));
+  const niceMax = Math.max(step * Math.ceil((max || 1) / step / 3) * 3, 3);
+  const x = (i) => pad.l + (daily.length === 1 ? iw / 2 : (i / (daily.length - 1)) * iw);
+  const y = (v) => pad.t + ih - (v / niceMax) * ih;
+  const pts = daily.map((r, i) => `${x(i).toFixed(1)},${y(r.users).toFixed(1)}`);
+  const grid = [0, 1, 2, 3].map(k => { const v = (niceMax / 3) * k, yy = y(v).toFixed(1);
+    return `<line class="grid" x1="${pad.l}" x2="${W - pad.r}" y1="${yy}" y2="${yy}"/><text class="axis-label" x="${pad.l - 8}" y="${+yy + 4}" text-anchor="end">${gaFmt(Math.round(v))}</text>`; }).join('');
+  const labelIdx = [...new Set([0, Math.floor((daily.length - 1) / 2), daily.length - 1])];
+  const xl = labelIdx.map(i => `<text class="axis-label" x="${x(i)}" y="${H - 6}" text-anchor="${i === 0 ? 'start' : (i === daily.length - 1 ? 'end' : 'middle')}">${gaDate(daily[i].date)}</text>`).join('');
+  box.innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Visitors per day">
+    ${grid}${xl}
+    <path class="area" d="M${pts[0].split(',')[0]},${y(0)} L${pts.join(' L')} L${pts[pts.length - 1].split(',')[0]},${y(0)} Z"/>
+    <polyline class="line" points="${pts.join(' ')}"/>
+    <line class="cross" id="ga-cross" y1="${pad.t}" y2="${pad.t + ih}" visibility="hidden"/>
+    <circle class="dot" id="ga-dot" r="4.5" visibility="hidden"/>
+    <rect x="${pad.l}" y="${pad.t}" width="${iw}" height="${ih}" fill="transparent" id="ga-hit"/>
+  </svg><div class="ga-tip" id="ga-tip" hidden></div>`;
+  const hit = $('#ga-hit'), cross = $('#ga-cross'), dot = $('#ga-dot'), tip = $('#ga-tip');
+  const show = (evt) => {
+    const rect = box.getBoundingClientRect();
+    const px = (evt.clientX - rect.left) * (W / rect.width);
+    const i = Math.max(0, Math.min(daily.length - 1, Math.round(((px - pad.l) / iw) * (daily.length - 1))));
+    const r = daily[i], cx = x(i), cy = y(r.users);
+    cross.setAttribute('x1', cx); cross.setAttribute('x2', cx); cross.setAttribute('visibility', 'visible');
+    dot.setAttribute('cx', cx); dot.setAttribute('cy', cy); dot.setAttribute('visibility', 'visible');
+    tip.hidden = false;
+    tip.style.left = (cx * rect.width / W) + 'px'; tip.style.top = (cy * rect.height / H) + 'px';
+    tip.innerHTML = `<b>${gaDate(r.date, { weekday: 'short', month: 'short', day: 'numeric' })}</b>${gaFmt(r.users)} visitors · ${gaFmt(r.sessions)} sessions · ${gaFmt(r.views)} page views`;
+  };
+  hit.addEventListener('mousemove', show);
+  hit.addEventListener('mouseleave', () => { cross.setAttribute('visibility', 'hidden'); dot.setAttribute('visibility', 'hidden'); tip.hidden = true; });
+}
+
+$$('#ga-range [data-range]').forEach(btn => btn.addEventListener('click', () => {
+  gaRange = Number(btn.dataset.range);
+  $$('#ga-range [data-range]').forEach(b => b.classList.toggle('active', b === btn));
+  loadAnalytics(false);
+}));
+$('#ga-refresh').addEventListener('click', () => loadAnalytics(true));
+window.addEventListener('resize', () => { if (gaData && !$('#sub-analytics').classList.contains('hidden')) renderGaChart(gaData.daily); });
+
 /* ============ SEO & SHARING ============ */
 let lastAuditChecks = null;
 const CHECK_LOCATIONS = {
@@ -2541,7 +2746,8 @@ function renderSocialPreview() {
 
 function updateSeoBottombarVisibility() {
   const activeSub = $('#page-seo .subtabs button.active')?.dataset.sub;
-  $('#seo-bottombar')?.classList.toggle('hidden', activeSub === 'audit');
+  $('#seo-bottombar')?.classList.toggle('hidden', activeSub !== 'search' && activeSub !== 'social');
+  const runBtn = $('#run-audit-btn'); if (runBtn) runBtn.style.display = activeSub === 'analytics' ? 'none' : '';
 }
 function updateSeoBottombarStatus() {
   const badge = $('#seo-status');

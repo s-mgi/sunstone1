@@ -10,6 +10,7 @@ import { requireAuth, checkLogin, createSessionCookie, clearSessionCookie } from
 import { renderHome, renderThankYou } from './lib/render.js';
 import { handleRegister } from './lib/register.js';
 import { listInquiries, createInquiry, importContacts, patchInquiry, deleteInquiry, listContent, putContent, listEditLog, seoCheck, perfCheck, serveMedia } from './lib/api.js';
+import { analyticsReport } from './lib/analytics.js';
 import { eblastState, saveDraft, sendCampaign, handleUnsubscribe, getCampaign, deleteCampaign, duplicateCampaign } from './lib/eblast.js';
 
 export default {
@@ -64,6 +65,7 @@ export default {
     if (path === '/api/edit-log' && method === 'GET') return listEditLog(request, env);
     if (path === '/api/seo-check' && method === 'GET') return seoCheck(request, env);
     if (path === '/api/perf-check' && method === 'GET') return perfCheck(request, env);
+    if (path === '/api/analytics' && method === 'GET') return analyticsReport(request, env, ctx);
 
     if (path === '/api/eblast/state' && method === 'GET') return eblastState(env);
     if (path === '/api/eblast/draft' && method === 'POST') return saveDraft(request, env);
