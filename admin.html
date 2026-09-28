@@ -1,0 +1,2623 @@
+<!DOCTYPE html>
+<!--
+  Sunstone Towns admin.html (built from cms-template).
+  SITE-SPECIFIC parts, for future edits:
+    IMG_DIR / MEDIA_FILES    site photos in assets/images/ (Gallery, pickers, eblast, og:image)
+    heroDefaults()           hero draft/publish fields + default slides
+    INSTANT_DEFAULTS         every save-instantly field (vision, homes, setting, map, community, register)
+    DEFAULT_HOMES_SPECS / DEFAULT_SETTING_ITEMS   list fields
+    EDIT_ANCHORS             section anchors in index.html
+    patchHeroLive            DOM selectors of the hero (live draft preview)
+    thankyouDefaults()       thank-you page draft/publish fields
+    Registrations columns    purchase_timeframe, hear_about, comments
+  Removed for this site: Mailchimp, neighbourhood map pins (the map data lives in js/main.js).
+  Defaults here must match src/lib/render.js and migrations/0001_init.sql.
+-->
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sunstone Towns — Site Dashboard</title>
+<meta name="robots" content="noindex, nofollow">
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#18161d; --card:#201e26; --sidebar:#18161d; --sidebar-hover:#28252f; --sidebar-active:#2e2a36;
+  --ink:#f4efe3; --sub:rgba(244,239,227,.58); --line:rgba(244,239,227,.16); --line-soft:rgba(244,239,227,.09);
+  --gold:#e7b162; --gold-btn:#ecb463; --gold-bright:#fbca59;
+  --tag-gold-bg:rgba(231,177,98,.14); --tag-gold-tx:#e7b162;
+  --tag-blue-bg:rgba(157,184,232,.14); --tag-blue-tx:#9db8e8;
+  --tag-purple-bg:rgba(198,168,240,.14); --tag-purple-tx:#c6a8f0;
+  --ok:#8fbf8a; --warn:#e7b162; --bad:#e07a6a;
+}
+:root[data-theme="light"]{
+  --bg:#f6f4ee; --card:#ffffff; --sidebar:#ffffff; --sidebar-hover:#f1eee5; --sidebar-active:#ece6d6;
+  --ink:#211f1a; --sub:rgba(33,31,26,.6); --line:rgba(33,31,26,.13); --line-soft:rgba(33,31,26,.06);
+  --gold:#b9812f; --gold-btn:#c98f36; --gold-bright:#c98f36;
+  --tag-gold-bg:rgba(185,129,47,.14); --tag-gold-tx:#8a611f;
+  --tag-blue-bg:rgba(60,100,180,.12); --tag-blue-tx:#3a5fa8;
+  --tag-purple-bg:rgba(140,90,200,.12); --tag-purple-tx:#7b4bb8;
+  --ok:#3f8a3a; --warn:#a9760f; --bad:#c33f2c;
+}
+*{ box-sizing:border-box; }
+html,body{ height:100%; }
+body{ margin:0; font-family:'Roboto','Helvetica Neue',Helvetica,Arial,sans-serif; background:var(--bg); color:var(--ink); -webkit-font-smoothing:antialiased; }
+a{ color:inherit; text-decoration:none; }
+button{ font-family:inherit; }
+code{ font-family:ui-monospace,SFMono-Regular,Menlo,monospace; }
+
+.app{ display:flex; min-height:100vh; }
+
+.sidebar{ width:250px; flex:none; background:var(--sidebar); border-right:1px solid var(--line); display:flex; flex-direction:column; padding:1.5rem 0; position:sticky; top:0; height:100vh; overflow-y:auto; }
+.sidebar .brand{ padding:0 1.5rem 1.25rem; margin-bottom:0.75rem; border-bottom:1px solid var(--line); display:flex; align-items:center; gap:0.85rem; }
+.sidebar .brand img{ height:2.1rem; width:auto; display:block; flex:none; }
+.sidebar .brand .brand-text{ display:flex; flex-direction:column; align-items:flex-start; justify-content:center; gap:0.3rem; min-width:0; text-align:left; }
+.sidebar .brand .name{ font-size:0.875rem; font-weight:700; letter-spacing:0.08em; line-height:1; text-align:left; margin:0; }
+.sidebar .brand .tag{ display:block; padding:0; font-size:0.625rem; letter-spacing:0.1em; color:var(--sub); text-transform:uppercase; line-height:1; text-align:left; margin:0; border-radius:0; background:none; }
+.sidebar nav{ display:flex; flex-direction:column; gap:0.1rem; padding:0 0.75rem; flex:1; }
+.sidebar nav button{ display:flex; align-items:center; gap:0.7rem; width:100%; text-align:left; background:none; border:0; color:var(--sub); padding:0.65rem 0.75rem; font-size:0.875rem; border-radius:0.3rem; cursor:pointer; }
+.sidebar nav button svg{ width:1.05rem; height:1.05rem; flex:none; opacity:0.85; }
+.sidebar nav button:hover{ background:var(--sidebar-hover); color:var(--ink); }
+.sidebar nav button.active{ background:var(--sidebar-active); color:var(--gold); }
+.sidebar .bottom{ padding:0.75rem; border-top:1px solid var(--line); margin-top:0.5rem; }
+
+.main{ flex:1; min-width:0; display:flex; flex-direction:column; }
+.topbar{ display:flex; align-items:center; justify-content:space-between; padding:1rem 2rem; border-bottom:1px solid var(--line); }
+.crumb{ font-size:0.8125rem; color:var(--sub); }
+.crumb b{ color:var(--ink); font-weight:600; }
+.topbar-right{ display:flex; align-items:center; gap:0.7rem; }
+.btn{ display:inline-flex; align-items:center; gap:0.4rem; font-size:0.75rem; font-weight:700; letter-spacing:0.04em; text-transform:uppercase; padding:0.55rem 1rem; border-radius:0.3rem; border:1px solid var(--line); background:transparent; color:var(--ink); cursor:pointer; }
+.btn:hover{ background:var(--line-soft); }
+.btn:disabled{ opacity:0.4; cursor:default; }
+.btn-gold{ background:var(--gold-btn); color:#17110a; border-color:var(--gold-btn); }
+.btn-gold:hover{ opacity:.88; background:var(--gold-btn); }
+.btn-bad{ color:var(--bad); border-color:var(--bad); }
+.avatar{ width:2.1rem; height:2.1rem; border-radius:50%; background:var(--line-soft); display:flex; align-items:center; justify-content:center; font-size:0.75rem; font-weight:700; cursor:pointer; border:0; color:var(--ink); font-family:inherit; }
+.avatar-wrap{ position:relative; }
+.avatar-menu{ position:absolute; top:calc(100% + 0.5rem); right:0; background:var(--card); border:1px solid var(--line); border-radius:0.4rem; min-width:9.5rem; padding:0.35rem; box-shadow:0 12px 30px rgba(0,0,0,.3); z-index:40; }
+.avatar-menu.hidden{ display:none; }
+.avatar-menu button{ display:block; width:100%; text-align:left; background:none; border:0; color:var(--ink); padding:0.55rem 0.7rem; font-size:0.8125rem; border-radius:0.3rem; cursor:pointer; }
+.avatar-menu button:hover{ background:var(--line-soft); }
+.avatar-menu button.danger{ color:var(--bad); }
+.theme-toggle-btn{ display:flex; align-items:center; gap:0.6rem; width:100%; text-align:left; background:none; border:1px solid var(--line); color:var(--sub); padding:0.6rem 0.75rem; font-size:0.8125rem; border-radius:0.3rem; cursor:pointer; }
+.theme-toggle-btn:hover{ color:var(--ink); border-color:var(--gold); }
+.theme-toggle-btn svg{ width:1rem; height:1rem; flex:none; }
+.made-by{ text-align:center; font-size:0.6875rem; color:var(--sub); margin-top:0.7rem; }
+.pager{ display:flex; align-items:center; justify-content:center; gap:0.9rem; padding-top:1rem; font-size:0.8125rem; color:var(--sub); }
+.pager button{ background:none; border:1px solid var(--line); color:var(--ink); padding:0.35rem 0.8rem; border-radius:0.3rem; cursor:pointer; font-size:0.75rem; font-weight:600; }
+.pager button:hover:not(:disabled){ border-color:var(--gold); color:var(--gold); }
+.pager button:disabled{ opacity:0.35; cursor:default; }
+.edit-subpage.hidden{ display:none; }
+
+.content{ flex:1; padding:2rem; max-width:96rem; width:100%; margin:0 auto; }
+.page{ display:block; } .page.hidden{ display:none; }
+
+.page-head{ display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:1rem; flex-wrap:wrap; gap:1rem; }
+.page-head h1{ font-size:1.75rem; margin:0 0 0.3rem; font-weight:700; }
+.page-head p{ margin:0; color:var(--sub); font-size:0.9375rem; }
+.page-head-right{ display:flex; align-items:center; gap:0.9rem; margin-left:auto; flex-wrap:wrap; justify-content:flex-end; }
+.sample-note{ font-size:0.8125rem; color:var(--sub); }
+
+.subtabs{ display:flex; gap:1.5rem; border-bottom:1px solid var(--line); margin-bottom:1.5rem; }
+.edit-layout{ display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; align-items:start; }
+.edit-accordion{ display:flex; flex-direction:column; gap:0.75rem; }
+.accordion-item{ border:1px solid var(--line); border-radius:0.4rem; overflow:hidden; background:var(--card); }
+.accordion-head{ width:100%; display:flex; align-items:center; justify-content:space-between; gap:0.6rem; padding:0.9rem 1.1rem; background:none; border:0; color:var(--ink); font-size:0.95rem; font-weight:700; cursor:pointer; text-align:left; }
+.accordion-head:hover{ color:var(--gold); }
+.accordion-head .chev{ width:1.1rem; height:1.1rem; flex:none; transition:transform .18s ease; }
+.accordion-item.open .accordion-head .chev{ transform:rotate(90deg); }
+.accordion-item.open .accordion-head{ border-bottom:1px solid var(--line); color:var(--gold); }
+.accordion-body{ display:none; padding:1.1rem; }
+.accordion-item.open .accordion-body{ display:block; }
+@media (max-width: 1000px){
+  .edit-layout{ grid-template-columns:1fr; }
+}
+.subtabs button{ background:none; border:0; color:var(--sub); font-size:0.875rem; font-weight:600; padding:0.6rem 0.1rem 0.85rem; cursor:pointer; border-bottom:2px solid transparent; }
+.subtabs button:hover{ color:var(--ink); }
+.subtabs button.active{ color:var(--gold); border-color:var(--gold); }
+.subpage.hidden{ display:none; }
+
+.stats{ display:grid; grid-template-columns:repeat(4,1fr); gap:1rem; margin-bottom:1.5rem; }
+.stat-card{ background:var(--card); border:1px solid var(--line); border-radius:0.4rem; padding:1.1rem 1.25rem; display:flex; align-items:center; gap:0.9rem; }
+.stat-card .icon{ width:2.5rem; height:2.5rem; border-radius:50%; background:var(--line-soft); display:flex; align-items:center; justify-content:center; flex:none; }
+.stat-card .icon svg{ width:1.15rem; height:1.15rem; color:var(--gold); }
+.stat-card .label{ font-size:0.8125rem; color:var(--sub); }
+.stat-card .value{ font-size:1.5rem; font-weight:700; line-height:1.2; }
+
+.grid-2{ display:grid; grid-template-columns:1.6fr 1fr; gap:1rem; align-items:start; }
+.grid-editor{ display:grid; grid-template-columns:1.3fr 1fr; gap:1.25rem; align-items:start; }
+
+.panel{ background:var(--card); border:1px solid var(--line); border-radius:0.4rem; padding:1.25rem; margin-bottom:1rem; }
+.panel-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:0.9rem; }
+.panel-head h2{ margin:0; font-size:1rem; font-weight:700; letter-spacing:0.02em; }
+.panel-head a.view-all{ font-size:0.8125rem; color:var(--gold); font-weight:600; }
+.panel-head a.view-all:hover{ text-decoration:underline; }
+
+.hero-wrap{ position:relative; border-radius:0.3rem; overflow:hidden; margin-bottom:1rem; background:#050408 center/cover no-repeat; aspect-ratio:16/9; }
+.hero-wrap .badge-row{ position:absolute; left:0.9rem; bottom:0.9rem; display:flex; align-items:center; gap:0.6rem; }
+.hero-wrap .page-name{ background:rgba(10,9,13,.85); border:1px solid var(--line); color:var(--ink); font-weight:700; padding:0.35rem 0.7rem; border-radius:0.25rem; font-size:0.9375rem; }
+.hero-wrap .published{ background:rgba(143,191,138,.16); color:var(--ok); font-size:0.6875rem; font-weight:700; letter-spacing:0.05em; padding:0.25rem 0.6rem; border-radius:1rem; text-transform:uppercase; }
+
+.section-row{ display:flex; align-items:center; justify-content:space-between; padding:0.85rem 0.2rem; border-bottom:1px solid var(--line-soft); }
+.section-row:last-child{ border-bottom:0; }
+.section-row .left{ display:flex; align-items:flex-start; gap:0.7rem; font-size:0.9375rem; }
+.section-row .left svg{ width:1.05rem; height:1.05rem; color:var(--gold); margin-top:0.15rem; flex:none; }
+.section-row .left .sub{ font-size:0.75rem; color:var(--sub); margin-top:0.15rem; font-weight:400; }
+.section-row .edit{ font-size:0.75rem; font-weight:700; letter-spacing:0.03em; text-transform:uppercase; display:flex; align-items:center; gap:0.3rem; cursor:pointer; color:var(--gold); background:none; border:0; flex:none; }
+.section-row .edit:hover{ text-decoration:underline; }
+
+.reg-row{ display:flex; align-items:center; gap:0.75rem; padding:0.7rem 0.2rem; border-bottom:1px solid var(--line-soft); }
+.reg-row:last-child{ border-bottom:0; }
+.reg-row .initials{ width:2.3rem; height:2.3rem; border-radius:50%; background:var(--line-soft); flex:none; color:var(--gold); display:flex; align-items:center; justify-content:center; font-size:0.8125rem; font-weight:700; }
+.reg-row .who{ flex:1; min-width:0; }
+.reg-row .who .name{ font-size:0.875rem; font-weight:600; }
+.reg-row .who .email{ font-size:0.8125rem; color:var(--sub); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.reg-row .when{ font-size:0.8125rem; color:var(--sub); flex:none; }
+.reg-row .status-col{ flex:none; margin-left:0.75rem; }
+
+.tag{ display:inline-block; padding:0.22rem 0.6rem; font-size:0.6875rem; font-weight:700; border-radius:1rem; text-transform:capitalize; }
+.tag.new, .tag.available, .tag.ok, .tag.low{ background:var(--tag-gold-bg); color:var(--tag-gold-tx); }
+.tag.contacted, .tag.reserved, .tag.qualified, .tag.medium{ background:var(--tag-blue-bg); color:var(--tag-blue-tx); }
+.tag.toured{ background:var(--tag-purple-bg); color:var(--tag-purple-tx); }
+.tag.closed, .tag.sold{ background:rgba(143,191,138,.14); color:var(--ok); }
+.tag.lost, .tag.needs_review, .tag.high, .tag.blocker{ background:rgba(224,122,106,.14); color:var(--bad); }
+
+.qa-row{ display:flex; align-items:center; gap:0.7rem; padding:0.75rem 0.2rem; border-bottom:1px solid var(--line-soft); cursor:pointer; background:none; border-left:0; border-right:0; border-top:0; width:100%; text-align:left; color:var(--ink); }
+.qa-row:last-child{ border-bottom:0; }
+.qa-row:hover{ opacity:0.75; }
+.qa-row svg.left-icon{ width:1.1rem; height:1.1rem; color:var(--gold); }
+.qa-row .txt{ flex:1; font-size:0.875rem; font-weight:600; }
+.qa-row svg.chev{ width:1rem; height:1rem; color:var(--sub); }
+
+table{ width:100%; border-collapse:collapse; font-size:0.875rem; }
+th{ text-align:left; font-size:0.6875rem; font-weight:700; color:var(--sub); text-transform:uppercase; letter-spacing:0.06em; padding:0.6rem 0.5rem; border-bottom:1px solid var(--line); }
+td{ padding:0.75rem 0.5rem; border-bottom:1px solid var(--line-soft); vertical-align:middle; }
+tr:last-child td{ border-bottom:0; }
+tr:hover td{ background:var(--line-soft); }
+
+.footer-bar{ display:flex; align-items:center; justify-content:space-between; padding:0.9rem 0.2rem; font-size:0.8125rem; color:var(--sub); }
+.footer-bar a{ font-weight:600; color:var(--gold); }
+.footer-bar a:hover{ text-decoration:underline; }
+
+.muted{ color:var(--sub); }
+.empty{ padding:1.5rem 0.5rem; text-align:center; color:var(--sub); font-size:0.875rem; }
+
+.toolbar{ display:flex; gap:0.6rem; align-items:center; margin-bottom:1rem; flex-wrap:wrap; }
+.toolbar select, .toolbar input{ font-family:inherit; font-size:0.8125rem; padding:0.5rem 0.65rem; border:1px solid var(--line); border-radius:0.3rem; background:var(--card); color:var(--ink); }
+
+.spec-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:1rem; margin-bottom:1.25rem; }
+.spec-tile{ background:var(--bg); border:1px solid var(--line); border-radius:0.3rem; padding:1rem 1.1rem; }
+.spec-tile .k{ font-size:0.6875rem; text-transform:uppercase; letter-spacing:0.06em; color:var(--sub); }
+.spec-tile .v{ font-size:1.4rem; font-weight:700; color:var(--gold); margin-top:0.2rem; }
+
+.chip-list{ display:flex; flex-wrap:wrap; gap:0.5rem; }
+.chip{ background:var(--line-soft); border:1px solid var(--line); border-radius:1rem; padding:0.35rem 0.8rem; font-size:0.8125rem; display:inline-flex; align-items:center; gap:0.4rem; }
+.chip button{ background:none; border:0; color:var(--sub); cursor:pointer; font-size:0.9rem; line-height:1; }
+.chip button:hover{ color:var(--bad); }
+
+.gallery{ display:grid; grid-template-columns:repeat(auto-fill,minmax(11rem,1fr)); gap:0.85rem; }
+.gallery figure{ margin:0; background:var(--bg); border:1px solid var(--line); border-radius:0.3rem; overflow:hidden; }
+.gallery img{ width:100%; height:7.5rem; object-fit:cover; display:block; background:#050408; }
+.gallery figcaption{ font-size:0.75rem; color:var(--sub); padding:0.45rem 0.6rem; word-break:break-all; display:flex; align-items:center; justify-content:space-between; gap:0.4rem; }
+.gallery figcaption .fname{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.gallery figcaption a{ flex:none; color:var(--gold); font-weight:700; font-size:0.6875rem; text-transform:uppercase; letter-spacing:0.03em; }
+.gallery figcaption a:hover{ text-decoration:underline; }
+.sp-favicon img{ width:100%; height:100%; object-fit:cover; border-radius:50%; }
+
+/* form fields (editor pages) */
+.field{ margin-bottom:1rem; }
+.field label{ display:block; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.04em; color:var(--sub); margin-bottom:0.35rem; }
+.field .hint{ font-size:0.75rem; color:var(--sub); margin-top:0.3rem; }
+.field textarea, .field input, .field select{ width:100%; font-family:inherit; font-size:0.875rem; padding:0.6rem 0.7rem; border:1px solid var(--line); border-radius:0.3rem; background:var(--bg); color:var(--ink); }
+.field textarea{ min-height:4.5rem; resize:vertical; }
+.field select option{ background:var(--card); }
+.eb-row{ display:flex; gap:0.85rem; align-items:flex-start; padding:0.85rem 0; border-bottom:1px solid var(--line-soft); }
+.eb-row:last-of-type{ border-bottom:0; }
+.eb-row .eb-thumb{ width:5.5rem; height:5.5rem; flex:none; border-radius:0.3rem; overflow:hidden; background:var(--bg); border:1px solid var(--line); }
+.eb-row .eb-thumb img{ width:100%; height:100%; object-fit:cover; display:block; }
+.eb-row .eb-fields{ flex:1; min-width:0; display:flex; flex-direction:column; gap:0.5rem; }
+.eb-row .eb-fields .field{ margin-bottom:0; }
+.eb-row .eb-handle{ flex:none; display:flex; flex-direction:column; gap:0.3rem; padding-top:0.2rem; }
+.eb-row .eb-handle button{ background:none; border:1px solid var(--line); color:var(--sub); border-radius:0.25rem; width:1.6rem; height:1.6rem; cursor:pointer; font-size:0.75rem; line-height:1; }
+.eb-row .eb-handle button:hover{ color:var(--ink); background:var(--sidebar-hover); }
+.eb-row .eb-remove{ flex:none; color:var(--bad); background:none; border:0; cursor:pointer; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.03em; font-weight:700; padding-top:0.4rem; }
+.eb-empty{ color:var(--sub); font-size:0.875rem; padding:0.5rem 0; }
+.eb-preview{ max-width:600px; margin:0 auto; background:var(--bg); border:1px solid var(--line); border-radius:0.3rem; overflow:hidden; }
+.eb-preview .eb-preview-row{ display:block; }
+.eb-preview .eb-preview-row img{ width:100%; display:block; }
+.eb-preview .eb-preview-caption{ font-size:0.6875rem; color:var(--sub); padding:0.3rem 0.6rem; background:var(--card); border-bottom:1px solid var(--line); }
+.eb-preview .eb-preview-empty{ padding:2rem 1rem; text-align:center; color:var(--sub); font-size:0.875rem; }
+.eb-stat{ display:inline-flex; align-items:center; gap:0.4rem; font-size:0.8125rem; color:var(--sub); }
+.eb-stat b{ color:var(--ink); }
+.folder-chips{ display:flex; flex-wrap:wrap; gap:0.5rem; margin:0.75rem 0 1rem; }
+.folder-chip{ background:var(--bg); border:1px solid var(--line); color:var(--sub); border-radius:1rem; padding:0.35rem 0.85rem; font-size:0.8125rem; cursor:pointer; }
+.folder-chip:hover{ color:var(--ink); }
+.folder-chip.active{ background:var(--sidebar-active); color:var(--gold); border-color:var(--gold); }
+.folder-chip.add{ border-style:dashed; }
+.folder-chip-wrap{ display:inline-flex; align-items:center; gap:0.15rem; }
+.folder-chip-del{ background:none; border:0; color:var(--sub); cursor:pointer; font-size:0.9rem; line-height:1; padding:0.2rem 0.3rem; border-radius:50%; }
+.folder-chip-del:hover{ color:var(--bad); background:var(--bg); }
+
+.switch{ position:relative; display:inline-block; width:2.1rem; height:1.2rem; vertical-align:middle; margin-right:0.4rem; }
+.switch input{ opacity:0; width:0; height:0; }
+.switch span{ position:absolute; inset:0; background:var(--line); border-radius:1rem; cursor:pointer; transition:background 0.15s; }
+.switch span::before{ content:''; position:absolute; width:0.9rem; height:0.9rem; left:0.15rem; top:0.15rem; background:#fff; border-radius:50%; transition:transform 0.15s; }
+.switch input:checked + span{ background:var(--gold); }
+.switch input:checked + span::before{ transform:translateX(0.9rem); }
+.gallery figcaption select{ font-size:0.6875rem; padding:0.15rem 0.3rem; border-radius:0.2rem; border:1px solid var(--line); background:var(--bg); color:var(--sub); max-width:6rem; }
+.eb-pick-btn{ width:100%; }
+.eb-pick-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(6.5rem,1fr)); gap:0.6rem; max-height:22rem; overflow-y:auto; margin-top:0.75rem; }
+.eb-pick-thumb{ display:flex; flex-direction:column; gap:0.3rem; background:none; border:1px solid var(--line); border-radius:0.3rem; padding:0.4rem; cursor:pointer; color:var(--sub); font-size:0.6875rem; text-align:left; }
+.eb-pick-thumb:hover{ border-color:var(--gold); color:var(--ink); }
+.eb-pick-thumb img{ width:100%; height:4.5rem; object-fit:cover; border-radius:0.2rem; background:var(--bg); display:block; }
+.eb-pick-thumb span{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.eb-status-banner{ padding:0.7rem 1rem; border-radius:0.3rem; background:var(--tag-blue-bg); color:var(--tag-blue-tx); font-size:0.8125rem; margin-bottom:1rem; }
+.eb-back{ background:none; border:0; color:var(--sub); cursor:pointer; font-size:0.8125rem; margin-bottom:0.75rem; padding:0; }
+.eb-back:hover{ color:var(--ink); }
+.field-row{ display:grid; grid-template-columns:1fr 1fr; gap:0.9rem; }
+.field-row .field{ margin-bottom:0; }
+
+.status-badge{ font-size:0.75rem; font-weight:600; padding:0.3rem 0.7rem; border-radius:1rem; }
+.status-badge.dirty{ background:rgba(231,177,98,.14); color:var(--gold); }
+.status-badge.pending{ background:var(--tag-blue-bg); color:var(--tag-blue-tx); }
+.status-badge.clean{ color:var(--sub); }
+
+/* live preview panels */
+.preview-frame{ background:var(--bg); border:1px solid var(--line); border-radius:0.4rem; overflow:hidden; position:sticky; top:1rem; }
+.preview-frame .pf-head{ display:flex; align-items:center; justify-content:space-between; padding:0.7rem 1rem; border-bottom:1px solid var(--line); font-size:0.8125rem; font-weight:600; flex-wrap:wrap; gap:0.6rem; }
+.preview-frame iframe{ vertical-align:top; }
+.pf-note{ padding:0.7rem 1rem; font-size:0.75rem; color:var(--sub); border-top:1px solid var(--line); }
+.pf-toolbar{ display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap; }
+.pf-devicetoggle{ display:flex; border:1px solid var(--line); border-radius:0.3rem; overflow:hidden; }
+.pf-device-btn{ background:none; border:0; color:var(--sub); font-size:0.6875rem; font-weight:700; text-transform:uppercase; letter-spacing:0.03em; padding:0.32rem 0.65rem; cursor:pointer; }
+.pf-device-btn.active{ background:var(--gold); color:#1a1206; }
+.pf-device-btn:not(.active):hover{ color:var(--ink); }
+.pf-zoom{ display:flex; align-items:center; gap:0.35rem; }
+.pf-zoom-btn{ width:1.5rem; height:1.5rem; border-radius:0.3rem; border:1px solid var(--line); background:none; color:var(--ink); font-size:0.9375rem; line-height:1; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+.pf-zoom-btn:hover{ border-color:var(--gold); color:var(--gold); }
+.pf-zoom-level{ font-size:0.6875rem; color:var(--sub); min-width:2.4rem; text-align:center; }
+.pf-viewport{ height:36rem; overflow:auto; background:#0a090d; }
+.pf-scaler{ transform-origin:top left; }
+.pf-iframe{ display:block; border:0; background:#050408; }
+
+.search-preview{ background:#fff; color:#1c1b16; border-radius:0.4rem; padding:1rem 1.1rem; }
+.search-preview .url{ font-size:0.8125rem; color:#3f6b34; }
+.search-preview .title{ font-size:1.1rem; color:#1a0dab; margin:0.15rem 0; }
+.search-preview .desc{ font-size:0.8125rem; color:#4d4d4d; line-height:1.4; }
+.social-preview{ background:var(--bg); border:1px solid var(--line); border-radius:0.4rem; overflow:hidden; }
+.social-preview .img{ height:9rem; background:var(--line-soft) center/cover no-repeat; display:flex; align-items:center; justify-content:center; color:var(--sub); font-size:0.8125rem; }
+.social-preview .txt{ padding:0.8rem 1rem; }
+.social-preview .u{ font-size:0.7rem; color:var(--sub); text-transform:uppercase; letter-spacing:0.04em; }
+.social-preview .t{ font-size:0.9375rem; font-weight:700; margin-top:0.2rem; }
+.social-preview .d{ font-size:0.8125rem; color:var(--sub); margin-top:0.2rem; }
+
+.check-item{ display:flex; align-items:center; gap:0.6rem; padding:0.55rem 0; font-size:0.8125rem; }
+.check-item .dot{ width:0.6rem; height:0.6rem; border-radius:50%; flex:none; }
+.check-item .dot.pass{ background:var(--ok); } .check-item .dot.warn{ background:var(--warn); } .check-item .dot.blocker{ background:var(--bad); }
+
+.grid-3{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:1rem; align-items:start; }
+.score-big{ font-size:3rem; font-weight:700; color:var(--gold); line-height:1; }
+.seo-bottombar{ position:sticky; bottom:0; margin:1.5rem -2rem -2rem; padding:1rem 2rem; background:var(--card); border-top:1px solid var(--line); display:flex; align-items:center; justify-content:space-between; }
+.seo-bottombar.hidden{ display:none; }
+.seo-bottombar .left{ display:flex; align-items:center; gap:0.9rem; font-size:0.8125rem; }
+.seo-bottombar .left a{ color:var(--sub); }
+.seo-bottombar .left a:hover{ color:var(--ink); text-decoration:underline; }
+.seo-bottombar .right{ display:flex; gap:0.6rem; }
+.sp-brand{ display:flex; align-items:center; gap:0.6rem; margin-bottom:0.35rem; }
+.sp-favicon{ width:1.7rem; height:1.7rem; border-radius:50%; background:#e4e0d3; color:#1c1b16; font-size:0.625rem; font-weight:700; display:flex; align-items:center; justify-content:center; flex:none; }
+.sp-brand .sitename{ font-size:0.8125rem; font-weight:600; color:#1c1b16; }
+.sp-brand .siteurl{ font-size:0.75rem; color:#5c584a; }
+.perf-toggle{ display:inline-flex; border:1px solid var(--line); border-radius:0.3rem; overflow:hidden; }
+.perf-toggle button{ background:none; border:0; color:var(--sub); font-size:0.75rem; font-weight:600; padding:0.35rem 0.7rem; cursor:pointer; }
+.perf-toggle button.active{ background:var(--line-soft); color:var(--gold); border:1px solid var(--gold); }
+.cwv-note{ margin-top:0.9rem; padding-top:0.9rem; border-top:1px solid var(--line-soft); font-size:0.8125rem; color:var(--sub); }
+.score-bar{ height:0.5rem; border-radius:1rem; background:var(--line-soft); overflow:hidden; margin-top:0.6rem; }
+.score-bar > div{ height:100%; background:var(--gold-btn); }
+.cat-row{ display:flex; align-items:center; gap:0.8rem; padding:0.5rem 0; }
+.cat-row .name{ width:8.5rem; font-size:0.8125rem; flex:none; }
+.cat-row .bar{ flex:1; height:0.4rem; border-radius:1rem; background:var(--line-soft); overflow:hidden; }
+.cat-row .bar > div{ height:100%; background:var(--gold-btn); }
+.cat-row .num{ width:2.2rem; text-align:right; font-size:0.8125rem; font-weight:700; flex:none; }
+
+.toggle{ position:relative; width:2.4rem; height:1.35rem; border-radius:1rem; background:var(--line); cursor:pointer; flex:none; }
+.toggle.on{ background:var(--gold-btn); }
+.toggle .knob{ position:absolute; top:0.15rem; left:0.15rem; width:1.05rem; height:1.05rem; border-radius:50%; background:#fff; transition:left .15s ease; }
+.toggle.on .knob{ left:1.2rem; }
+.toggle-row{ display:flex; align-items:center; justify-content:space-between; padding:0.6rem 0; }
+
+.drag-row{ display:flex; align-items:center; gap:0.6rem; padding:0.55rem 0.3rem; border-bottom:1px solid var(--line-soft); cursor:grab; }
+.drag-row:last-child{ border-bottom:0; }
+.drag-row.dragging{ opacity:0.4; }
+.drag-row .handle{ color:var(--sub); font-size:0.9rem; }
+.drag-row .thumb{ width:2.6rem; height:2.6rem; border-radius:0.25rem; background:var(--bg) center/cover no-repeat; flex:none; border:1px solid var(--line); }
+.drag-row .meta{ flex:1; min-width:0; }
+.drag-row .meta input{ font-size:0.8125rem; }
+.drag-row .fname{ font-size:0.8125rem; font-weight:600; margin-bottom:0.25rem; }
+
+.overlay{ position:fixed; inset:0; background:rgba(4,3,2,.6); display:flex; align-items:center; justify-content:center; z-index:50; padding:1rem; }
+.overlay.hidden{ display:none; }
+.modal{ background:var(--card); border:1px solid var(--line); border-radius:0.4rem; width:100%; max-width:34rem; max-height:88vh; overflow:auto; padding:1.5rem; }
+.modal h3{ margin:0 0 0.9rem; font-size:1.05rem; }
+.modal-actions{ display:flex; justify-content:flex-end; gap:0.6rem; margin-top:1.1rem; }
+.msg{ font-size:0.8125rem; margin-top:0.6rem; }
+.msg.err{ color:var(--bad); } .msg.ok{ color:var(--ok); }
+
+@media (max-width: 1000px){
+  .stats{ grid-template-columns:repeat(2,1fr); }
+  .grid-2, .grid-editor{ grid-template-columns:1fr; }
+  .field-row{ grid-template-columns:1fr; }
+}
+
+/* Generic hide utility — placed last so it wins over same-specificity
+   component rules like .toolbar{display:flex}. */
+.hidden{ display:none; }
+:root[data-theme="light"] #brand-logo{ filter: brightness(0.3) sepia(0.4); }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">
+      <img src="assets/favicon.svg" alt="Sunstone Towns" id="brand-logo">
+      <div class="brand-text"><div class="name">SUNSTONE TOWNS</div><div class="tag">Site Dashboard</div></div>
+    </div>
+    <nav>
+      <button data-page="overview" class="active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l9-7 9 7"/><path d="M5 10v9a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1v-9"/></svg>Overview</button>
+      <button data-page="homepage"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>Edit</button>
+      <button data-page="gallery"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>Gallery</button>
+      <button data-page="registrations"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Registrations</button>
+      <button data-page="contacts"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="2" width="16" height="20" rx="2"/><circle cx="12" cy="10" r="3"/><path d="M7 18a5 5 0 0 1 10 0"/></svg>Contacts</button>
+      <button data-page="eblast"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 6l-10 7L2 6"/></svg>Eblast</button>
+      <button data-page="seo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>SEO &amp; sharing</button>
+      <button data-page="settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9c.11.35.31.66.6.9.29.24.51.55.6.9"/></svg>Settings</button>
+    </nav>
+    <div class="bottom">
+      <button type="button" class="theme-toggle-btn" id="theme-toggle">
+        <svg id="theme-toggle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        <span id="theme-toggle-label">Dark mode</span>
+      </button>
+      <div class="made-by">Made by Maverick Graphics</div>
+    </div>
+  </aside>
+
+  <div class="main">
+    <div class="topbar">
+      <div class="crumb"><span>Website</span> / <b id="crumb-page">Overview</b></div>
+      <div class="topbar-right" id="topbar-actions">
+        <a class="btn" href="/" target="_blank" rel="noopener">View website ↗</a>
+        <div class="avatar-wrap">
+          <button type="button" class="avatar" id="whoami">A</button>
+          <div class="avatar-menu hidden" id="avatar-menu">
+            <button type="button" id="logout-btn" class="danger">Log out</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- OVERVIEW -->
+      <section class="page" id="page-overview">
+        <div class="page-head">
+          <div><h1>Overview</h1><p>Manage the Sunstone Towns site.</p></div>
+          <div class="page-head-right">
+            <span class="sample-note">Live data</span>
+            <button class="btn btn-gold" data-page-link="homepage">Edit site</button>
+          </div>
+        </div>
+        <div class="stats">
+          <div class="stat-card"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg></div><div><div class="label">Published pages</div><div class="value" id="stat-pages">—</div></div></div>
+          <div class="stat-card"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l9-7 9 7"/><path d="M5 10v9a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1v-9"/></svg></div><div><div class="label">Total registrations</div><div class="value" id="stat-total">—</div></div></div>
+          <div class="stat-card"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div><div><div class="label">New registrations</div><div class="value" id="stat-newregs">—</div></div></div>
+          <div class="stat-card"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></div><div><div class="label">SEO health</div><div class="value" id="stat-seo">—</div></div></div>
+        </div>
+        <div class="grid-2">
+          <div>
+            <div class="panel">
+              <div class="panel-head"><h2>Website content</h2></div>
+              <div class="hero-wrap" id="hero-image"><div class="badge-row"><span class="page-name">Homepage</span><span class="published">Published</span></div></div>
+              <div class="section-row"><div class="left"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h7"/></svg><div>Hero &amp; introduction<div class="sub">Headline, supporting text, price, CTA, slideshow</div></div></div><button class="edit" data-page-link="homepage">Edit ›</button></div>
+              <div class="section-row"><div class="left"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l2.9 6.3 6.9.6-5.2 4.6 1.6 6.8L12 16.9 5.8 20.3l1.6-6.8L2.2 8.9l6.9-.6z"/></svg><div>Homes &amp; setting<div class="sub">Section copy, spec strip, nearby highlights &amp; photos</div></div></div><button class="edit" data-page-link="homepage" data-subtab-link="homes">Edit ›</button></div>
+              <div class="section-row"><div class="left"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg><div>Gallery<div class="sub">Photos &amp; uploads</div></div></div><button class="edit" data-page-link="gallery">Edit ›</button></div>
+              <div class="section-row"><div class="left"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><div>SEO &amp; sharing<div class="sub">Search &amp; social appearance, site audit</div></div></div><button class="edit" data-page-link="seo">Edit ›</button></div>
+            </div>
+          </div>
+          <div>
+            <div class="panel"><div class="panel-head"><h2>Recent registrations</h2><a class="view-all" data-page-link="registrations">View all →</a></div><div id="recent-regs"><div class="empty">Loading…</div></div></div>
+            <div class="panel"><div class="panel-head"><h2>Quick actions</h2></div>
+              <button class="qa-row" data-page-link="gallery"><svg class="left-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9"/><path d="M3 15l5-5 4 4 3-3 6 6"/></svg><span class="txt">View photos</span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></button>
+              <button class="qa-row" data-page-link="seo"><svg class="left-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><span class="txt">Run an SEO audit</span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></button>
+              <button class="qa-row" data-page-link="registrations"><svg class="left-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg><span class="txt">Review new registrations</span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></button>
+            </div>
+          </div>
+        </div>
+        <div class="footer-bar"><span id="last-published">—</span><a href="#" data-page-link="settings">View activity log →</a></div>
+      </section>
+
+      <!-- HOMEPAGE -->
+      <section class="page hidden" id="page-homepage">
+        <div class="page-head"><div><h1>Edit</h1><p>Everything on the page, in the order it appears on the site.</p></div>
+          <div class="page-head-right" id="edit-homepage-actions">
+            <span class="status-badge clean" id="hero-status"></span>
+            <button class="btn" id="hero-discard">Discard changes</button>
+            <button class="btn" id="hero-save-draft">Save draft</button>
+            <button class="btn btn-gold" id="hero-publish">Publish changes</button>
+          </div>
+        </div>
+
+        <div class="subtabs" id="edit-pagetabs">
+          <button type="button" data-editpage="homepage" class="active">Homepage</button>
+          <button type="button" data-editpage="thankyou">Thank you page</button>
+        </div>
+
+        <div class="edit-subpage" id="editpage-homepage">
+        <div class="edit-layout">
+          <div class="edit-accordion">
+            <div class="accordion-item open" data-sub="hero">
+              <button type="button" class="accordion-head"><span>Hero &amp; introduction</span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></button>
+              <div class="accordion-body" id="sub-hero">
+                <div class="panel">
+                  <div class="panel-head"><h2>Hero content</h2></div>
+                  <div class="field"><label>Headline (press Enter for a new line)</label><textarea id="h-headline" rows="2"></textarea></div>
+                  <div class="field"><label>Tagline</label><input id="h-tag"></div>
+                  <div class="field"><label>Square footage (shown as "Up to ___ sq. ft.")</label><input id="h-sqft"></div>
+                  <div class="field-row">
+                    <div class="field"><label>Price prefix</label><input id="h-price-label"></div>
+                    <div class="field"><label>Price</label><input id="h-price"></div>
+                  </div>
+                  <p class="hint">The hero saves as a draft until you publish.</p>
+                </div>
+                <div class="panel">
+                  <div class="panel-head"><h2>Hero slideshow</h2><span class="muted" id="hero-slide-count" style="font-size:0.8125rem;"></span></div>
+                  <div id="hero-slide-list"></div>
+                  <button class="btn" id="hero-add-slide" style="margin-top:0.8rem;">+ Add image</button>
+                  <p class="hint" style="margin-top:0.6rem;">Drag to reorder. Original image files remain unchanged — only the slideshow order and alt text change.</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="accordion-item" data-sub="vision">
+              <button type="button" class="accordion-head"><span>Vision</span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></button>
+              <div class="accordion-body" id="sub-vision">
+                <div class="panel">
+                  <div class="panel-head"><h2>Vision section</h2></div>
+                  <div class="field"><label>Heading (press Enter for a new line)</label><textarea data-cms="vision_heading" rows="3"></textarea></div>
+                  <div class="field"><label>Paragraph</label><textarea data-cms="vision_copy" rows="4"></textarea></div>
+                  <div class="field-row">
+                    <div class="field"><label>Image</label><select data-cms-img="vision_image"></select></div>
+                    <div class="field"><label>Image description (alt text)</label><input data-cms="vision_image_alt"></div>
+                  </div>
+                </div>
+                <p class="hint">Changes in this section save as soon as you leave a field.</p>
+              </div>
+            </div>
+
+            <div class="accordion-item" data-sub="homes">
+              <button type="button" class="accordion-head"><span>Homes</span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></button>
+              <div class="accordion-body" id="sub-homes">
+                <div class="panel">
+                  <div class="panel-head"><h2>Homes copy</h2></div>
+                  <div class="field"><label>Heading (press Enter for a new line)</label><textarea data-cms="homes_heading" rows="3"></textarea></div>
+                  <div class="field"><label>Paragraph</label><textarea data-cms="homes_copy" rows="3"></textarea></div>
+                </div>
+                <div class="panel">
+                  <div class="panel-head"><h2>Spec strip</h2></div>
+                  <div class="field-row">
+                    <div class="field"><label>Spec 1 value</label><input data-spec-idx="0" data-spec-field="value"></div>
+                    <div class="field"><label>Spec 1 label</label><input data-spec-idx="0" data-spec-field="label"></div>
+                  </div>
+                  <div class="field-row">
+                    <div class="field"><label>Spec 2 value</label><input data-spec-idx="1" data-spec-field="value"></div>
+                    <div class="field"><label>Spec 2 label</label><input data-spec-idx="1" data-spec-field="label"></div>
+                  </div>
+                  <div class="field-row">
+                    <div class="field"><label>Spec 3 value</label><input data-spec-idx="2" data-spec-field="value"></div>
+                    <div class="field"><label>Spec 3 label</label><input data-spec-idx="2" data-spec-field="label"></div>
+                  </div>
+                </div>
+                <div class="panel">
+                  <div class="panel-head"><h2>Homes photos</h2></div>
+                  <div class="field-row">
+                    <div class="field"><label>Large photo</label><select data-cms-img="homes_image_main"></select></div>
+                    <div class="field"><label>Image description (alt text)</label><input data-cms="homes_image_main_alt"></div>
+                  </div>
+                  <div class="field-row">
+                    <div class="field"><label>Small photo 1</label><select data-cms-img="homes_image_thumb1"></select></div>
+                    <div class="field"><label>Image description (alt text)</label><input data-cms="homes_image_thumb1_alt"></div>
+                  </div>
+                  <div class="field-row">
+                    <div class="field"><label>Small photo 2</label><select data-cms-img="homes_image_thumb2"></select></div>
+                    <div class="field"><label>Image description (alt text)</label><input data-cms="homes_image_thumb2_alt"></div>
+                  </div>
+                  <div class="field-row">
+                    <div class="field"><label>Side photo</label><select data-cms-img="homes_image_side"></select></div>
+                    <div class="field"><label>Image description (alt text)</label><input data-cms="homes_image_side_alt"></div>
+                  </div>
+                </div>
+                <p class="hint">Changes in this section save as soon as you leave a field.</p>
+              </div>
+            </div>
+
+            <div class="accordion-item" data-sub="setting">
+              <button type="button" class="accordion-head"><span>The Setting</span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></button>
+              <div class="accordion-body" id="sub-setting">
+                <div class="panel">
+                  <div class="panel-head"><h2>Setting copy</h2></div>
+                  <div class="field"><label>Heading (press Enter for a new line)</label><textarea data-cms="setting_heading" rows="3"></textarea></div>
+                  <div class="field"><label>Supporting text</label><textarea data-cms="setting_lede" rows="2"></textarea></div>
+                </div>
+                <div class="panel">
+                  <div class="panel-head"><h2>Highlight 01</h2></div>
+                  <div class="field"><label>Title (also the photo tag)</label><input data-setting-idx="0" data-setting-field="title"></div>
+                  <div class="field-row">
+                    <div class="field"><label>Place</label><input data-setting-idx="0" data-setting-field="place"></div>
+                    <div class="field"><label>Distance</label><input data-setting-idx="0" data-setting-field="distance"></div>
+                  </div>
+                  <div class="field-row">
+                    <div class="field"><label>Photo</label><select data-setting-idx="0" data-setting-field="image"></select></div>
+                    <div class="field"><label>Image description (alt text)</label><input data-setting-idx="0" data-setting-field="alt"></div>
+                  </div>
+                </div>
+                <div class="panel">
+                  <div class="panel-head"><h2>Highlight 02</h2></div>
+                  <div class="field"><label>Title (also the photo tag)</label><input data-setting-idx="1" data-setting-field="title"></div>
+                  <div class="field-row">
+                    <div class="field"><label>Place</label><input data-setting-idx="1" data-setting-field="place"></div>
+                    <div class="field"><label>Distance</label><input data-setting-idx="1" data-setting-field="distance"></div>
+                  </div>
+                  <div class="field-row">
+                    <div class="field"><label>Photo</label><select data-setting-idx="1" data-setting-field="image"></select></div>
+                    <div class="field"><label>Image description (alt text)</label><input data-setting-idx="1" data-setting-field="alt"></div>
+                  </div>
+                </div>
+                <div class="panel">
+                  <div class="panel-head"><h2>Highlight 03</h2></div>
+                  <div class="field"><label>Title (also the photo tag)</label><input data-setting-idx="2" data-setting-field="title"></div>
+                  <div class="field-row">
+                    <div class="field"><label>Place</label><input data-setting-idx="2" data-setting-field="place"></div>
+                    <div class="field"><label>Distance</label><input data-setting-idx="2" data-setting-field="distance"></div>
+                  </div>
+                  <div class="field-row">
+                    <div class="field"><label>Photo</label><select data-setting-idx="2" data-setting-field="image"></select></div>
+                    <div class="field"><label>Image description (alt text)</label><input data-setting-idx="2" data-setting-field="alt"></div>
+                  </div>
+                </div>
+                <p class="hint">Changes in this section save as soon as you leave a field.</p>
+              </div>
+            </div>
+
+            <div class="accordion-item" data-sub="maptab">
+              <button type="button" class="accordion-head"><span>Amenities map</span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></button>
+              <div class="accordion-body" id="sub-maptab">
+                <div class="panel">
+                  <div class="panel-head"><h2>Map section copy</h2></div>
+                  <div class="field"><label>Heading</label><input data-cms="map_heading"></div>
+                  <div class="field"><label>Supporting text</label><textarea data-cms="map_lede" rows="3"></textarea></div>
+                  <p class="hint" style="margin-top:0.9rem;">The map pins and amenity list are part of the site code (js/main.js). Ask your web developer to change them.</p>
+                </div>
+                <p class="hint">Changes in this section save as soon as you leave a field.</p>
+              </div>
+            </div>
+
+            <div class="accordion-item" data-sub="community">
+              <button type="button" class="accordion-head"><span>Community</span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></button>
+              <div class="accordion-body" id="sub-community">
+                <div class="panel">
+                  <div class="panel-head"><h2>Community section</h2></div>
+                  <div class="field"><label>Heading (press Enter for a new line)</label><textarea data-cms="community_heading" rows="3"></textarea></div>
+                  <div class="field"><label>Paragraph</label><textarea data-cms="community_copy" rows="3"></textarea></div>
+                  <div class="field-row">
+                    <div class="field"><label>Image</label><select data-cms-img="community_image"></select></div>
+                    <div class="field"><label>Image description (alt text)</label><input data-cms="community_image_alt"></div>
+                  </div>
+                </div>
+                <p class="hint">Changes in this section save as soon as you leave a field.</p>
+              </div>
+            </div>
+
+            <div class="accordion-item" data-sub="registrationtab">
+              <button type="button" class="accordion-head"><span>Registration</span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></button>
+              <div class="accordion-body" id="sub-registrationtab">
+                <div class="panel">
+                  <div class="panel-head"><h2>Registration section content</h2></div>
+                  <div class="field"><label>Heading (press Enter for a new line)</label><textarea data-cms="register_heading" rows="3"></textarea></div>
+                  <div class="field"><label>Supporting text</label><textarea data-cms="register_lede" rows="2"></textarea></div>
+                  <p class="hint" style="margin-top:0.9rem;">The form itself still sends every registration to Keap. A copy also lands in Registrations here.</p>
+                  <div style="display:flex; align-items:center; justify-content:space-between; gap:1rem; margin-top:0.9rem; padding-top:0.9rem; border-top:1px solid var(--line-soft);">
+                    <span class="muted" style="font-size:0.875rem;">View everyone who's registered so far.</span>
+                    <button type="button" class="btn" data-page-link="registrations">View registrations</button>
+                  </div>
+                </div>
+                <p class="hint">Changes in this section save as soon as you leave a field.</p>
+              </div>
+            </div>
+
+          </div>
+
+          <div class="preview-frame" data-preview="editpreview">
+            <div class="pf-head"><span>Live preview</span><div class="pf-toolbar">
+                <div class="pf-devicetoggle">
+                  <button type="button" class="pf-device-btn active" data-device="desktop">Desktop</button>
+                  <button type="button" class="pf-device-btn" data-device="mobile">Mobile</button>
+                </div>
+                <div class="pf-zoom">
+                  <button type="button" class="pf-zoom-btn" data-zoom="out" aria-label="Zoom out">−</button>
+                  <span class="pf-zoom-level">Fit</span>
+                  <button type="button" class="pf-zoom-btn" data-zoom="in" aria-label="Zoom in">+</button>
+                </div>
+              </div></div>
+            <div class="pf-viewport"><div class="pf-scaler"><iframe id="pf-frame-edit" class="pf-iframe" src="/#hero" title="Live preview"></iframe></div></div>
+            <div class="pf-note" id="edit-preview-note">This is the actual live site — your unpublished changes are patched in here so you can see exactly how they'll look before you publish.</div>
+          </div>
+        </div>
+        </div>
+
+        <div class="edit-subpage hidden" id="editpage-thankyou">
+          <div class="page-head-right" id="edit-thankyou-actions" style="margin-bottom:1rem;">
+            <span class="status-badge clean" id="ty-status"></span>
+            <button class="btn" id="ty-discard">Discard changes</button>
+            <button class="btn" id="ty-save-draft">Save draft</button>
+            <button class="btn btn-gold" id="ty-publish">Publish changes</button>
+          </div>
+          <div class="edit-layout">
+            <div class="panel">
+              <div class="panel-head"><h2>Thank you page content</h2></div>
+              <div class="field"><label>Headline (press Enter for a new line)</label><textarea id="ty-headline" rows="2"></textarea></div>
+              <div class="field"><label>Main message</label><textarea id="ty-lede" rows="3"></textarea></div>
+              <div class="field"><label>Small note</label><input id="ty-note"></div>
+              <p class="hint" style="margin-top:0.9rem;">This is the page people land on right after registering (Keap sends them here, so its thank-you redirect should point to /thank-you). It saves as a draft until you publish, just like the homepage.</p>
+            </div>
+            <div class="preview-frame" data-preview="thankyoupreview">
+              <div class="pf-head"><span>Live preview</span><div class="pf-toolbar">
+                  <div class="pf-devicetoggle">
+                    <button type="button" class="pf-device-btn active" data-device="desktop">Desktop</button>
+                    <button type="button" class="pf-device-btn" data-device="mobile">Mobile</button>
+                  </div>
+                  <div class="pf-zoom">
+                    <button type="button" class="pf-zoom-btn" data-zoom="out" aria-label="Zoom out">−</button>
+                    <span class="pf-zoom-level">Fit</span>
+                    <button type="button" class="pf-zoom-btn" data-zoom="in" aria-label="Zoom in">+</button>
+                  </div>
+                </div></div>
+              <div class="pf-viewport"><div class="pf-scaler"><iframe id="pf-frame-thankyou" class="pf-iframe" src="/thank-you.html" title="Thank you page live preview"></iframe></div></div>
+              <div class="pf-note" id="ty-preview-note">This is the actual live thank you page — your unpublished changes are patched in here so you can see exactly how they'll look before you publish.</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- GALLERY -->
+      <section class="page hidden" id="page-gallery">
+        <div class="page-head"><div><h1>Gallery</h1><p>Photos used across the site, plus your uploads.</p></div>
+          <div class="page-head-right">
+            <button class="btn btn-gold" id="gallery-upload-btn">+ Upload image</button>
+            <input type="file" id="gallery-upload-input" accept="image/*" style="display:none;">
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><h2>Site assets</h2></div>
+          <p class="muted" style="margin-top:0;">Every image file on the site, plus anything you've uploaded. Use folders to keep campaign photos separated — pick a folder before uploading to sort new images into it.</p>
+          <div class="folder-chips" id="gallery-folder-chips"></div>
+          <div class="msg" id="gallery-upload-msg" style="display:none;"></div>
+          <div class="gallery" id="media-gallery" style="padding-top:0.5rem;"></div>
+        </div>
+      </section>
+
+      <!-- REGISTRATIONS -->
+      <section class="page hidden" id="page-registrations">
+        <div class="page-head"><div><h1>Registrations</h1><p>Everyone who has submitted the registration form.</p></div></div>
+        <div class="toolbar">
+          <select id="reg-filter">
+            <option value="">All statuses</option>
+            <option value="new">New</option><option value="contacted">Contacted</option><option value="qualified">Qualified</option>
+            <option value="toured">Toured</option><option value="closed">Closed</option><option value="lost">Lost</option><option value="needs_review">Needs review</option>
+          </select>
+          <a class="btn" href="/api/inquiries?format=csv">Export CSV</a>
+        </div>
+        <div class="panel">
+          <table><thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Timeframe</th><th>Heard About</th><th>Comments</th><th>Source</th><th>Status</th><th>Received</th><th>Actions</th></tr></thead>
+          <tbody id="reg-table"><tr><td colspan="10" class="empty">Loading…</td></tr></tbody></table>
+        </div>
+      </section>
+
+      <!-- CONTACTS -->
+      <section class="page hidden" id="page-contacts">
+        <div class="page-head"><div><h1>Contacts</h1><p>Everyone eblasts go out to — registrants plus anyone added by hand.</p></div></div>
+        <div class="toolbar">
+          <input id="contacts-search" placeholder="Search name or email…" style="max-width:16rem;">
+          <select id="contacts-filter">
+            <option value="">Everyone</option>
+            <option value="subscribed">Subscribed only</option>
+            <option value="unsubscribed">Unsubscribed only</option>
+          </select>
+          <button class="btn" id="contact-import-btn" type="button" style="margin-left:auto;">Import CSV</button>
+          <input type="file" id="contact-import-file" accept=".csv,text/csv" class="hidden">
+          <button class="btn btn-gold" id="contact-add-btn" type="button">+ Add contact</button>
+        </div>
+        <div class="toolbar hidden" id="contacts-bulk-bar">
+          <span class="msg" id="contacts-bulk-count"></span>
+          <button class="btn" id="contacts-bulk-export" type="button">Export selected</button>
+          <button class="btn" id="contacts-bulk-unsub" type="button">Unsubscribe selected</button>
+          <button class="btn" id="contacts-bulk-resub" type="button">Resubscribe selected</button>
+          <button class="btn btn-bad" id="contacts-bulk-delete" type="button">Delete selected</button>
+        </div>
+        <div class="panel">
+          <table><thead><tr><th style="width:2rem;"><input type="checkbox" id="contacts-select-all"></th><th>Name</th><th>Email</th><th>Phone</th><th>Source</th><th>Subscribed</th><th>Actions</th></tr></thead>
+          <tbody id="contacts-table"><tr><td colspan="7" class="empty">Loading…</td></tr></tbody></table>
+        </div>
+      </section>
+
+      <!-- EBLAST -->
+      <section class="page hidden" id="page-eblast">
+        <div class="page-head"><div><h1>Eblast</h1><p>Send an email update to everyone who's registered.</p></div>
+          <div class="page-head-right"><span class="eb-stat" id="eb-recipient-count">Loading recipients…</span></div>
+        </div>
+        <div class="subtabs">
+          <button data-sub="blasts" class="active">Blasts</button>
+          <button data-sub="edit">Edit</button>
+        </div>
+
+        <div class="subpage" id="sub-blasts">
+          <div class="toolbar">
+            <button class="btn btn-gold" id="eb-new-btn" type="button">+ New blast</button>
+          </div>
+          <div class="panel">
+            <table><thead><tr><th>Subject</th><th>Status</th><th>Date</th><th>Recipients</th><th>Delivered</th><th>Failed</th><th></th></tr></thead>
+            <tbody id="eb-list-table"><tr><td colspan="7" class="empty">Loading…</td></tr></tbody></table>
+          </div>
+        </div>
+
+        <div class="subpage hidden" id="sub-edit">
+          <button type="button" class="eb-back" id="eb-back-btn">&larr; Back to blasts</button>
+          <div id="eb-status-banner"></div>
+          <div class="panel">
+            <div class="panel-head"><h2>Subject</h2></div>
+            <div class="field"><input id="eb-subject" placeholder="e.g. New floorplans just released"></div>
+            <div class="field" style="margin-top:0.75rem;">
+              <label>Preview text</label>
+              <input id="eb-preview-text" placeholder="e.g. Take a first look at the new layouts" maxlength="150">
+              <p class="muted" style="margin:0.35rem 0 0;">The snippet of text most inboxes show next to the subject line. Leave it blank and it'll just show the unsubscribe footer instead, so it's worth filling in.</p>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-head"><h2>Email content</h2></div>
+            <p class="muted" style="margin-top:0;">Add photos in the order they should appear in the email. Each one needs a short description — it's what shows if a recipient's inbox blocks the image, and it keeps the email out of spam filters too.</p>
+            <div id="eb-rows"></div>
+            <button class="btn" id="eb-add-row" type="button">+ Add image</button>
+          </div>
+
+          <div class="panel">
+            <div class="panel-head"><h2>Preview</h2></div>
+            <div id="eb-preview" class="eb-preview"><div class="eb-preview-empty">Add an image above to see a preview.</div></div>
+          </div>
+
+          <div class="toolbar" style="justify-content:flex-end;">
+            <span class="msg" id="eb-save-msg"></span>
+            <button class="btn" id="eb-delete-btn" type="button" style="margin-right:auto; color:var(--bad);">Delete draft</button>
+            <button class="btn" id="eb-save-btn" type="button">Save draft</button>
+            <button class="btn btn-gold" id="eb-send-btn" type="button">Send eblast</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- SEO & SHARING -->
+      <section class="page hidden" id="page-seo">
+        <div class="page-head"><div><h1>SEO &amp; sharing</h1><p id="seo-page-desc">Review your site's health and resolve issues.</p></div>
+          <div class="page-head-right" id="seo-actions">
+            <a class="btn" href="/" target="_blank" rel="noopener">View website ↗</a>
+            <button class="btn btn-gold" id="run-audit-btn">Run audit</button>
+          </div>
+        </div>
+        <div class="subtabs">
+          <button data-sub="audit" class="active">SEO audit</button>
+          <button data-sub="search">Search appearance</button>
+          <button data-sub="social">Social sharing</button>
+        </div>
+
+        <div class="subpage" id="sub-audit">
+          <div class="panel" style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:0.5rem;">
+            <span class="muted" id="audit-url"></span>
+            <span class="muted" id="audit-when">No audit run yet.</span>
+          </div>
+          <div class="grid-3">
+            <div class="panel">
+              <div class="panel-head"><h2>Site health</h2></div>
+              <div class="score-big" id="audit-score">—</div>
+              <span class="muted">/ 100</span>
+              <div class="score-bar"><div id="audit-score-bar" style="width:0%"></div></div>
+              <p class="muted" style="margin-top:0.6rem; font-size:0.8125rem;" id="audit-summary">Custom audit score · 1 page checked</p>
+            </div>
+            <div class="panel">
+              <div class="panel-head"><h2>Audit categories</h2></div>
+              <div id="audit-categories"><div class="empty">—</div></div>
+            </div>
+            <div class="panel">
+              <div class="panel-head"><h2>Performance</h2>
+                <div class="perf-toggle"><button class="active" id="perf-mobile">Mobile</button><button id="perf-desktop">Desktop</button></div>
+              </div>
+              <div class="score-big" style="font-size:1.9rem;" id="perf-score">Not checked</div>
+              <p class="muted" style="margin-top:0.3rem; font-size:0.8125rem;" id="perf-summary">Click Mobile or Desktop to run a live Google PageSpeed Insights check.</p>
+              <div class="cwv-note" id="perf-cwv">Core Web Vitals: <b style="color:var(--ink);">—</b></div>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel-head"><h2>Recommended fixes</h2></div>
+            <table><thead><tr><th>Priority</th><th>Finding</th><th>Location</th><th>Detail</th><th>Action</th></tr></thead>
+            <tbody id="audit-fixes"><tr><td colspan="5" class="empty">Run the audit to see results.</td></tr></tbody></table>
+            <p class="hint" id="audit-fixes-caption"></p>
+          </div>
+          <div class="panel"><div class="panel-head"><h2>Audit history</h2></div>
+            <table><thead><tr><th>Date</th><th>Site health</th><th>Performance</th></tr></thead><tbody id="audit-history"><tr><td colspan="3" class="empty">No history yet.</td></tr></tbody></table>
+          </div>
+        </div>
+
+        <div class="subpage hidden" id="sub-search">
+          <div class="grid-editor">
+            <div>
+              <div class="panel">
+                <div class="panel-head"><h2>Search appearance</h2></div>
+                <div class="field"><label>Page</label><select id="s-page-select" disabled title="This site has a single page"><option>Homepage</option></select></div>
+                <div class="field"><label>SEO title</label><input id="s-seo-title"><div class="hint">Keep your title clear and descriptive.</div></div>
+                <div class="field"><label>Meta description</label><textarea id="s-seo-desc" rows="3"></textarea><div class="hint">Shown under your title in search results.</div></div>
+                <div class="field"><label>Canonical URL</label><input id="s-canonical"><div class="hint">Preferred address for this page.</div></div>
+              </div>
+              <div class="panel">
+                <div class="panel-head"><h2>Favicon</h2></div>
+                <div style="display:flex; align-items:center; gap:0.9rem; margin-bottom:0.9rem;">
+                  <div class="sp-favicon" id="favicon-preview" style="width:2.6rem; height:2.6rem; font-size:0.75rem;">ST</div>
+                  <div>
+                    <input type="file" id="favicon-upload" accept="image/png,image/x-icon,image/svg+xml,image/jpeg">
+                    <div class="hint" style="margin-top:0.3rem;">PNG, ICO or SVG, ideally square, under 100&nbsp;KB. Replaces the browser-tab icon across the whole site.</div>
+                  </div>
+                </div>
+                <button class="btn" id="favicon-reset">Reset to default favicon</button>
+                <div class="msg" id="favicon-msg"></div>
+              </div>
+            </div>
+            <div>
+              <div class="panel"><div class="panel-head"><h2>Search preview</h2></div>
+                <div class="search-preview">
+                  <div class="sp-brand"><span class="sp-favicon" id="sp-favicon">ST</span><div><div class="sitename">Sunstone Towns</div><div class="siteurl" id="sp-url"></div></div></div>
+                  <div class="title" id="sp-title"></div><div class="desc" id="sp-desc"></div>
+                </div>
+                <p class="hint">Preview only. Search engines may display different text.</p>
+              </div>
+              <div class="panel"><div class="panel-head"><h2>Page checks</h2></div><div id="search-checks"></div></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="subpage hidden" id="sub-social">
+          <div class="grid-editor">
+            <div>
+              <div class="panel">
+                <div class="panel-head"><h2>Social sharing</h2></div>
+                <div class="toggle-row"><span>Use search title and description</span><div class="toggle" id="social-mirror-toggle"><div class="knob"></div></div></div>
+                <div class="field"><label>Social image</label><select id="s-og-image"></select><div class="hint">Chosen from images already in the gallery. Recommended: 1200 × 630 px. Uploaded gallery images aren't eligible here since social platforms need a real image URL, not an upload.</div></div>
+                <div class="field"><label>Social title</label><input id="s-og-title"></div>
+                <div class="field"><label>Social description</label><textarea id="s-og-desc" rows="3"></textarea></div>
+              </div>
+            </div>
+            <div>
+              <div class="panel"><div class="panel-head"><h2>Social preview</h2></div>
+                <div class="social-preview"><div class="img" id="sp2-img">No image</div><div class="txt"><div class="u" id="sp2-url"></div><div class="t" id="sp2-title"></div><div class="d" id="sp2-desc"></div></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="seo-bottombar hidden" id="seo-bottombar">
+          <div class="left"><span class="status-badge clean" id="seo-status"></span><a href="#" id="seo-discard-link">Discard changes</a></div>
+          <div class="right"><button class="btn" id="seo-save-draft">Save draft</button><button class="btn btn-gold" id="seo-publish">Publish changes</button></div>
+        </div>
+      </section>
+
+      <!-- SETTINGS -->
+      <section class="page hidden" id="page-settings">
+        <div class="page-head"><div><h1>Settings</h1><p>Activity log for every change made in the dashboard.</p></div></div>
+        <div class="panel"><div class="panel-head"><h2>Activity log</h2></div>
+          <table><thead><tr><th>When</th><th>Editor</th><th>Entity</th><th>Note</th></tr></thead>
+          <tbody id="log-table"><tr><td colspan="4" class="empty">Loading…</td></tr></tbody></table>
+          <div class="pager" id="log-pager"></div>
+        </div>
+      </section>
+
+    </div>
+  </div>
+</div>
+
+<div class="overlay hidden" id="overlay">
+  <div class="modal">
+    <h3 id="modal-title">Edit</h3>
+    <div id="modal-body"></div>
+    <div class="msg" id="modal-msg"></div>
+    <div class="modal-actions"><button class="btn" id="modal-cancel">Cancel</button><button class="btn btn-gold" id="modal-save">Save</button></div>
+  </div>
+</div>
+
+<div class="overlay hidden" id="notice-overlay">
+  <div class="modal" style="max-width:24rem; text-align:center;">
+    <h3 id="notice-title">Published</h3>
+    <p class="muted" id="notice-body" style="margin-top:0.5rem;"></p>
+    <div class="modal-actions" style="justify-content:center;"><button class="btn btn-gold" id="notice-ok">OK</button></div>
+  </div>
+</div>
+
+<script>
+const $ = (sel, root=document) => root.querySelector(sel);
+const $$ = (sel, root=document) => Array.from(root.querySelectorAll(sel));
+
+let CONTENT = {};
+let INQUIRIES = [];
+let LOGENTRIES = [];
+const DRAFT_PREFIX = 'draft__';
+
+const IMG_DIR = 'assets/images/';
+const MEDIA_FILES = ['hero.jpg','hero-2.jpg','hero-3.jpg','hero-4.jpg','vision-building.jpg','homes-living.jpg','homes-details.jpg','homes-bedroom.jpg','homes-kitchen.jpg','homes-patio.jpg','setting-transit.jpg','setting-shops.jpg','setting-schools.jpg','setting-highway.jpg','community-trail.jpg','community-aerial.jpg','register-bg.jpg','band-texture.jpg','gallery-01.jpg','gallery-02.jpg','gallery-03.jpg','gallery-04.jpg','gallery-05.jpg'];
+const HERO_CANDIDATE_FILES = MEDIA_FILES;
+function linesHtml(str) { return escapeHtml(str).replace(/\s*\r?\n\s*/g, '<br>'); }
+
+async function api(path, opts) {
+  const res = await fetch(path, opts);
+  if (res.status === 401) { location.href = '/login.html?next=' + encodeURIComponent(location.pathname); throw new Error('Session expired.'); }
+  let body; try { body = await res.json(); } catch { body = null; }
+  if (!res.ok || (body && body.ok === false)) throw new Error((body && body.error) || `Request failed (${res.status})`);
+  return body;
+}
+function safeParse(str, fallback) { try { return JSON.parse(str); } catch { return fallback; } }
+function initials(first, last) { return ((first||'')[0]||'').toUpperCase() + ((last||'')[0]||'').toUpperCase(); }
+function timeAgo(iso) {
+  if (!iso) return '—';
+  const d = new Date(iso.includes('T') ? iso : iso.replace(' ', 'T') + 'Z');
+  if (isNaN(d)) return iso;
+  return d.toLocaleDateString(undefined, { month:'short', day:'numeric', year:'numeric' });
+}
+function escapeHtml(str) { return String(str ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+function hearAboutLabel(value) { return value || '—'; } // free text on this site
+function dateAndTime(iso) {
+  if (!iso) return '—';
+  const d = new Date(iso.includes('T') ? iso : iso.replace(' ', 'T') + 'Z');
+  if (isNaN(d)) return iso;
+  return d.toLocaleString(undefined, { month:'short', day:'numeric', year:'numeric', hour:'numeric', minute:'2-digit' });
+}
+async function putField(key, value) { return api(`/api/content/${encodeURIComponent(key)}`, { method:'PUT', headers:{'content-type':'application/json'}, body: JSON.stringify({ value }) }); }
+
+/* ---------- navigation ---------- */
+const PAGE_TITLES = { overview:'Overview', homepage:'Edit', gallery:'Gallery', registrations:'Registrations', contacts:'Contacts', eblast:'Eblast', seo:'SEO & sharing', settings:'Settings' };
+function showPage(id) {
+  $$('.page').forEach(p => p.classList.add('hidden'));
+  const target = $('#page-' + id);
+  if (target) target.classList.remove('hidden');
+  $$('.sidebar nav button[data-page]').forEach(b => b.classList.toggle('active', b.dataset.page === id));
+  $('#crumb-page').textContent = PAGE_TITLES[id] || id;
+  if (id === 'homepage') {
+    showEditPage('homepage');
+    switchEditSection('hero');
+    initHeroEditor(); renderInstantFields(); initThankYouEditor();
+  }
+  if (id === 'gallery') renderMedia();
+  if (id === 'registrations') renderRegistrations();
+  if (id === 'contacts') renderContacts();
+  if (id === 'eblast') loadEblast();
+  if (id === 'seo') { initSeoEditors(); runAudit(); }
+  if (id === 'settings') { renderLog(); }
+  if (target) $$('.preview-frame[data-preview]', target).forEach(pf => { if (PREVIEW_STATE[pf.dataset.preview]) updatePreviewViewport(pf); });
+}
+$$('.sidebar nav button[data-page]').forEach(b => b.addEventListener('click', () => showPage(b.dataset.page)));
+document.addEventListener('click', (e) => {
+  const link = e.target.closest('[data-page-link]');
+  if (!link) return;
+  e.preventDefault();
+  showPage(link.dataset.pageLink);
+  if (link.dataset.subtabLink) {
+    const page = $('#page-' + link.dataset.pageLink);
+    const subtabs = page && $('.subtabs', page);
+    if (subtabs) showSubtab(subtabs, link.dataset.subtabLink);
+    else if (link.dataset.pageLink === 'homepage') switchEditSection(link.dataset.subtabLink);
+    else $('#sub-' + link.dataset.subtabLink)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+});
+
+function showSubtab(container, subId) {
+  $$('.subtabs button', container).forEach(b => b.classList.toggle('active', b.dataset.sub === subId));
+  $$('.subpage', container.parentElement).forEach(p => p.classList.toggle('hidden', p.id !== 'sub-' + subId));
+  if (container.closest('#page-seo')) updateSeoBottombarVisibility();
+}
+function initSubtabs(container) {
+  $$('.subtabs button', container).forEach(btn => btn.addEventListener('click', () => showSubtab(container, btn.dataset.sub)));
+}
+$$('.subtabs').forEach(initSubtabs);
+
+/* ---------- load everything ---------- */
+async function loadAll() {
+  try {
+    const [contentRes, inqRes] = await Promise.all([api('/api/content'), api('/api/inquiries')]);
+    CONTENT = {}; for (const f of contentRes.fields) CONTENT[f.key] = f.value;
+    INQUIRIES = inqRes.inquiries;
+    renderOverview();
+  } catch (e) { $('#recent-regs').innerHTML = `<div class="empty">Couldn't load data: ${e.message}</div>`; }
+}
+function getAuditHistory() { return safeParse(CONTENT.seo_audit_history, []); }
+
+/* ---------- draft helpers ---------- */
+function draftPending(section) { return CONTENT[DRAFT_PREFIX + section + '__pending'] === '1'; }
+function loadDraftValues(section, keys) {
+  const pending = draftPending(section);
+  const values = {};
+  keys.forEach(k => { values[k] = pending ? (CONTENT[DRAFT_PREFIX + k] ?? CONTENT[k] ?? '') : (CONTENT[k] ?? ''); });
+  return { values, pending };
+}
+async function persistDraft(section, keys, values) {
+  await Promise.all(keys.map(k => putField(DRAFT_PREFIX + k, values[k] ?? '')));
+  await putField(DRAFT_PREFIX + section + '__pending', '1');
+  keys.forEach(k => CONTENT[DRAFT_PREFIX + k] = values[k] ?? '');
+  CONTENT[DRAFT_PREFIX + section + '__pending'] = '1';
+}
+async function publishDraft(section, keys, values) {
+  await Promise.all(keys.map(k => putField(k, values[k] ?? '')));
+  await putField(DRAFT_PREFIX + section + '__pending', '0');
+  keys.forEach(k => CONTENT[k] = values[k] ?? '');
+  CONTENT[DRAFT_PREFIX + section + '__pending'] = '0';
+  renderOverview();
+}
+async function discardDraft(section) {
+  await putField(DRAFT_PREFIX + section + '__pending', '0');
+  CONTENT[DRAFT_PREFIX + section + '__pending'] = '0';
+}
+
+/* ---------- overview ---------- */
+function renderOverview() {
+  $('#stat-pages').textContent = '2';
+  $('#stat-total').textContent = INQUIRIES.length;
+  $('#stat-newregs').textContent = INQUIRIES.filter(i => i.status === 'new').length;
+  $('#stat-seo').textContent = CONTENT.seo_audit_last_score ? `${CONTENT.seo_audit_last_score}/100` : '—';
+
+  if (CONTENT.og_image) $('#hero-image').style.backgroundImage = `url(${JSON.stringify(CONTENT.og_image).slice(1,-1)})`;
+
+  const recent = INQUIRIES.slice(0, 4);
+  $('#recent-regs').innerHTML = recent.length ? recent.map(r => `
+    <div class="reg-row"><div class="initials">${initials(r.first_name, r.last_name)}</div>
+      <div class="who"><div class="name">${escapeHtml(r.first_name)} ${escapeHtml(r.last_name)}</div><div class="email">${escapeHtml(r.email)}</div></div>
+      <div class="when">${timeAgo(r.created_at)}</div>
+      <div class="status-col"><span class="tag ${r.status}">${r.status.replace('_',' ')}</span></div>
+    </div>`).join('') : '<div class="empty">No registrations yet.</div>';
+
+  $('#whoami').textContent = 'A';
+  api('/api/edit-log?limit=50').then(res => {
+    LOGENTRIES = res.entries;
+    $('#last-published').textContent = LOGENTRIES.length ? `Last edit ${timeAgo(LOGENTRIES[0].created_at)}` : 'No edits yet';
+  }).catch(() => {});
+}
+
+/* ============ HOMEPAGE / HERO ============ */
+const HERO_KEYS = ['hero_headline','hero_tag','hero_sqft','hero_price_label','hero_price','hero_images'];
+let heroDraft = null; // working copy
+let heroDirty = false;
+
+function heroDefaults() {
+  return {
+    hero_headline: CONTENT.hero_headline || 'A Brighter\nWay Home.',
+    hero_tag: CONTENT.hero_tag || 'Freehold Townhomes · Vaughan',
+    hero_sqft: CONTENT.hero_sqft || '2,427',
+    hero_price_label: CONTENT.hero_price_label || 'From the',
+    hero_price: CONTENT.hero_price || "$900's",
+    hero_images: CONTENT.hero_images || JSON.stringify([
+      { file:'hero.jpg', alt:'A GO train passing the wooded trail network beside Sunstone Towns' },
+      { file:'hero-2.jpg', alt:'Vaughan Mills shopping and entertainment centre near Sunstone Towns' },
+      { file:'hero-3.jpg', alt:"Canada's Wonderland amusement park near Sunstone Towns" },
+      { file:'hero-4.jpg', alt:'Community recreation centre near Sunstone Towns' },
+    ]),
+  };
+}
+
+function initHeroEditor() {
+  const { values, pending } = loadDraftValues('hero', HERO_KEYS);
+  const fallbacks = heroDefaults();
+  heroDraft = {};
+  HERO_KEYS.forEach(k => { heroDraft[k] = values[k] || fallbacks[k]; });
+  heroDraft.hero_images = safeParse(heroDraft.hero_images, safeParse(fallbacks.hero_images, []));
+  heroDirty = false;
+
+  $('#h-headline').value = heroDraft.hero_headline;
+  $('#h-tag').value = heroDraft.hero_tag;
+  $('#h-sqft').value = heroDraft.hero_sqft;
+  $('#h-price-label').value = heroDraft.hero_price_label;
+  $('#h-price').value = heroDraft.hero_price;
+
+  renderHeroSlideList();
+  renderHeroPreview();
+  updateHeroStatus(pending);
+}
+
+function updateHeroStatus(pending) {
+  const badge = $('#hero-status');
+  if (heroDirty) { badge.textContent = 'Unsaved changes'; badge.className = 'status-badge dirty'; }
+  else if (pending) { badge.textContent = 'Draft saved, not published'; badge.className = 'status-badge pending'; }
+  else { badge.textContent = 'Published'; badge.className = 'status-badge clean'; }
+}
+
+['h-headline','h-tag','h-sqft','h-price-label','h-price'].forEach(id => {
+  $('#' + id).addEventListener('input', () => {
+    heroDraft.hero_headline = $('#h-headline').value;
+    heroDraft.hero_tag = $('#h-tag').value;
+    heroDraft.hero_sqft = $('#h-sqft').value;
+    heroDraft.hero_price_label = $('#h-price-label').value;
+    heroDraft.hero_price = $('#h-price').value;
+    heroDirty = true;
+    renderHeroPreview();
+    updateHeroStatus(draftPending('hero'));
+  });
+});
+
+function renderHeroSlideList() {
+  const list = $('#hero-slide-list');
+  $('#hero-slide-count').textContent = `${heroDraft.hero_images.length} images`;
+  list.innerHTML = heroDraft.hero_images.map((img, i) => `
+    <div class="drag-row" draggable="true" data-idx="${i}">
+      <span class="handle">⠿⠿</span>
+      <div class="thumb" style="background-image:url(${IMG_DIR}${escapeHtml(img.file)})"></div>
+      <div class="meta">
+        <div class="fname">
+          <select data-slide-file="${i}">${HERO_CANDIDATE_FILES.map(f => `<option value="${f}" ${f===img.file?'selected':''}>${f}</option>`).join('')}</select>
+        </div>
+        <input type="text" data-slide-alt="${i}" value="${escapeHtml(img.alt||'')}" placeholder="Alt text (for accessibility & SEO)">
+      </div>
+      <button class="edit" data-slide-remove="${i}" style="color:var(--bad);">Remove</button>
+    </div>
+  `).join('') || '<div class="empty">No slides — add at least one image.</div>';
+
+  $$('[data-slide-file]', list).forEach(sel => sel.addEventListener('change', () => {
+    heroDraft.hero_images[Number(sel.dataset.slideFile)].file = sel.value;
+    heroDirty = true; renderHeroSlideList(); renderHeroPreview(); updateHeroStatus(draftPending('hero'));
+  }));
+  $$('[data-slide-alt]', list).forEach(inp => inp.addEventListener('input', () => {
+    heroDraft.hero_images[Number(inp.dataset.slideAlt)].alt = inp.value;
+    heroDirty = true; updateHeroStatus(draftPending('hero'));
+  }));
+  $$('[data-slide-remove]', list).forEach(btn => btn.addEventListener('click', () => {
+    heroDraft.hero_images.splice(Number(btn.dataset.slideRemove), 1);
+    heroDirty = true; renderHeroSlideList(); renderHeroPreview(); updateHeroStatus(draftPending('hero'));
+  }));
+
+  let dragSrc = null;
+  $$('.drag-row', list).forEach(row => {
+    row.addEventListener('dragstart', () => { dragSrc = Number(row.dataset.idx); row.classList.add('dragging'); });
+    row.addEventListener('dragend', () => row.classList.remove('dragging'));
+    row.addEventListener('dragover', (e) => e.preventDefault());
+    row.addEventListener('drop', () => {
+      const destIdx = Number(row.dataset.idx);
+      if (dragSrc === null || dragSrc === destIdx) return;
+      const [moved] = heroDraft.hero_images.splice(dragSrc, 1);
+      heroDraft.hero_images.splice(destIdx, 0, moved);
+      heroDirty = true; renderHeroSlideList(); renderHeroPreview(); updateHeroStatus(draftPending('hero'));
+    });
+  });
+}
+$('#hero-add-slide').addEventListener('click', () => {
+  const used = new Set(heroDraft.hero_images.map(i => i.file));
+  const next = HERO_CANDIDATE_FILES.find(f => !used.has(f)) || HERO_CANDIDATE_FILES[0];
+  heroDraft.hero_images.push({ file: next, alt: '' });
+  heroDirty = true; renderHeroSlideList(); renderHeroPreview(); updateHeroStatus(draftPending('hero'));
+});
+
+function renderHeroPreview() {
+  refreshLivePreview('hero');
+}
+
+/* ---------- Edit tab: Homepage vs Thank You page tabs ---------- */
+function showEditPage(page) {
+  $$('#edit-pagetabs button[data-editpage]').forEach(b => b.classList.toggle('active', b.dataset.editpage === page));
+  $('#editpage-homepage')?.classList.toggle('hidden', page !== 'homepage');
+  $('#editpage-thankyou')?.classList.toggle('hidden', page !== 'thankyou');
+  const actions = $('#edit-homepage-actions');
+  if (actions) actions.style.display = page === 'homepage' ? '' : 'none';
+  if (page === 'thankyou') { initThankYouEditor(); }
+  // A preview iframe that loaded while its tab was hidden (display:none)
+  // never got a real layout, so its measured content height was 0 or
+  // stale. Re-measure now that the tab is actually visible.
+  const subId = page === 'thankyou' ? 'thankyoupreview' : 'editpreview';
+  const pf = document.querySelector(`.preview-frame[data-preview="${subId}"]`);
+  if (pf) { updatePreviewViewport(pf); fitPreviewHeight(subId); }
+}
+$$('#edit-pagetabs button[data-editpage]').forEach(btn => btn.addEventListener('click', () => showEditPage(btn.dataset.editpage)));
+
+/* ---------- live preview: one shared iframe for the Homepage accordion, plus a dedicated Thank You iframe ---------- */
+const EDIT_ANCHORS = { hero:'#hero', vision:'#vision', homes:'#homes', setting:'#setting', maptab:'#map', community:'#community', registrationtab:'#register' };
+let currentEditSub = 'hero';
+const EDIT_FRAME = { frame: null, ready: false };
+function setupEditFrame() {
+  const frame = document.getElementById('pf-frame-edit');
+  if (!frame) return;
+  EDIT_FRAME.frame = frame;
+  frame.addEventListener('load', () => { EDIT_FRAME.ready = true; fitPreviewHeight('editpreview'); refreshLivePreview(currentEditSub); });
+}
+function refreshLivePreview(subId) {
+  if (subId !== currentEditSub) return;
+  if (!EDIT_FRAME.ready || !EDIT_FRAME.frame) return;
+  let doc;
+  try { doc = EDIT_FRAME.frame.contentDocument; } catch (e) { return; }
+  if (!doc) return;
+  if (subId === 'hero') patchHeroLive(doc);
+}
+function reloadLiveFrame(subId) {
+  if (subId === 'thankyoupreview') {
+    const frame = document.getElementById('pf-frame-thankyou');
+    if (!frame) return;
+    try { frame.contentWindow.location.reload(); } catch (e) { /* ignore */ }
+    return;
+  }
+  if (subId !== currentEditSub) return;
+  if (!EDIT_FRAME.frame) return;
+  EDIT_FRAME.ready = false;
+  try { EDIT_FRAME.frame.contentWindow.location.reload(); } catch (e) { /* ignore */ }
+}
+setupEditFrame();
+(function setupThankYouFrame() {
+  const frame = document.getElementById('pf-frame-thankyou');
+  if (!frame) return;
+  frame.addEventListener('load', () => fitPreviewHeight('thankyoupreview'));
+})();
+
+// Measures the real rendered height of a preview iframe's document so the
+// scrollable viewport stops right at the page's footer instead of leaving
+// blank space below it (from the fixed device-height guess).
+function fitPreviewHeight(subId) {
+  const pf = document.querySelector(`.preview-frame[data-preview="${subId}"]`);
+  const st = PREVIEW_STATE[subId];
+  if (!pf || !st) return;
+  const iframe = $('.pf-iframe', pf);
+  let doc; try { doc = iframe && iframe.contentDocument; } catch (e) { return; }
+  if (!doc || !doc.documentElement) return;
+  // Reset to a plain viewport-height probe first — any `100vh` (etc.) CSS
+  // in the page resolves against whatever height the iframe currently has,
+  // so measuring against a stale/oversized height gives a wrong, inflated
+  // result. Forcing the probe height first, then reading, keeps it honest.
+  const probe = PREVIEW_DEVICE_DIMS[st.device].h;
+  iframe.style.height = probe + 'px';
+  void iframe.offsetHeight; // force layout before reading scrollHeight
+  st.contentHeight = st.contentHeight || {};
+  st.contentHeight[st.device] = Math.max(doc.documentElement.scrollHeight, probe);
+  updatePreviewViewport(pf);
+}
+
+/* ---------- Edit tab accordion: one section open at a time, driving the shared preview ---------- */
+function switchEditSection(subId) {
+  currentEditSub = subId;
+  $$('#page-homepage .accordion-item').forEach(item => item.classList.toggle('open', item.dataset.sub === subId));
+  const note = $('#edit-preview-note');
+  if (note) {
+    note.textContent = subId === 'hero'
+      ? "This is the actual live site — your unpublished changes are patched in here so you can see exactly how they'll look before you publish."
+      : "This is the actual live site. Changes here save immediately, so this always matches what's published.";
+  }
+  if (EDIT_ANCHORS[subId]) {
+    EDIT_FRAME.ready = false;
+    if (EDIT_FRAME.frame) EDIT_FRAME.frame.src = '/' + EDIT_ANCHORS[subId];
+  }
+  const pf = $('#page-homepage .preview-frame[data-preview="editpreview"]');
+  if (pf && PREVIEW_STATE[pf.dataset.preview]) updatePreviewViewport(pf);
+}
+$$('#page-homepage .accordion-head').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const item = btn.closest('.accordion-item');
+    const subId = item.dataset.sub;
+    if (item.classList.contains('open')) {
+      // clicking an already-open section collapses it
+      item.classList.remove('open');
+      currentEditSub = null;
+      const note = $('#edit-preview-note');
+      if (note) note.textContent = 'Select a section on the left to preview it here.';
+    } else {
+      switchEditSection(subId);
+    }
+  });
+});
+
+/* ---------- live preview: device toggle + zoom/pan controls ---------- */
+const PREVIEW_ZOOM_STEP = 0.15;
+const PREVIEW_MIN_ZOOM = 0.2;
+const PREVIEW_MAX_ZOOM = 2;
+// h below is a starting viewport height only (used before the real page
+// height is measured) — it should look like a real browser window, not a
+// guess at total page length. Setting it too tall breaks any `100vh`
+// section in the site's CSS (it inflates to match), which is exactly what
+// was happening. The true height is measured and applied once the iframe
+// loads (see fitPreviewHeight).
+const PREVIEW_DEVICE_DIMS = { desktop: { w: 1440, h: 900 }, mobile: { w: 390, h: 800 } };
+const PREVIEW_STATE = {};
+function initPreviewControls() {
+  $$('.preview-frame[data-preview]').forEach(pf => {
+    const subId = pf.dataset.preview;
+    PREVIEW_STATE[subId] = { device: 'desktop', zoom: null }; // zoom null = auto-fit to width ("Fit")
+    updatePreviewViewport(pf);
+    $$('.pf-device-btn', pf).forEach(btn => btn.addEventListener('click', () => {
+      const st = PREVIEW_STATE[subId];
+      st.device = btn.dataset.device;
+      st.zoom = null;
+      $$('.pf-device-btn', pf).forEach(b => b.classList.toggle('active', b === btn));
+      updatePreviewViewport(pf);
+      fitPreviewHeight(subId);
+    }));
+    $$('.pf-zoom-btn', pf).forEach(btn => btn.addEventListener('click', () => {
+      const st = PREVIEW_STATE[subId];
+      const dims = PREVIEW_DEVICE_DIMS[st.device];
+      const viewport = $('.pf-viewport', pf);
+      const fit = viewport.clientWidth / dims.w;
+      const current = st.zoom ?? fit;
+      let next = btn.dataset.zoom === 'in' ? current + PREVIEW_ZOOM_STEP : current - PREVIEW_ZOOM_STEP;
+      next = Math.max(PREVIEW_MIN_ZOOM, Math.min(PREVIEW_MAX_ZOOM, next));
+      st.zoom = next;
+      updatePreviewViewport(pf);
+    }));
+  });
+  window.addEventListener('resize', () => $$('.preview-frame[data-preview]').forEach(pf => {
+    if (PREVIEW_STATE[pf.dataset.preview].zoom === null) updatePreviewViewport(pf);
+  }));
+}
+function updatePreviewViewport(pf) {
+  const subId = pf.dataset.preview;
+  const st = PREVIEW_STATE[subId];
+  const iframe = $('.pf-iframe', pf);
+  const scaler = $('.pf-scaler', pf);
+  const viewport = $('.pf-viewport', pf);
+  if (!iframe || !scaler || !viewport) return;
+  const dims = PREVIEW_DEVICE_DIMS[st.device];
+  const h = (st.contentHeight && st.contentHeight[st.device]) || dims.h;
+  const fit = viewport.clientWidth / dims.w;
+  const isAutoFit = st.zoom === null;
+  const zoom = st.zoom ?? fit;
+  iframe.style.width = dims.w + 'px';
+  iframe.style.height = h + 'px';
+  scaler.style.width = (dims.w * zoom) + 'px';
+  scaler.style.height = (h * zoom) + 'px';
+  scaler.style.transform = `scale(${zoom})`;
+  const level = $('.pf-zoom-level', pf); if (level) level.textContent = isAutoFit ? 'Fit' : Math.round(zoom * 100) + '%';
+}
+initPreviewControls();
+function patchHeroLive(doc) {
+  if (!heroDraft) return;
+  const h1 = doc.querySelector('#hero h1'); if (h1) h1.innerHTML = linesHtml(heroDraft.hero_headline);
+  const tag = doc.querySelector('#hero .hero-split__tag'); if (tag) tag.innerHTML = escapeHtml(heroDraft.hero_tag).replace(/ · /g, '&nbsp;·&nbsp;');
+  const sqft = doc.querySelector('#hero .figure__num strong'); if (sqft) sqft.textContent = heroDraft.hero_sqft;
+  const figs = doc.querySelectorAll('#hero .hero-split__specs .figure');
+  if (figs[1]) figs[1].innerHTML = `${escapeHtml(heroDraft.hero_price_label)}<br><strong>${escapeHtml(heroDraft.hero_price)}</strong>`;
+  patchHeroSlidesLive(doc, heroDraft.hero_images);
+}
+function patchHeroSlidesLive(doc, images) {
+  const track = doc.querySelector('#heroSlider .hero-slider__track');
+  const dots = doc.querySelector('#heroSlider .hero-slider__dots');
+  if (track) track.innerHTML = (images || []).map((img, i) => `<div class="hero-slider__slide${i === 0 ? ' is-active' : ''}"><img src="${IMG_DIR}${escapeHtml(img.file)}" alt="${escapeHtml(img.alt || '')}"></div>`).join('');
+  if (dots) dots.innerHTML = (images || []).map((_, i) => `<button type="button" class="hero-slider__dot${i === 0 ? ' is-active' : ''}" aria-label="Show image ${i + 1}"></button>`).join('');
+}
+
+$('#hero-save-draft').addEventListener('click', async () => {
+  const values = { ...heroDraft, hero_images: JSON.stringify(heroDraft.hero_images) };
+  try { await persistDraft('hero', HERO_KEYS, values); heroDirty = false; updateHeroStatus(true); }
+  catch (e) { alert('Could not save draft: ' + e.message); }
+});
+$('#hero-publish').addEventListener('click', async () => {
+  const values = { ...heroDraft, hero_images: JSON.stringify(heroDraft.hero_images) };
+  try {
+    await publishDraft('hero', HERO_KEYS, values); heroDirty = false; updateHeroStatus(false);
+    showNotice('Published', 'Your changes are now live on the website.');
+  }
+  catch (e) { alert('Could not publish: ' + e.message); }
+});
+function showNotice(title, body) {
+  $('#notice-title').textContent = title;
+  $('#notice-body').textContent = body;
+  $('#notice-overlay').classList.remove('hidden');
+}
+function closeNotice() { $('#notice-overlay').classList.add('hidden'); }
+$('#notice-ok').addEventListener('click', closeNotice);
+$('#notice-overlay').addEventListener('click', (e) => { if (e.target.id === 'notice-overlay') closeNotice(); });
+$('#hero-discard').addEventListener('click', async () => {
+  if (!confirm('Discard the saved draft and revert to the last published version?')) return;
+  try { await discardDraft('hero'); initHeroEditor(); } catch (e) { alert('Could not discard: ' + e.message); }
+});
+
+/* ============ SAVE-INSTANTLY SECTIONS (Vision, Homes, Setting, Map, Community, Registration) ============ */
+// Any element with data-cms="<key>" (text) or data-cms-img="<key>" (image
+// picker) saves to that content field on change. Defaults must match
+// src/lib/render.js and the seed rows.
+const INSTANT_DEFAULTS = {
+  vision_heading: 'Designed\nFor The Way\nLife Moves.',
+  vision_copy: "Sunstone Towns is where inspired design meets everyday convenience in the heart of Vaughan. Freehold townhomes with the space you live today — and the life you're building tomorrow.",
+  vision_image: 'vision-building.jpg',
+  vision_image_alt: 'Open parkland and meadow trails at sunset near Sunstone Towns',
+  homes_heading: 'Room to Live.\nSpace to Become.',
+  homes_copy: 'Thoughtfully laid out freehold townhomes with open-concept interiors, elevated finishes, and seamless indoor-outdoor living.',
+  homes_image_main: 'homes-living.jpg',
+  homes_image_main_alt: 'A couple relaxing in a sunlit open-concept living room',
+  homes_image_thumb1: 'homes-details.jpg',
+  homes_image_thumb1_alt: 'Quiet afternoon at home — wooden puzzle and coffee on the living room table',
+  homes_image_thumb2: 'homes-bedroom.jpg',
+  homes_image_thumb2_alt: 'Primary bedroom with floor-to-ceiling windows',
+  homes_image_side: 'homes-patio.jpg',
+  homes_image_side_alt: 'Reading with a coffee on a private outdoor terrace',
+  setting_heading: 'Close to\nWhat Counts.',
+  setting_lede: 'A connected address in Vaughan with transit, shopping, dining, and major routes just minutes away.',
+  map_heading: 'Everything Nearby.',
+  map_lede: 'Explore the amenities, transit, and green space that surround Sunstone Towns — click any point to locate it on the map.',
+  community_heading: 'Rooted Here.\nConnected Everywhere.',
+  community_copy: 'Beautifully planned streetscapes, green spaces, and gathering places create a neighbourhood where connections grow and life comes together.',
+  community_image: 'community-trail.jpg',
+  community_image_alt: 'Cyclists on the community trail through autumn green space',
+  register_heading: 'Be First\nin Line.',
+  register_lede: 'Register for priority access to floorplans, pricing and updates.',
+};
+const DEFAULT_HOMES_SPECS = [
+  { value: '2, 3, & 4', label: 'Bedrooms' },
+  { value: 'Up to 2,427', label: 'Sq. Ft.' },
+  { value: 'Private', label: 'Outdoor Space' },
+];
+const DEFAULT_SETTING_ITEMS = [
+  { title: 'Go Transit', place: 'Rutherford GO Station', distance: '6 min walk', image: 'setting-transit.jpg', alt: 'GO Transit train at a nearby Vaughan station' },
+  { title: 'Shop & Dine', place: 'Vaughan Mills', distance: '5 min drive', image: 'setting-shops.jpg', alt: 'Friends sharing an outdoor dinner under string lights' },
+  { title: 'Top-Rated Schools', place: 'Stephen Lewis Secondary', distance: '4 min drive', image: 'setting-schools.jpg', alt: 'Stephen Lewis Secondary School, 555 Autumn Hill Blvd, Thornhill' },
+];
+function getHomesSpecs() { const v = safeParse(CONTENT.homes_specs, null); return Array.isArray(v) && v.length ? v : DEFAULT_HOMES_SPECS.map(x => ({ ...x })); }
+function getSettingItems() { const v = safeParse(CONTENT.setting_items, null); return Array.isArray(v) && v.length ? v : DEFAULT_SETTING_ITEMS.map(x => ({ ...x })); }
+function imageOptionsHtml(current) {
+  const files = MEDIA_FILES.slice();
+  if (current && !files.includes(current)) files.unshift(current);
+  return files.map(f => `<option value="${escapeHtml(f)}" ${f === current ? 'selected' : ''}>${escapeHtml(f)}</option>`).join('');
+}
+// Trim, and trim each line of a multi-line field, but keep the line breaks.
+function cleanValue(el) {
+  if (el.tagName !== 'TEXTAREA') return el.value.trim();
+  return el.value.split('\n').map(l => l.trim()).filter(Boolean).join('\n');
+}
+function renderInstantFields() {
+  $$('#page-homepage [data-cms]').forEach(el => { el.value = CONTENT[el.dataset.cms] || INSTANT_DEFAULTS[el.dataset.cms] || ''; });
+  $$('#page-homepage [data-cms-img]').forEach(sel => { sel.innerHTML = imageOptionsHtml(CONTENT[sel.dataset.cmsImg] || INSTANT_DEFAULTS[sel.dataset.cmsImg] || ''); });
+  const specs = getHomesSpecs();
+  $$('#page-homepage [data-spec-idx]').forEach(el => { const s = specs[Number(el.dataset.specIdx)] || {}; el.value = s[el.dataset.specField] || ''; });
+  const items = getSettingItems();
+  $$('#page-homepage [data-setting-idx]').forEach(el => {
+    const it = items[Number(el.dataset.settingIdx)] || {};
+    if (el.tagName === 'SELECT') el.innerHTML = imageOptionsHtml(it.image || '');
+    else el.value = it[el.dataset.settingField] || '';
+  });
+}
+function sectionOf(el) { const item = el.closest('.accordion-item'); return item ? item.dataset.sub : null; }
+async function saveInstant(el, key, value) {
+  try { await putField(key, value); CONTENT[key] = value; reloadLiveFrame(sectionOf(el)); }
+  catch (e) { alert('Could not save: ' + e.message); }
+}
+$$('#page-homepage [data-cms]').forEach(el => el.addEventListener('change', () => {
+  const key = el.dataset.cms;
+  let value = cleanValue(el);
+  // An emptied heading or paragraph goes back to its original copy rather than leaving a gap on the page.
+  if (!value && INSTANT_DEFAULTS[key] !== undefined) { value = INSTANT_DEFAULTS[key]; el.value = value; }
+  saveInstant(el, key, value);
+}));
+$$('#page-homepage [data-cms-img]').forEach(el => el.addEventListener('change', () => saveInstant(el, el.dataset.cmsImg, el.value)));
+$$('#page-homepage [data-spec-idx]').forEach(el => el.addEventListener('change', () => {
+  const specs = getHomesSpecs();
+  $$('#page-homepage [data-spec-idx]').forEach(inp => { const i = Number(inp.dataset.specIdx); specs[i] = specs[i] || {}; specs[i][inp.dataset.specField] = inp.value.trim(); });
+  saveInstant(el, 'homes_specs', JSON.stringify(specs));
+}));
+$$('#page-homepage [data-setting-idx]').forEach(el => el.addEventListener('change', () => {
+  const items = getSettingItems();
+  $$('#page-homepage [data-setting-idx]').forEach(inp => { const i = Number(inp.dataset.settingIdx); items[i] = items[i] || {}; items[i][inp.dataset.settingField] = inp.value.trim(); });
+  saveInstant(el, 'setting_items', JSON.stringify(items));
+}));
+
+/* ============ GALLERY & SITE ASSETS ============ */
+const GALLERY_UPLOAD_MAX_BYTES = 4 * 1024 * 1024; // 4MB
+function getGalleryUploads() { return safeParse(CONTENT.gallery_upload_index, []); }
+function galleryUploadKey(name) { return 'gallery_upload__' + name; }
+function getGalleryFolders() { return safeParse(CONTENT.gallery_folders, []); }
+function galleryFolderKey(name) { return 'gallery_upload_folder__' + name; }
+function getUploadFolder(name) { return CONTENT[galleryFolderKey(name)] || ''; }
+let activeGalleryFolder = 'all';
+
+function renderGalleryFolderChips() {
+  const folders = getGalleryFolders();
+  const chip = (id, label, deletable) => `<span class="folder-chip-wrap">
+      <button type="button" class="folder-chip${activeGalleryFolder === id ? ' active' : ''}" data-folder="${escapeHtml(id)}">${escapeHtml(label)}</button>
+      ${deletable ? `<button type="button" class="folder-chip-del" data-del-folder="${escapeHtml(id)}" title="Delete folder">&times;</button>` : ''}
+    </span>`;
+  $('#gallery-folder-chips').innerHTML =
+    chip('all', 'All', false) +
+    folders.map(f => chip(f, f, true)).join('') +
+    `<button type="button" class="folder-chip add" id="gallery-add-folder">+ New folder</button>`;
+  $$('.folder-chip[data-folder]', $('#gallery-folder-chips')).forEach(btn => btn.addEventListener('click', () => {
+    activeGalleryFolder = btn.dataset.folder;
+    renderGalleryFolderChips();
+    renderMedia();
+  }));
+  $$('[data-del-folder]', $('#gallery-folder-chips')).forEach(btn => btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    deleteGalleryFolder(btn.dataset.delFolder);
+  }));
+  $('#gallery-add-folder').addEventListener('click', async () => {
+    const name = (prompt('Name this folder (e.g. "Fall eblast"):') || '').trim();
+    if (!name) return;
+    const folders2 = getGalleryFolders();
+    if (!folders2.includes(name)) folders2.push(name);
+    try {
+      await putField('gallery_folders', JSON.stringify(folders2));
+      CONTENT.gallery_folders = JSON.stringify(folders2);
+      activeGalleryFolder = name;
+      renderGalleryFolderChips();
+      renderMedia();
+    } catch (err) { alert('Could not create folder: ' + err.message); }
+  });
+}
+
+async function deleteGalleryFolder(name) {
+  if (name === 'all') return;
+  if (!confirm(`Delete the "${name}" folder? Photos in it move back to unsorted — nothing gets deleted.`)) return;
+  try {
+    const folders2 = getGalleryFolders().filter(f => f !== name);
+    await putField('gallery_folders', JSON.stringify(folders2));
+    CONTENT.gallery_folders = JSON.stringify(folders2);
+
+    // Clear the folder tag off every upload that was in it, so they fall
+    // back to unsorted (visible under "All") rather than vanishing.
+    const tagged = getGalleryUploads().filter(u => getUploadFolder(u) === name);
+    for (const uploadName of tagged) {
+      await putField(galleryFolderKey(uploadName), '');
+      CONTENT[galleryFolderKey(uploadName)] = '';
+    }
+
+    if (activeGalleryFolder === name) activeGalleryFolder = 'all';
+    renderGalleryFolderChips();
+    renderMedia();
+  } catch (err) { alert('Could not delete folder: ' + err.message); }
+}
+
+function renderMedia() {
+  renderGalleryFolderChips();
+  const showStatic = activeGalleryFolder === 'all';
+  const staticFigs = showStatic ? MEDIA_FILES.map(f => `
+    <figure>
+      <img src="${IMG_DIR}${encodeURIComponent(f)}" alt="${escapeHtml(f)}" loading="lazy">
+      <figcaption><span class="fname" title="${escapeHtml(f)}">${escapeHtml(f)}</span><a href="${IMG_DIR}${encodeURIComponent(f)}" download="${escapeHtml(f)}">Download</a></figcaption>
+    </figure>
+  `).join('') : '';
+  const folders = getGalleryFolders();
+  const uploads = getGalleryUploads().filter(name => activeGalleryFolder === 'all' || getUploadFolder(name) === activeGalleryFolder);
+  const uploadFigs = uploads.map(name => {
+    const dataUrl = CONTENT[galleryUploadKey(name)] || '';
+    const currentFolder = getUploadFolder(name);
+    const folderSelect = `<select data-move-upload="${escapeHtml(name)}" title="Move to folder">
+      <option value="">No folder</option>
+      ${folders.map(f => `<option value="${escapeHtml(f)}" ${f === currentFolder ? 'selected' : ''}>${escapeHtml(f)}</option>`).join('')}
+    </select>`;
+    return `
+    <figure>
+      <img src="${dataUrl}" alt="${escapeHtml(name)}" loading="lazy">
+      <figcaption><span class="fname" title="${escapeHtml(name)}">${escapeHtml(name)}</span><span style="display:flex; gap:0.4rem; align-items:center; flex:none;">${folderSelect}<a href="#" data-remove-upload="${escapeHtml(name)}" style="color:var(--bad);">Remove</a></span></figcaption>
+    </figure>`;
+  }).join('');
+  $('#media-gallery').innerHTML = (staticFigs + uploadFigs) || '<div class="empty">No images in this folder yet.</div>';
+  $$('[data-remove-upload]', $('#media-gallery')).forEach(a => a.addEventListener('click', async (e) => {
+    e.preventDefault();
+    const name = a.dataset.removeUpload;
+    if (!confirm(`Remove uploaded image "${name}"?`)) return;
+    try {
+      const list = getGalleryUploads().filter(n => n !== name);
+      await putField('gallery_upload_index', JSON.stringify(list));
+      await putField(galleryUploadKey(name), '');
+      await putField(galleryFolderKey(name), '');
+      CONTENT.gallery_upload_index = JSON.stringify(list);
+      delete CONTENT[galleryUploadKey(name)];
+      delete CONTENT[galleryFolderKey(name)];
+      renderMedia();
+    } catch (err) { alert('Could not remove: ' + err.message); }
+  }));
+  $$('[data-move-upload]', $('#media-gallery')).forEach(sel => sel.addEventListener('change', async () => {
+    const name = sel.dataset.moveUpload;
+    const folder = sel.value;
+    try {
+      await putField(galleryFolderKey(name), folder);
+      CONTENT[galleryFolderKey(name)] = folder;
+      if (activeGalleryFolder !== 'all') renderMedia(); // moved out of the folder being viewed
+    } catch (err) { alert('Could not move image: ' + err.message); }
+  }));
+}
+$('#gallery-upload-btn')?.addEventListener('click', () => $('#gallery-upload-input').click());
+$('#gallery-upload-input')?.addEventListener('change', async () => {
+  const input = $('#gallery-upload-input');
+  const file = input.files[0];
+  const msg = $('#gallery-upload-msg');
+  if (!file) return;
+  const show = (cls, text) => { msg.style.display = ''; msg.className = 'msg ' + cls; msg.textContent = text; };
+  if (!file.type.startsWith('image/')) { show('err', 'Please choose an image file.'); input.value = ''; return; }
+  if (file.size > GALLERY_UPLOAD_MAX_BYTES) { show('err', `That file is too large — please keep uploads under ${Math.round(GALLERY_UPLOAD_MAX_BYTES / 1024 / 1024)}MB.`); input.value = ''; return; }
+  const reader = new FileReader();
+  reader.onload = async () => {
+    const dataUrl = reader.result;
+    const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+    const folder = activeGalleryFolder === 'all' ? '' : activeGalleryFolder;
+    try {
+      await putField(galleryUploadKey(safeName), dataUrl);
+      const list = getGalleryUploads();
+      if (!list.includes(safeName)) list.push(safeName);
+      await putField('gallery_upload_index', JSON.stringify(list));
+      if (folder) await putField(galleryFolderKey(safeName), folder);
+      CONTENT[galleryUploadKey(safeName)] = dataUrl;
+      CONTENT.gallery_upload_index = JSON.stringify(list);
+      if (folder) CONTENT[galleryFolderKey(safeName)] = folder;
+      renderMedia();
+      show('ok', `Uploaded "${safeName}"${folder ? ` to "${folder}"` : ''}.`);
+    } catch (err) { show('err', 'Could not upload: ' + err.message); }
+    input.value = '';
+  };
+  reader.readAsDataURL(file);
+});
+
+/* ============ EBLAST ============ */
+let EB_DRAFT = null; // { id, subject, blocks: [{image, alt, link}] }
+let EB_READONLY = false;
+let EB_RECIPIENTS = { active: 0, unsubscribed: 0 };
+let EB_CAMPAIGNS = [];
+
+// Every image usable in an eblast needs a real, absolute URL — a recipient's
+// inbox can't resolve a relative path or load a data: URI. Static files
+// already live at /assets/images/<file>; gallery uploads get theirs from the
+// /media/<name> route added alongside this feature. `folder` is null for
+// static site images (they only show up under "All images" in the picker).
+function eblastImageOptions() {
+  const staticOpts = MEDIA_FILES.filter(f => /\.(jpe?g|png)$/i.test(f)).map(f => ({ value: `${location.origin}/${IMG_DIR}${f}`, label: f, folder: null }));
+  const uploadOpts = getGalleryUploads().map(name => ({ value: `${location.origin}/media/${encodeURIComponent(name)}`, label: name, folder: getUploadFolder(name) || null }));
+  return staticOpts.concat(uploadOpts);
+}
+
+async function loadEblast() {
+  try {
+    const data = await api('/api/eblast/state');
+    EB_RECIPIENTS = data.recipients;
+    EB_CAMPAIGNS = data.campaigns || [];
+    renderEblastRecipientCount();
+    renderEblastList();
+  } catch (e) {
+    $('#eb-recipient-count').textContent = 'Could not load: ' + e.message;
+  }
+}
+
+function renderEblastRecipientCount() {
+  const { active, unsubscribed } = EB_RECIPIENTS;
+  $('#eb-recipient-count').innerHTML = `<b>${active}</b> active registrant${active === 1 ? '' : 's'} will receive this` + (unsubscribed ? ` &middot; ${unsubscribed} unsubscribed` : '');
+}
+
+function renderEblastList() {
+  const tbody = $('#eb-list-table');
+  if (!EB_CAMPAIGNS.length) { tbody.innerHTML = '<tr><td colspan="7" class="empty">No blasts yet — click "New blast" to start one.</td></tr>'; return; }
+  const badgeClass = { draft: 'medium', sending: 'medium', sent: 'closed', failed: 'high' };
+  tbody.innerHTML = EB_CAMPAIGNS.map(c => `
+    <tr>
+      <td>${escapeHtml(c.subject || '(no subject)')}</td>
+      <td><span class="tag ${badgeClass[c.status] || ''}">${escapeHtml(c.status)}</span></td>
+      <td>${c.sent_at ? dateAndTime(c.sent_at) : dateAndTime(c.created_at)}</td>
+      <td>${c.recipient_count ?? '—'}</td>
+      <td>${c.sent_count ?? '—'}</td>
+      <td>${c.failed_count ? c.failed_count : '—'}</td>
+      <td>
+        <button type="button" class="edit" data-open-eblast="${c.id}">${c.status === 'draft' ? 'Edit ›' : 'View ›'}</button>
+        ${c.status !== 'draft' ? `<button type="button" class="edit" data-duplicate-eblast="${c.id}" style="margin-left:0.4rem;">Edit &amp; resend ›</button>` : ''}
+        <button type="button" class="edit" data-delete-eblast="${c.id}" data-subject="${escapeHtml(c.subject || '(no subject)')}" style="margin-left:0.4rem;color:var(--bad);">Delete</button>
+      </td>
+    </tr>`).join('');
+  $$('[data-open-eblast]', tbody).forEach(btn => btn.addEventListener('click', () => openEblastEditor(Number(btn.dataset.openEblast))));
+  $$('[data-duplicate-eblast]', tbody).forEach(btn => btn.addEventListener('click', () => duplicateEblast(Number(btn.dataset.duplicateEblast))));
+  $$('[data-delete-eblast]', tbody).forEach(btn => btn.addEventListener('click', () => deleteEblastFromList(Number(btn.dataset.deleteEblast), btn.dataset.subject)));
+}
+
+async function duplicateEblast(id) {
+  try {
+    const data = await api('/api/eblast/campaigns/' + id + '/duplicate', { method: 'POST', headers: { 'content-type': 'application/json' } });
+    await loadEblast();
+    openEblastEditor(data.campaign.id);
+  } catch (e) { alert('Could not set up a new draft from that blast: ' + e.message); }
+}
+
+async function deleteEblastFromList(id, subject) {
+  if (!confirm(`Delete "${subject}"? This only removes it from this list — it won't unsend anything already delivered. This can't be undone.`)) return;
+  try {
+    await api('/api/eblast/campaigns/' + id, { method: 'DELETE' });
+    await loadEblast();
+  } catch (e) { alert('Could not delete that blast: ' + e.message); }
+}
+
+$('#eb-new-btn').addEventListener('click', async () => {
+  try {
+    const data = await api('/api/eblast/draft', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ subject: '', blocks: [] }) });
+    await loadEblast();
+    openEblastEditor(data.campaign.id);
+  } catch (e) { alert('Could not create a new blast: ' + e.message); }
+});
+
+async function openEblastEditor(id) {
+  try {
+    const data = await api('/api/eblast/campaigns/' + id);
+    const c = data.campaign;
+    EB_DRAFT = { id: c.id, subject: c.subject || '', previewText: c.preview_text || '', blocks: c.blocks || [] };
+    EB_READONLY = c.status !== 'draft';
+    $('#eb-status-banner').innerHTML = EB_READONLY
+      ? `<div class="eb-status-banner">This blast was already ${c.status === 'sending' ? 'sent (still finishing up)' : c.status} on ${dateAndTime(c.sent_at)} — it can't be edited or sent again.</div>` : '';
+    $('#eb-subject').value = EB_DRAFT.subject;
+    $('#eb-subject').disabled = EB_READONLY;
+    $('#eb-preview-text').value = EB_DRAFT.previewText;
+    $('#eb-preview-text').disabled = EB_READONLY;
+    $('#eb-add-row').style.display = EB_READONLY ? 'none' : '';
+    $('#eb-save-btn').style.display = EB_READONLY ? 'none' : '';
+    $('#eb-send-btn').style.display = EB_READONLY ? 'none' : '';
+    $('#eb-delete-btn').style.display = EB_READONLY ? 'none' : '';
+    $('#eb-save-msg').textContent = '';
+    renderEblastRows();
+    renderEblastPreview();
+    showSubtab($('#page-eblast .subtabs'), 'edit');
+  } catch (e) { alert('Could not open that blast: ' + e.message); }
+}
+
+$('#eb-back-btn').addEventListener('click', () => { showSubtab($('#page-eblast .subtabs'), 'blasts'); loadEblast(); });
+
+function renderEblastRows() {
+  const wrap = $('#eb-rows');
+  if (!EB_DRAFT.blocks.length) {
+    wrap.innerHTML = '<div class="eb-empty">No images yet — add one below.</div>';
+    return;
+  }
+  wrap.innerHTML = EB_DRAFT.blocks.map((b, i) => `
+    <div class="eb-row" data-row="${i}">
+      <div class="eb-thumb">${b.image ? `<img src="${escapeHtml(b.image)}" alt="">` : ''}</div>
+      <div class="eb-fields">
+        <div class="field"><label>Image</label><button type="button" class="btn eb-pick-btn" data-eb-pick="1" ${EB_READONLY ? 'disabled' : ''}>Choose image…</button></div>
+        <div class="field"><label>Description (alt text, required)</label><input data-eb-field="alt" value="${escapeHtml(b.alt || '')}" placeholder="e.g. New floorplan renderings" ${EB_READONLY ? 'disabled' : ''}></div>
+        <div class="field"><label>Link (optional)</label><input data-eb-field="link" value="${escapeHtml(b.link || '')}" placeholder="https://…" ${EB_READONLY ? 'disabled' : ''}></div>
+      </div>
+      ${EB_READONLY ? '' : `
+      <div class="eb-handle">
+        <button type="button" data-eb-move="up" title="Move up" ${i === 0 ? 'disabled' : ''}>&uarr;</button>
+        <button type="button" data-eb-move="down" title="Move down" ${i === EB_DRAFT.blocks.length - 1 ? 'disabled' : ''}>&darr;</button>
+      </div>
+      <button type="button" class="eb-remove" data-eb-remove="1">Remove</button>`}
+    </div>`).join('');
+
+  if (EB_READONLY) return;
+  $$('.eb-row', wrap).forEach(row => {
+    const i = Number(row.dataset.row);
+    $$('[data-eb-field]', row).forEach(el => el.addEventListener('change', () => {
+      EB_DRAFT.blocks[i][el.dataset.ebField] = el.value;
+      renderEblastRows();
+      renderEblastPreview();
+    }));
+    $('[data-eb-pick]', row).addEventListener('click', () => openEblastImagePicker(i));
+    $('[data-eb-remove]', row).addEventListener('click', () => {
+      EB_DRAFT.blocks.splice(i, 1);
+      renderEblastRows();
+      renderEblastPreview();
+    });
+    $$('[data-eb-move]', row).forEach(btn => btn.addEventListener('click', () => {
+      const dir = btn.dataset.ebMove === 'up' ? -1 : 1;
+      const j = i + dir;
+      if (j < 0 || j >= EB_DRAFT.blocks.length) return;
+      [EB_DRAFT.blocks[i], EB_DRAFT.blocks[j]] = [EB_DRAFT.blocks[j], EB_DRAFT.blocks[i]];
+      renderEblastRows();
+      renderEblastPreview();
+    }));
+  });
+}
+
+function openEblastImagePicker(rowIndex) {
+  const items = eblastImageOptions();
+  const folders = getGalleryFolders();
+  const folderSelectHtml = folders.length ? `<div class="field"><label>Folder</label><select id="eb-pick-folder">
+      <option value="all">All images</option>
+      ${folders.map(f => `<option value="${escapeHtml(f)}">${escapeHtml(f)}</option>`).join('')}
+    </select></div>` : '';
+  openModal('Choose an image', `${folderSelectHtml}<div class="eb-pick-grid" id="eb-pick-grid"></div>`, null);
+
+  const renderGrid = (folder) => {
+    const filtered = items.filter(it => folder === 'all' || it.folder === folder);
+    $('#eb-pick-grid').innerHTML = filtered.length ? filtered.map(it => `
+      <button type="button" class="eb-pick-thumb" data-value="${escapeHtml(it.value)}" title="${escapeHtml(it.label)}">
+        <img src="${escapeHtml(it.value)}" alt="" loading="lazy">
+        <span>${escapeHtml(it.label)}</span>
+      </button>`).join('') : '<div class="eb-empty">No images in this folder.</div>';
+    $$('.eb-pick-thumb', $('#eb-pick-grid')).forEach(btn => btn.addEventListener('click', () => {
+      EB_DRAFT.blocks[rowIndex].image = btn.dataset.value;
+      closeModal();
+      renderEblastRows();
+      renderEblastPreview();
+    }));
+  };
+  renderGrid('all');
+  $('#eb-pick-folder')?.addEventListener('change', (e) => renderGrid(e.target.value));
+}
+
+$('#eb-add-row').addEventListener('click', () => {
+  const opts = eblastImageOptions();
+  if (!opts.length) { alert('Upload at least one image in the Gallery tab first.'); return; }
+  EB_DRAFT.blocks.push({ image: '', alt: '', link: '' });
+  renderEblastRows();
+  renderEblastPreview();
+});
+
+function renderEblastPreview() {
+  const el = $('#eb-preview');
+  if (!EB_DRAFT.blocks.length) { el.innerHTML = '<div class="eb-preview-empty">Add an image above to see a preview.</div>'; return; }
+  el.innerHTML = EB_DRAFT.blocks.map(b => `
+    <div class="eb-preview-row">
+      ${b.image ? `<img src="${escapeHtml(b.image)}" alt="${escapeHtml(b.alt || '')}">` : '<div class="eb-preview-empty">No image chosen yet</div>'}
+      <div class="eb-preview-caption">${escapeHtml(b.alt || '(no description yet)')}${b.link ? ` &rarr; ${escapeHtml(b.link)}` : ''}</div>
+    </div>`).join('');
+}
+
+async function saveEblastDraft() {
+  const msg = $('#eb-save-msg');
+  EB_DRAFT.subject = $('#eb-subject').value.trim();
+  EB_DRAFT.previewText = $('#eb-preview-text').value.trim();
+  msg.className = 'msg'; msg.textContent = 'Saving…';
+  try {
+    const data = await api('/api/eblast/draft', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(EB_DRAFT) });
+    EB_DRAFT = { id: data.campaign.id, subject: data.campaign.subject || '', previewText: data.campaign.preview_text || '', blocks: data.campaign.blocks || [] };
+    msg.className = 'msg ok'; msg.textContent = 'Draft saved.';
+    return true;
+  } catch (e) {
+    msg.className = 'msg err'; msg.textContent = e.message;
+    return false;
+  }
+}
+$('#eb-save-btn').addEventListener('click', saveEblastDraft);
+
+$('#eb-delete-btn').addEventListener('click', async () => {
+  if (!EB_DRAFT?.id) return;
+  if (!confirm('Delete this draft blast? This can\'t be undone.')) return;
+  try {
+    await api('/api/eblast/campaigns/' + EB_DRAFT.id, { method: 'DELETE' });
+    showSubtab($('#page-eblast .subtabs'), 'blasts');
+    await loadEblast();
+  } catch (e) { alert('Could not delete: ' + e.message); }
+});
+
+$('#eb-send-btn').addEventListener('click', async () => {
+  EB_DRAFT.subject = $('#eb-subject').value.trim();
+  EB_DRAFT.previewText = $('#eb-preview-text').value.trim();
+  if (!EB_DRAFT.subject) return alert('Add a subject line first.');
+  if (!EB_DRAFT.blocks.length) return alert('Add at least one image first.');
+  const missingImage = EB_DRAFT.blocks.find(b => !b.image);
+  if (missingImage) return alert('Every row needs an image chosen before this can send.');
+  const missing = EB_DRAFT.blocks.find(b => !b.alt || !b.alt.trim());
+  if (missing) return alert('Every image needs a description before this can send.');
+
+  const saved = await saveEblastDraft();
+  if (!saved) return;
+
+  const { active } = EB_RECIPIENTS;
+  openModal('Send eblast', `
+    <p>This will email <b>${active}</b> active registrant${active === 1 ? '' : 's'} with the subject "<b>${escapeHtml(EB_DRAFT.subject)}</b>". This can't be undone.</p>
+  `, async () => {
+    const result = await api('/api/eblast/send', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ id: EB_DRAFT.id }) });
+    showNotice('Eblast sent', `Delivered to ${result.sent} of ${result.total} recipient${result.total === 1 ? '' : 's'}${result.failed ? ` (${result.failed} failed)` : ''}.`);
+    showSubtab($('#page-eblast .subtabs'), 'blasts');
+    await loadEblast();
+  });
+});
+
+/* ============ REGISTRATIONS ============ */
+function renderRegistrationsInto(tableSel, filterSel) {
+  const tbody = $(tableSel);
+  if (!tbody) return;
+  const filterEl = $(filterSel);
+  const filter = filterEl ? filterEl.value : '';
+  const rows = filter ? INQUIRIES.filter(i => i.status === filter) : INQUIRIES;
+  tbody.innerHTML = rows.length ? rows.map(r => `
+    <tr><td>${escapeHtml(r.first_name)} ${escapeHtml(r.last_name)}</td><td>${escapeHtml(r.email)}</td><td>${escapeHtml(r.phone||'—')}</td>
+      <td>${escapeHtml(r.purchase_timeframe||'—')}</td>
+      <td>${escapeHtml(hearAboutLabel(r.hear_about))}</td>
+      <td title="${escapeHtml(r.comments||'')}">${r.comments ? escapeHtml(r.comments.length > 60 ? r.comments.slice(0, 60) + '…' : r.comments) : '—'}</td>
+      <td>${escapeHtml(r.source_path||'—')}</td>
+      <td><select data-status-for="${r.id}">${['new','contacted','qualified','toured','closed','lost','needs_review'].map(s => `<option value="${s}" ${s===r.status?'selected':''}>${s.replace('_',' ')}</option>`).join('')}</select></td>
+      <td>${timeAgo(r.created_at)}</td>
+      <td><div style="display:flex; gap:0.4rem; flex-wrap:wrap;">
+        <a class="btn" style="padding:0.3rem 0.6rem;" href="${replyMailto(r)}">Reply</a>
+        <button class="btn btn-bad" style="padding:0.3rem 0.6rem;" data-delete-reg="${r.id}">Delete</button>
+      </div></td></tr>
+  `).join('') : `<tr><td colspan="10" class="empty">No registrations.</td></tr>`;
+  $$('[data-status-for]', tbody).forEach(sel => sel.addEventListener('change', async () => {
+    const id = sel.dataset.statusFor;
+    try {
+      await api(`/api/inquiries/${id}`, { method:'PATCH', headers:{'content-type':'application/json'}, body: JSON.stringify({ status: sel.value }) });
+      const inq = INQUIRIES.find(i => String(i.id) === String(id)); if (inq) inq.status = sel.value;
+      renderRegistrations(); renderOverview();
+    } catch (e) { alert('Could not update status: ' + e.message); }
+  }));
+  $$('[data-delete-reg]', tbody).forEach(btn => btn.addEventListener('click', async () => {
+    const id = btn.dataset.deleteReg;
+    const inq = INQUIRIES.find(i => String(i.id) === String(id));
+    const who = inq ? `${inq.first_name} ${inq.last_name}` : 'this registration';
+    if (!confirm(`Delete the registration from ${who}? This can't be undone.`)) return;
+    try {
+      await api(`/api/inquiries/${id}`, { method: 'DELETE' });
+      INQUIRIES = INQUIRIES.filter(i => String(i.id) !== String(id));
+      renderRegistrations(); renderOverview();
+    } catch (e) { alert('Could not delete: ' + e.message); }
+  }));
+}
+function replyMailto(r) {
+  const subject = encodeURIComponent('Re: Your Sunstone Towns registration');
+  const body = encodeURIComponent(`Hi ${r.first_name || ''},\n\nThanks for your interest in Sunstone Towns.\n\n`);
+  return `mailto:${encodeURIComponent(r.email)}?subject=${subject}&body=${body}`;
+}
+function renderRegistrations() { renderRegistrationsInto('#reg-table', '#reg-filter'); }
+$('#reg-filter').addEventListener('change', renderRegistrations);
+
+/* ============ CONTACTS ============ */
+// Same inquiries table as Registrations, but this view is about the
+// eblast recipient list specifically: who's on it, who's opted out, and
+// letting a client add someone (a broker, a past client) who never went
+// through the registration form but should still get eblasts.
+let CONTACTS_SELECTED = new Set();
+
+function renderContacts() {
+  const tbody = $('#contacts-table');
+  const search = ($('#contacts-search').value || '').trim().toLowerCase();
+  const filter = $('#contacts-filter').value;
+
+  let rows = INQUIRIES;
+  if (filter === 'subscribed') rows = rows.filter(r => !r.unsubscribed);
+  if (filter === 'unsubscribed') rows = rows.filter(r => !!r.unsubscribed);
+  if (search) rows = rows.filter(r =>
+    `${r.first_name} ${r.last_name}`.toLowerCase().includes(search) || (r.email || '').toLowerCase().includes(search));
+
+  // Selections for contacts no longer in view (filtered/searched out, or
+  // deleted) don't count toward the bulk bar or "select all" state.
+  const visibleIds = new Set(rows.map(r => String(r.id)));
+  for (const id of [...CONTACTS_SELECTED]) if (!visibleIds.has(id)) CONTACTS_SELECTED.delete(id);
+
+  tbody.innerHTML = rows.length ? rows.map(r => `
+    <tr data-contact-row="${r.id}">
+      <td><input type="checkbox" data-contact-select="${r.id}" ${CONTACTS_SELECTED.has(String(r.id)) ? 'checked' : ''}></td>
+      <td>
+        <input data-contact-field="name" data-id="${r.id}" style="width:9rem;" value="${escapeHtml(`${r.first_name} ${r.last_name}`.trim())}" placeholder="(no name)">
+      </td>
+      <td><input data-contact-field="email" data-id="${r.id}" style="width:13rem;" value="${escapeHtml(r.email)}"></td>
+      <td><input data-contact-field="phone" data-id="${r.id}" style="width:8rem;" value="${escapeHtml(r.phone || '')}" placeholder="(none)"></td>
+      <td>${r.source_path === 'manual' ? '<span class="tag medium">Manual</span>' : '<span class="tag closed">Registered</span>'}</td>
+      <td>
+        <label class="switch"><input type="checkbox" data-contact-unsub="${r.id}" ${r.unsubscribed ? '' : 'checked'}><span></span></label>
+        <span class="muted" style="font-size:0.75rem;">${r.unsubscribed ? 'Unsubscribed' : 'Subscribed'}</span>
+      </td>
+      <td><button class="btn btn-bad" style="padding:0.3rem 0.6rem;" data-delete-contact="${r.id}">Delete</button></td>
+    </tr>
+  `).join('') : `<tr><td colspan="7" class="empty">No contacts match.</td></tr>`;
+
+  $$('[data-contact-select]', tbody).forEach(cb => cb.addEventListener('change', () => {
+    const id = cb.dataset.contactSelect;
+    if (cb.checked) CONTACTS_SELECTED.add(id); else CONTACTS_SELECTED.delete(id);
+    updateContactsBulkBar();
+  }));
+  $$('[data-contact-field]', tbody).forEach(input => input.addEventListener('change', () => saveContactField(input)));
+  $$('[data-contact-unsub]', tbody).forEach(cb => cb.addEventListener('change', async () => {
+    const id = cb.dataset.contactUnsub;
+    const unsubscribed = !cb.checked;
+    try {
+      await api(`/api/inquiries/${id}`, { method: 'PATCH', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ unsubscribed }) });
+      const inq = INQUIRIES.find(i => String(i.id) === String(id)); if (inq) inq.unsubscribed = unsubscribed ? 1 : 0;
+      renderContacts();
+    } catch (e) { alert('Could not update: ' + e.message); cb.checked = !cb.checked; }
+  }));
+  $$('[data-delete-contact]', tbody).forEach(btn => btn.addEventListener('click', async () => {
+    const id = btn.dataset.deleteContact;
+    const inq = INQUIRIES.find(i => String(i.id) === String(id));
+    const who = inq ? (inq.email || 'this contact') : 'this contact';
+    if (!confirm(`Delete ${who} from your contacts? This can't be undone, and they'll stop receiving eblasts.`)) return;
+    try {
+      await api(`/api/inquiries/${id}`, { method: 'DELETE' });
+      INQUIRIES = INQUIRIES.filter(i => String(i.id) !== String(id));
+      CONTACTS_SELECTED.delete(id);
+      renderContacts(); renderOverview();
+    } catch (e) { alert('Could not delete: ' + e.message); }
+  }));
+
+  const selectAll = $('#contacts-select-all');
+  selectAll.checked = rows.length > 0 && rows.every(r => CONTACTS_SELECTED.has(String(r.id)));
+  selectAll.indeterminate = !selectAll.checked && rows.some(r => CONTACTS_SELECTED.has(String(r.id)));
+  updateContactsBulkBar();
+}
+
+function updateContactsBulkBar() {
+  const n = CONTACTS_SELECTED.size;
+  $('#contacts-bulk-bar').classList.toggle('hidden', n === 0);
+  $('#contacts-bulk-count').textContent = `${n} selected`;
+}
+
+$('#contacts-select-all').addEventListener('change', (e) => {
+  const tbody = $('#contacts-table');
+  $$('[data-contact-select]', tbody).forEach(cb => {
+    cb.checked = e.target.checked;
+    if (e.target.checked) CONTACTS_SELECTED.add(cb.dataset.contactSelect); else CONTACTS_SELECTED.delete(cb.dataset.contactSelect);
+  });
+  updateContactsBulkBar();
+});
+
+async function bulkUpdateContacts(unsubscribed) {
+  const ids = [...CONTACTS_SELECTED];
+  if (!ids.length) return;
+  const bar = $('#contacts-bulk-count');
+  bar.textContent = `Updating ${ids.length}…`;
+  const results = await Promise.allSettled(ids.map(id =>
+    api(`/api/inquiries/${id}`, { method: 'PATCH', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ unsubscribed }) })
+      .then(() => { const inq = INQUIRIES.find(i => String(i.id) === id); if (inq) inq.unsubscribed = unsubscribed ? 1 : 0; })
+  ));
+  const failed = results.filter(r => r.status === 'rejected').length;
+  renderContacts();
+  if (failed) alert(`${failed} of ${ids.length} couldn't be updated.`);
+}
+
+$('#contacts-bulk-unsub').addEventListener('click', () => bulkUpdateContacts(true));
+$('#contacts-bulk-resub').addEventListener('click', () => bulkUpdateContacts(false));
+$('#contacts-bulk-delete').addEventListener('click', async () => {
+  const ids = [...CONTACTS_SELECTED];
+  if (!ids.length) return;
+  if (!confirm(`Delete ${ids.length} contact${ids.length === 1 ? '' : 's'}? This can't be undone, and they'll stop receiving eblasts.`)) return;
+  const bar = $('#contacts-bulk-count');
+  bar.textContent = `Deleting ${ids.length}…`;
+  const results = await Promise.allSettled(ids.map(id => api(`/api/inquiries/${id}`, { method: 'DELETE' })));
+  const failed = results.filter(r => r.status === 'rejected').length;
+  const succeededIds = ids.filter((id, i) => results[i].status === 'fulfilled');
+  INQUIRIES = INQUIRIES.filter(i => !succeededIds.includes(String(i.id)));
+  CONTACTS_SELECTED.clear();
+  renderContacts(); renderOverview();
+  if (failed) alert(`${failed} of ${ids.length} couldn't be deleted.`);
+});
+
+$('#contacts-bulk-export').addEventListener('click', () => {
+  const ids = [...CONTACTS_SELECTED];
+  if (!ids.length) return;
+  const selected = INQUIRIES.filter(i => ids.includes(String(i.id)));
+
+  const cols = ['first_name', 'last_name', 'email', 'phone', 'source_path', 'unsubscribed'];
+  const headerLabels = ['First name', 'Last name', 'Email', 'Phone', 'Source', 'Subscribed'];
+  const csvCell = (v) => {
+    const s = String(v ?? '');
+    return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+  };
+  const lines = [headerLabels.map(csvCell).join(',')];
+  for (const r of selected) {
+    lines.push([
+      r.first_name, r.last_name, r.email, r.phone || '',
+      r.source_path === 'manual' ? 'Manual' : (r.source_path === 'import' ? 'Import' : 'Registered'),
+      r.unsubscribed ? 'No' : 'Yes',
+    ].map(csvCell).join(','));
+  }
+
+  const blob = new Blob([lines.join('\n')], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `contacts-export-${new Date().toISOString().slice(0, 10)}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+});
+
+async function saveContactField(input) {
+  const id = input.dataset.id;
+  const field = input.dataset.contactField;
+  const inq = INQUIRIES.find(i => String(i.id) === String(id));
+  if (!inq) return;
+
+  let body;
+  if (field === 'email') {
+    body = { email: input.value.trim() };
+  } else if (field === 'phone') {
+    body = { phone: input.value.trim() };
+  } else {
+    const parts = input.value.trim().split(/\s+/);
+    body = { first_name: parts.shift() || '', last_name: parts.join(' ') };
+  }
+
+  try {
+    const data = await api(`/api/inquiries/${id}`, { method: 'PATCH', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
+    Object.assign(inq, data.inquiry);
+    input.style.borderColor = '';
+  } catch (e) {
+    input.style.borderColor = 'var(--bad)';
+    alert('Could not save: ' + e.message);
+    renderContacts();
+  }
+}
+
+$('#contacts-search').addEventListener('input', renderContacts);
+$('#contacts-filter').addEventListener('change', renderContacts);
+
+$('#contact-add-btn').addEventListener('click', () => {
+  openModal('Add contact', `
+    <div class="field"><label>Name (optional)</label><input id="contact-new-name" placeholder="e.g. Jordan Reyes"></div>
+    <div class="field" style="margin-top:0.75rem;"><label>Email</label><input id="contact-new-email" placeholder="jordan@example.com"></div>
+    <div class="field" style="margin-top:0.75rem;"><label>Phone (optional)</label><input id="contact-new-phone" placeholder="e.g. 905-555-0123"></div>
+  `, async () => {
+    const email = $('#contact-new-email').value.trim();
+    if (!email) throw new Error('Enter an email address.');
+    const [first_name, ...rest] = $('#contact-new-name').value.trim().split(/\s+/);
+    const phone = $('#contact-new-phone').value.trim();
+    const data = await api('/api/inquiries', {
+      method: 'POST', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ email, first_name: first_name || '', last_name: rest.join(' '), phone }),
+    });
+    INQUIRIES.unshift(data.inquiry);
+    renderContacts(); renderOverview();
+  });
+});
+
+/* ---------- contacts CSV import ---------- */
+$('#contact-import-btn').addEventListener('click', () => $('#contact-import-file').click());
+$('#contact-import-file').addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  e.target.value = ''; // so picking the same file twice still fires "change"
+  if (!file) return;
+
+  let text;
+  try { text = await file.text(); } catch { alert('Could not read that file.'); return; }
+
+  openModal('Importing contacts…', `<p class="muted">Reading <b>${escapeHtml(file.name)}</b>, this can take a moment for a big list.</p>`, null);
+
+  try {
+    const data = await api('/api/inquiries/import', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ csv: text }) });
+    const inqRes = await api('/api/inquiries');
+    INQUIRIES = inqRes.inquiries;
+    renderContacts(); renderOverview();
+
+    const errList = data.errors && data.errors.length
+      ? `<p class="muted" style="margin-top:0.75rem;">First few issues:</p><ul style="margin:0.35rem 0 0 1.1rem; font-size:0.8125rem; color:var(--sub);">${data.errors.map(e => `<li>${escapeHtml(e)}</li>`).join('')}</ul>`
+      : '';
+    $('#modal-title').textContent = 'Import complete';
+    $('#modal-body').innerHTML = `
+      <p><b>${data.imported}</b> new contact${data.imported === 1 ? '' : 's'} added, <b>${data.updated}</b> updated, <b>${data.skipped}</b> skipped, out of ${data.total} row${data.total === 1 ? '' : 's'} in the file.</p>
+      ${errList}
+    `;
+  } catch (err) {
+    $('#modal-title').textContent = 'Import failed';
+    $('#modal-body').innerHTML = `<p class="msg err">${escapeHtml(err.message)}</p>`;
+  }
+});
+
+/* ============ THANK YOU PAGE CONTENT (Edit tab page-level tab) ============ */
+const THANKYOU_KEYS = ['thankyou_headline','thankyou_lede','thankyou_note'];
+function thankyouDefaults() {
+  return {
+    thankyou_headline: CONTENT.thankyou_headline || 'Thank You.',
+    thankyou_lede: CONTENT.thankyou_lede || "You're on the list. A member of the Sunstone Towns team will be in touch soon with floorplans, pricing, and priority updates.",
+    thankyou_note: CONTENT.thankyou_note || 'In the meantime, take another look around the community.',
+  };
+}
+let thankyouDraft = null;
+let thankyouDirty = false;
+function initThankYouEditor() {
+  const { values, pending } = loadDraftValues('thankyou', THANKYOU_KEYS);
+  const fallbacks = thankyouDefaults();
+  thankyouDraft = {};
+  THANKYOU_KEYS.forEach(k => { thankyouDraft[k] = values[k] || fallbacks[k]; });
+  thankyouDirty = false;
+  $('#ty-headline').value = thankyouDraft.thankyou_headline;
+  $('#ty-lede').value = thankyouDraft.thankyou_lede;
+  $('#ty-note').value = thankyouDraft.thankyou_note;
+  updateThankYouStatus(pending);
+  refreshThankYouPreview();
+}
+function updateThankYouStatus(pending) {
+  const badge = $('#ty-status');
+  if (!badge) return;
+  if (thankyouDirty) { badge.textContent = 'Unsaved changes'; badge.className = 'status-badge dirty'; }
+  else if (pending) { badge.textContent = 'Draft saved, not published'; badge.className = 'status-badge pending'; }
+  else { badge.textContent = 'Published'; badge.className = 'status-badge clean'; }
+}
+['ty-headline','ty-lede','ty-note'].forEach(id => {
+  $('#' + id)?.addEventListener('input', () => {
+    thankyouDraft.thankyou_headline = $('#ty-headline').value;
+    thankyouDraft.thankyou_lede = $('#ty-lede').value;
+    thankyouDraft.thankyou_note = $('#ty-note').value;
+    thankyouDirty = true;
+    refreshThankYouPreview();
+    updateThankYouStatus(draftPending('thankyou'));
+  });
+});
+$('#ty-save-draft')?.addEventListener('click', async () => {
+  try { await persistDraft('thankyou', THANKYOU_KEYS, thankyouDraft); thankyouDirty = false; updateThankYouStatus(true); }
+  catch (e) { alert('Could not save draft: ' + e.message); }
+});
+$('#ty-publish')?.addEventListener('click', async () => {
+  try {
+    await publishDraft('thankyou', THANKYOU_KEYS, thankyouDraft); thankyouDirty = false; updateThankYouStatus(false);
+    showNotice('Published', 'Your changes are now live on the website.');
+  } catch (e) { alert('Could not publish: ' + e.message); }
+});
+$('#ty-discard')?.addEventListener('click', async () => {
+  if (!confirm('Discard the saved draft and revert to the last published version?')) return;
+  try { await discardDraft('thankyou'); initThankYouEditor(); } catch (e) { alert('Could not discard: ' + e.message); }
+});
+
+/* ---------- Thank You live preview: its own iframe, patched in place like Hero ---------- */
+const THANKYOU_FRAME = { frame: null, ready: false };
+(function setupThankYouLiveFrame() {
+  const frame = document.getElementById('pf-frame-thankyou');
+  if (!frame) return;
+  THANKYOU_FRAME.frame = frame;
+  frame.addEventListener('load', () => { THANKYOU_FRAME.ready = true; fitPreviewHeight('thankyoupreview'); refreshThankYouPreview(); });
+})();
+function refreshThankYouPreview() {
+  if (!THANKYOU_FRAME.ready || !THANKYOU_FRAME.frame || !thankyouDraft) return;
+  let doc;
+  try { doc = THANKYOU_FRAME.frame.contentDocument; } catch (e) { return; }
+  if (!doc) return;
+  const h1 = doc.querySelector('.thanks h1'); if (h1) h1.innerHTML = linesHtml(thankyouDraft.thankyou_headline);
+  const lede = doc.querySelector('.thanks .lede'); if (lede) lede.textContent = thankyouDraft.thankyou_lede;
+  const note = doc.querySelector('.thanks .thanks__note'); if (note) note.textContent = thankyouDraft.thankyou_note;
+}
+
+/* ============ SEO & SHARING ============ */
+let lastAuditChecks = null;
+const CHECK_LOCATIONS = {
+  title: { label: 'Search appearance', page: 'seo', sub: 'search' },
+  title_length: { label: 'Search appearance', page: 'seo', sub: 'search' },
+  meta_description: { label: 'Search appearance', page: 'seo', sub: 'search' },
+  meta_description_length: { label: 'Search appearance', page: 'seo', sub: 'search' },
+  canonical: { label: 'Search appearance', page: 'seo', sub: 'search' },
+  og_tags: { label: 'Social sharing', page: 'seo', sub: 'social' },
+  structured_data: { label: 'Structured data (auto-generated)' },
+  image_alt: { label: 'Gallery', page: 'gallery' },
+  robots: { label: 'robots.txt (static file)' },
+  sitemap: { label: 'sitemap.xml (static file)' },
+  internal_anchors: { label: 'Site template (code)' },
+  placeholder_content: { label: 'Site template (code)' },
+};
+function locationForCheck(id) { return (CHECK_LOCATIONS[id] || {}).label || '—'; }
+function actionForCheck(id) {
+  const loc = CHECK_LOCATIONS[id];
+  if (loc && loc.page) return `<button class="edit" data-fix-goto="${loc.page}|${loc.sub||''}">Fix ›</button>`;
+  return '<span class="muted">—</span>';
+}
+document.addEventListener('click', (e) => {
+  const btn = e.target.closest('[data-fix-goto]'); if (!btn) return;
+  const [page, sub] = btn.dataset.fixGoto.split('|');
+  showPage(page);
+  if (sub) {
+    const subtabs = $('#page-' + page + ' .subtabs');
+    if (subtabs) showSubtab(subtabs, sub);
+    else if (page === 'homepage') switchEditSection(sub);
+  }
+});
+function initSeoEditors() { renderAuditHistory(); initSearchAppearance(); initSocialSharing(); updateSeoBottombarVisibility(); initPerfPanel(); }
+
+function categorize(check) {
+  if (['title','title_length','meta_description','meta_description_length','canonical','og_tags'].includes(check.id)) return 'Metadata';
+  if (['robots','sitemap','internal_anchors','placeholder_content'].includes(check.id)) return 'Crawlability';
+  if (check.id === 'structured_data') return 'Structured data';
+  if (check.id === 'image_alt') return 'Image optimization';
+  return 'Metadata';
+}
+function scoreChecks(checks) {
+  let num = 0, den = 0;
+  checks.forEach(c => { const w = c.severity === 'blocker' ? 3 : 1; den += w; if (c.pass) num += w; });
+  return den ? Math.round(100 * num / den) : 100;
+}
+$('#run-audit-btn').addEventListener('click', runAudit);
+async function runPerfCheck(strategy) {
+  $('#perf-mobile').classList.toggle('active', strategy === 'mobile');
+  $('#perf-desktop').classList.toggle('active', strategy === 'desktop');
+  $('#perf-score').textContent = '…';
+  $('#perf-summary').textContent = 'Checking Google PageSpeed Insights — this can take up to 30 seconds…';
+  $('#perf-cwv').innerHTML = 'Core Web Vitals: <b style="color:var(--ink);">—</b>';
+  try {
+    const res = await api(`/api/perf-check?strategy=${strategy}`);
+    $('#perf-score').textContent = res.score;
+    $('#perf-summary').textContent = `Live Lighthouse ${strategy} performance score · checked ${new Date(res.checked_at).toLocaleTimeString()}`;
+    const m = res.metrics || {};
+    $('#perf-cwv').innerHTML = `LCP: <b style="color:var(--ink);">${escapeHtml(m.lcp || '—')}</b> &middot; CLS: <b style="color:var(--ink);">${escapeHtml(m.cls || '—')}</b> &middot; FCP: <b style="color:var(--ink);">${escapeHtml(m.fcp || '—')}</b>`;
+    try {
+      await putField(`perf_last_score_${strategy}`, String(res.score));
+      await putField('perf_last_checked_at', res.checked_at);
+      CONTENT[`perf_last_score_${strategy}`] = String(res.score);
+      CONTENT.perf_last_checked_at = res.checked_at;
+      renderAuditHistory();
+    } catch (e2) { /* non-fatal — the score is still shown above */ }
+  } catch (e) {
+    $('#perf-score').textContent = 'Not available';
+    $('#perf-summary').textContent = "Couldn't get a live score: " + e.message;
+    $('#perf-cwv').innerHTML = 'Core Web Vitals: <b style="color:var(--ink);">Unavailable</b>';
+  }
+}
+$('#perf-mobile')?.addEventListener('click', () => runPerfCheck('mobile'));
+$('#perf-desktop')?.addEventListener('click', () => runPerfCheck('desktop'));
+function initPerfPanel() {
+  const mobile = CONTENT.perf_last_score_mobile;
+  const desktop = CONTENT.perf_last_score_desktop;
+  if (!mobile && !desktop) return;
+  const strategy = mobile ? 'mobile' : 'desktop';
+  $('#perf-mobile').classList.toggle('active', strategy === 'mobile');
+  $('#perf-desktop').classList.toggle('active', strategy === 'desktop');
+  $('#perf-score').textContent = mobile || desktop;
+  $('#perf-summary').textContent = CONTENT.perf_last_checked_at ? `Live Lighthouse ${strategy} performance score · checked ${new Date(CONTENT.perf_last_checked_at).toLocaleString()}` : `Last known ${strategy} performance score.`;
+}
+async function runAudit() {
+  const btn = $('#run-audit-btn'); btn.disabled = true; btn.textContent = 'Running…';
+  try {
+    const res = await api('/api/seo-check');
+    lastAuditChecks = res.checks;
+    const score = scoreChecks(res.checks);
+    $('#audit-url').textContent = res.url;
+    $('#audit-when').textContent = 'Checked ' + new Date(res.checked_at).toLocaleString();
+    $('#audit-score').textContent = score;
+    $('#audit-score-bar').style.width = score + '%';
+    $('#audit-summary').textContent = `${res.summary.passed} passed, ${res.summary.warnings} warnings, ${res.summary.blockers} blockers, out of ${res.summary.total} checks.`;
+
+    const cats = {};
+    res.checks.forEach(c => { const cat = categorize(c); (cats[cat] = cats[cat] || []).push(c); });
+    $('#audit-categories').innerHTML = Object.entries(cats).map(([name, list]) => {
+      const s = scoreChecks(list);
+      return `<div class="cat-row"><span class="name">${name}</span><div class="bar"><div style="width:${s}%"></div></div><span class="num">${s}</span></div>`;
+    }).join('');
+
+    const fails = res.checks.filter(c => !c.pass).sort((a,b) => (a.severity==='blocker'?0:1) - (b.severity==='blocker'?0:1));
+    $('#audit-fixes').innerHTML = fails.length ? fails.map(c => `
+      <tr><td><span class="tag ${c.severity==='blocker'?'high':'medium'}">${c.severity==='blocker'?'High':'Medium'}</span></td><td>${escapeHtml(c.label)}</td><td class="muted">${escapeHtml(locationForCheck(c.id))}</td><td class="muted">${escapeHtml(c.detail||'')}</td><td>${actionForCheck(c.id)}</td></tr>
+    `).join('') : `<tr><td colspan="5" class="empty">No issues found — nice work.</td></tr>`;
+    const fixableCount = fails.filter(c => CHECK_LOCATIONS[c.id] && CHECK_LOCATIONS[c.id].page).length;
+    $('#audit-fixes-caption').textContent = fails.length
+      ? (fixableCount ? `${fixableCount} of ${fails.length} finding(s) can be fixed from the CMS — use "Fix ›". The rest live in code or static files.` : 'These findings live in code or static files, not the CMS.')
+      : '';
+
+    const history = getAuditHistory();
+    history.unshift({ date: res.checked_at, score });
+    while (history.length > 10) history.pop();
+    await putField('seo_audit_history', JSON.stringify(history));
+    await putField('seo_audit_last_score', String(score));
+    CONTENT.seo_audit_history = JSON.stringify(history);
+    CONTENT.seo_audit_last_score = String(score);
+    renderAuditHistory();
+    renderOverview();
+  } catch (e) {
+    $('#audit-summary').textContent = "Couldn't run audit: " + e.message;
+  } finally { btn.disabled = false; btn.textContent = 'Run audit'; }
+}
+function perfSummaryText() {
+  const mobile = CONTENT.perf_last_score_mobile;
+  const desktop = CONTENT.perf_last_score_desktop;
+  if (!mobile && !desktop) return '<span class="muted">Not checked</span>';
+  const parts = [];
+  if (mobile) parts.push(`${escapeHtml(mobile)} mobile`);
+  if (desktop) parts.push(`${escapeHtml(desktop)} desktop`);
+  return parts.join(' &middot; ');
+}
+function renderAuditHistory() {
+  const history = getAuditHistory();
+  $('#audit-history').innerHTML = history.length ? history.map((h, i) => `<tr><td>${new Date(h.date).toLocaleString()}</td><td>${h.score}</td><td class="muted">${i === 0 ? perfSummaryText() : '—'}</td></tr>`).join('') : `<tr><td colspan="3" class="empty">No history yet — run an audit.</td></tr>`;
+  if (history.length) { $('#audit-score').textContent = history[0].score; $('#audit-score-bar').style.width = history[0].score + '%'; $('#audit-when').textContent = 'Last checked ' + new Date(history[0].date).toLocaleString(); }
+}
+
+const SEARCH_KEYS = ['seo_title','seo_description','canonical_url'];
+let searchDraft = null; let searchDirty = false;
+function initSearchAppearance() {
+  const { values, pending } = loadDraftValues('search', SEARCH_KEYS);
+  searchDraft = { seo_title: values.seo_title || CONTENT.seo_title || '', seo_description: values.seo_description || CONTENT.seo_description || '', canonical_url: values.canonical_url || CONTENT.canonical_url || '' };
+  searchDirty = false;
+  $('#s-seo-title').value = searchDraft.seo_title;
+  $('#s-seo-desc').value = searchDraft.seo_description;
+  $('#s-canonical').value = searchDraft.canonical_url;
+  renderSearchPreview();
+  renderSearchChecks();
+  renderFaviconPreview();
+  updateSeoBottombarStatus();
+}
+['s-seo-title','s-seo-desc','s-canonical'].forEach(id => $('#'+id)?.addEventListener('input', () => {
+  searchDraft.seo_title = $('#s-seo-title').value; searchDraft.seo_description = $('#s-seo-desc').value; searchDraft.canonical_url = $('#s-canonical').value;
+  searchDirty = true; renderSearchPreview(); updateSeoBottombarStatus();
+}));
+function renderSearchPreview() {
+  $('#sp-url').textContent = searchDraft.canonical_url;
+  $('#sp-title').textContent = searchDraft.seo_title;
+  $('#sp-desc').textContent = searchDraft.seo_description;
+}
+
+/* ---------- favicon ---------- */
+function renderFaviconPreview() {
+  const href = CONTENT.favicon_href;
+  const isCustom = href && href !== 'assets/favicon.svg';
+  [$('#favicon-preview'), $('#sp-favicon')].forEach(el => {
+    if (!el) return;
+    el.innerHTML = isCustom ? `<img src="${escapeHtml(href)}" alt="Custom favicon">` : 'ST';
+  });
+  $('#favicon-reset').style.display = isCustom ? '' : 'none';
+}
+const FAVICON_MAX_BYTES = 100 * 1024;
+$('#favicon-upload')?.addEventListener('change', async () => {
+  const file = $('#favicon-upload').files[0];
+  const msg = $('#favicon-msg');
+  if (!file) return;
+  if (file.size > FAVICON_MAX_BYTES) {
+    msg.className = 'msg err'; msg.textContent = `That file is ${Math.round(file.size/1024)} KB — please use something under 100 KB.`;
+    $('#favicon-upload').value = ''; return;
+  }
+  const reader = new FileReader();
+  reader.onload = async () => {
+    const dataUrl = reader.result;
+    try {
+      msg.className = 'msg'; msg.textContent = 'Saving…';
+      await putField('favicon_href', dataUrl);
+      CONTENT.favicon_href = dataUrl;
+      renderFaviconPreview();
+      msg.className = 'msg ok'; msg.textContent = 'Favicon updated — live now.';
+    } catch (e) { msg.className = 'msg err'; msg.textContent = 'Could not save: ' + e.message; }
+  };
+  reader.onerror = () => { msg.className = 'msg err'; msg.textContent = 'Could not read that file.'; };
+  reader.readAsDataURL(file);
+});
+$('#favicon-reset')?.addEventListener('click', async () => {
+  const msg = $('#favicon-msg');
+  try {
+    await putField('favicon_href', 'assets/favicon.svg');
+    CONTENT.favicon_href = 'assets/favicon.svg';
+    $('#favicon-upload').value = '';
+    renderFaviconPreview();
+    msg.className = 'msg ok'; msg.textContent = 'Reset to the default favicon.';
+  } catch (e) { msg.className = 'msg err'; msg.textContent = 'Could not reset: ' + e.message; }
+});
+function renderSearchChecks() {
+  const checks = [
+    { label: 'Title added', pass: !!searchDraft.seo_title },
+    { label: 'Description added', pass: !!searchDraft.seo_description },
+    { label: 'Title length (30–60 chars)', pass: searchDraft.seo_title.length >= 30 && searchDraft.seo_title.length <= 60 },
+    { label: 'Description length (120–160 chars)', pass: searchDraft.seo_description.length >= 120 && searchDraft.seo_description.length <= 160 },
+  ];
+  $('#search-checks').innerHTML = checks.map(c => `<div class="check-item"><span class="dot ${c.pass?'pass':'warn'}"></span>${c.label}</div>`).join('');
+}
+
+const SOCIAL_KEYS = ['og_title','og_description','og_image'];
+let socialDraft = null; let socialMirror = false;
+function populateOgImageOptions(current) {
+  const sel = $('#s-og-image');
+  if (!sel) return;
+  const options = MEDIA_FILES.filter(f => /\.(jpe?g|png)$/i.test(f)).map(f => `${IMG_DIR}${f}`);
+  if (current && !options.includes(current)) options.unshift(current);
+  sel.innerHTML = options.map(v => `<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join('');
+  sel.value = current || options[0] || '';
+}
+function initSocialSharing() {
+  const { values } = loadDraftValues('social', SOCIAL_KEYS);
+  socialDraft = { og_title: values.og_title || CONTENT.og_title || '', og_description: values.og_description || CONTENT.og_description || '', og_image: values.og_image || CONTENT.og_image || '' };
+  $('#s-og-title').value = socialDraft.og_title; $('#s-og-desc').value = socialDraft.og_description;
+  populateOgImageOptions(socialDraft.og_image);
+  $('#social-mirror-toggle').classList.toggle('on', socialMirror);
+  renderSocialPreview();
+}
+['s-og-title','s-og-desc'].forEach(id => $('#'+id)?.addEventListener('input', () => {
+  socialDraft.og_title = $('#s-og-title').value; socialDraft.og_description = $('#s-og-desc').value;
+  renderSocialPreview(); updateSeoBottombarStatus();
+}));
+$('#s-og-image')?.addEventListener('change', () => {
+  socialDraft.og_image = $('#s-og-image').value;
+  renderSocialPreview(); updateSeoBottombarStatus();
+});
+$('#social-mirror-toggle').addEventListener('click', () => {
+  socialMirror = !socialMirror;
+  $('#social-mirror-toggle').classList.toggle('on', socialMirror);
+  if (socialMirror) { socialDraft.og_title = searchDraft.seo_title; socialDraft.og_description = searchDraft.seo_description; $('#s-og-title').value = socialDraft.og_title; $('#s-og-desc').value = socialDraft.og_description; }
+  renderSocialPreview(); updateSeoBottombarStatus();
+});
+function renderSocialPreview() {
+  $('#sp2-img').style.backgroundImage = socialDraft.og_image ? `url(${socialDraft.og_image})` : '';
+  $('#sp2-img').textContent = socialDraft.og_image ? '' : 'No image';
+  $('#sp2-url').textContent = searchDraft ? searchDraft.canonical_url : '';
+  $('#sp2-title').textContent = socialDraft.og_title;
+  $('#sp2-desc').textContent = socialDraft.og_description;
+}
+
+function updateSeoBottombarVisibility() {
+  const activeSub = $('#page-seo .subtabs button.active')?.dataset.sub;
+  $('#seo-bottombar')?.classList.toggle('hidden', activeSub === 'audit');
+}
+function updateSeoBottombarStatus() {
+  const badge = $('#seo-status');
+  if (!badge) return;
+  const dirty = searchDirty || (socialDraft && (socialDraft.og_title !== (CONTENT.og_title||'') || socialDraft.og_description !== (CONTENT.og_description||'') || socialDraft.og_image !== (CONTENT.og_image||'')));
+  const pending = draftPending('search') || draftPending('social');
+  if (dirty) { badge.textContent = 'Unsaved changes'; badge.className = 'status-badge dirty'; }
+  else if (pending) { badge.textContent = 'Draft saved, not published'; badge.className = 'status-badge pending'; }
+  else { badge.textContent = 'Published'; badge.className = 'status-badge clean'; }
+}
+function initSeoBottombar() {
+  $('#seo-publish').addEventListener('click', async () => {
+    try {
+      await publishDraft('search', SEARCH_KEYS, searchDraft);
+      await publishDraft('social', SOCIAL_KEYS, socialDraft);
+      searchDirty = false; updateSeoBottombarStatus();
+    } catch (e) { alert('Could not publish: ' + e.message); }
+  });
+  $('#seo-save-draft').addEventListener('click', async () => {
+    try { await persistDraft('search', SEARCH_KEYS, searchDraft); await persistDraft('social', SOCIAL_KEYS, socialDraft); searchDirty = false; updateSeoBottombarStatus(); }
+    catch (e) { alert('Could not save draft: ' + e.message); }
+  });
+  $('#seo-discard-link').addEventListener('click', async (e) => {
+    e.preventDefault();
+    if (!confirm('Discard unpublished changes to SEO & sharing?')) return;
+    await discardDraft('search'); await discardDraft('social'); initSearchAppearance(); initSocialSharing();
+  });
+}
+initSeoBottombar();
+
+/* ============ SETTINGS ============ */
+const LOG_PAGE_SIZE = 20;
+let logPage = 0;
+async function renderLog() {
+  try {
+    const res = await api('/api/edit-log?limit=300');
+    LOGENTRIES = res.entries;
+    logPage = 0;
+    renderLogPage();
+  } catch (e) { $('#log-table').innerHTML = `<tr><td colspan="4" class="empty">Couldn't load: ${e.message}</td></tr>`; }
+}
+function renderLogPage() {
+  const totalPages = Math.max(1, Math.ceil(LOGENTRIES.length / LOG_PAGE_SIZE));
+  logPage = Math.max(0, Math.min(logPage, totalPages - 1));
+  const start = logPage * LOG_PAGE_SIZE;
+  const rows = LOGENTRIES.slice(start, start + LOG_PAGE_SIZE);
+  $('#log-table').innerHTML = rows.length ? rows.map(l => `
+    <tr><td>${dateAndTime(l.created_at)}</td><td>${escapeHtml(l.editor||'—')}</td><td>${escapeHtml(l.entity_type)}:${escapeHtml(l.entity_key)}</td><td>${escapeHtml(l.note||'')}</td></tr>
+  `).join('') : `<tr><td colspan="4" class="empty">No activity yet.</td></tr>`;
+  const pager = $('#log-pager');
+  if (pager) {
+    pager.innerHTML = LOGENTRIES.length > LOG_PAGE_SIZE
+      ? `<button type="button" id="log-prev" ${logPage === 0 ? 'disabled' : ''}>‹ Newer</button><span>Page ${logPage + 1} of ${totalPages}</span><button type="button" id="log-next" ${logPage >= totalPages - 1 ? 'disabled' : ''}>Older ›</button>`
+      : '';
+    $('#log-prev')?.addEventListener('click', () => { logPage--; renderLogPage(); });
+    $('#log-next')?.addEventListener('click', () => { logPage++; renderLogPage(); });
+  }
+}
+
+/* ---------- modal plumbing ---------- */
+let currentSave = null;
+function openModal(title, bodyHtml, onSave) { $('#modal-title').textContent = title; $('#modal-body').innerHTML = bodyHtml; $('#modal-msg').textContent = ''; currentSave = onSave; $('#overlay').classList.remove('hidden'); }
+function closeModal() { $('#overlay').classList.add('hidden'); currentSave = null; }
+$('#modal-cancel').addEventListener('click', closeModal);
+$('#overlay').addEventListener('click', (e) => { if (e.target.id === 'overlay') closeModal(); });
+$('#modal-save').addEventListener('click', async () => {
+  if (!currentSave) return closeModal();
+  try { $('#modal-msg').className = 'msg'; $('#modal-msg').textContent = 'Saving…'; await currentSave(); closeModal(); }
+  catch (e) { $('#modal-msg').className = 'msg err'; $('#modal-msg').textContent = e.message; }
+});
+
+/* ---------- theme (light / dark) ---------- */
+function applyTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+  const label = $('#theme-toggle-label');
+  const icon = $('#theme-toggle-icon');
+  if (label) label.textContent = theme === 'light' ? 'Light mode' : 'Dark mode';
+  if (icon) icon.innerHTML = theme === 'light'
+    ? '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>'
+    : '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>';
+  const logo = $('#brand-logo');
+  // One mark for both themes; light theme darkens it with CSS (see #brand-logo rule).
+}
+(function initTheme() {
+  let saved = null;
+  try { saved = localStorage.getItem('sunstone-towns-admin-theme'); } catch (e) { /* ignore */ }
+  applyTheme(saved === 'light' ? 'light' : 'dark');
+})();
+$('#theme-toggle')?.addEventListener('click', () => {
+  const next = document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+  applyTheme(next);
+  try { localStorage.setItem('sunstone-towns-admin-theme', next); } catch (e) { /* ignore */ }
+});
+
+/* ---------- avatar menu / logout ---------- */
+$('#whoami')?.addEventListener('click', (e) => { e.stopPropagation(); $('#avatar-menu')?.classList.toggle('hidden'); });
+document.addEventListener('click', () => $('#avatar-menu')?.classList.add('hidden'));
+$('#logout-btn')?.addEventListener('click', async () => {
+  try { await fetch('/api/logout', { method: 'POST' }); } catch (e) { /* ignore */ }
+  location.href = '/login.html';
+});
+
+loadAll();
+</script>
+</body>
+</html>

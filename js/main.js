@@ -447,15 +447,58 @@
      Posts to Keap/Infusionsoft via the form's action. Keap's recaptcha.js
      needs a real, non-intercepted POST, so this only runs native validation
      and otherwise lets the browser submit. The post-submit destination is
-     set in the form's settings in Keap. */
+     set in the form's settings in Keap.
+
+     CMS copy: as the visitor submits, the same fields are also sent in the
+     background to /register (keepalive, so it survives Keap's page change).
+     That stores the lead in the site's own database, emails the
+     notification and sends the auto-reply. It never blocks or changes the
+     Keap submission; if it fails, Keap still gets the lead. */
   var form = document.querySelector('.form');
   if (form) {
+    var cmsCopySent = false;
+    var sendCmsCopy = function () {
+      if (cmsCopySent || !form.checkValidity()) return;
+      cmsCopySent = true;
+      var val = function (name) { var el = form.querySelector('[name="' + name + '"]'); return el ? String(el.value || '').trim() : ''; };
+      var qs = new URLSearchParams(window.location.search);
+      var consentEl = form.querySelector('[name="inf_custom_Consent"]');
+      var payload = JSON.stringify({
+        firstName: val('inf_field_FirstName'),
+        lastName: val('inf_field_LastName'),
+        email: val('inf_field_Email'),
+        phone: val('inf_field_Phone1'),
+        timeframe: val('inf_custom_PurchaseTimeframe'),
+        hearAbout: val('inf_custom_LeadSource'),
+        comments: val('inf_custom_SunstoneComments'),
+        consent: consentEl && consentEl.checked ? 'yes' : '',
+        company: val('inf-sbt'), // Keap's hidden honeypot: bots fill it, people don't
+        sourcePath: window.location.pathname + window.location.hash,
+        utmSource: qs.get('utm_source') || '',
+        utmMedium: qs.get('utm_medium') || '',
+        utmCampaign: qs.get('utm_campaign') || ''
+      });
+      try {
+        fetch('/register', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: payload, keepalive: true, credentials: 'same-origin' })
+          .catch(function () {});
+      } catch (err) {
+        try { navigator.sendBeacon && navigator.sendBeacon('/register', new Blob([payload], { type: 'application/json' })); } catch (e) { /* ignore */ }
+      }
+    };
+
+    // Keap's reCAPTCHA can take over the button click and submit the form
+    // itself, which skips the submit event, so the copy is sent from the
+    // click as well. cmsCopySent makes sure it only goes once.
+    var submitBtn = form.querySelector('button[type="submit"]');
+    if (submitBtn) submitBtn.addEventListener('click', sendCmsCopy, true);
+
     form.addEventListener('submit', function (e) {
       if (!form.checkValidity()) {
         e.preventDefault();
         form.reportValidity();
         return;
       }
+      sendCmsCopy();
       form.classList.add('is-sent');
     });
   }

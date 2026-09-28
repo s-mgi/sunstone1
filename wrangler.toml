@@ -1,0 +1,19 @@
+name = "sunstone-towns"
+main = "src/worker.js"
+compatibility_date = "2026-09-28"
+# Keep plain-text variables the user sets in the Cloudflare dashboard when
+# Workers Builds redeploys from GitHub.
+keep_vars = true
+
+[assets]
+directory = "./"
+binding = "ASSETS"
+# The Worker must run first for these paths (to render CMS content, handle
+# the API, and gate /admin) — everything else is served straight from disk
+# without invoking the Worker at all, which is both faster and simpler.
+run_worker_first = ["/", "/thank-you.html", "/thank-you", "/register", "/admin", "/admin.html", "/api/*", "/media/*"]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "sunstonetowns"
+database_id = "4e0652f7-14d0-4518-a9ed-707460eaa237"

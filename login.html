@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sign in — Sunstone Towns Site Dashboard</title>
+<meta name="robots" content="noindex, nofollow">
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{ --bg:#141219; --card:#1c1a22; --ink:#f4efe3; --sub:rgba(244,239,227,.6); --line:rgba(244,239,227,.16); --gold:#e7b162; --gold-btn:#ecb463; --bad:#e07a6a; }
+*{ box-sizing:border-box; }
+html,body{ height:100%; }
+body{ margin:0; font-family:'Roboto','Helvetica Neue',Helvetica,Arial,sans-serif; background:var(--bg); color:var(--ink); display:flex; align-items:center; justify-content:center; -webkit-font-smoothing:antialiased; }
+.card{ width:100%; max-width:23rem; margin:1rem; background:var(--card); border:1px solid var(--line); border-radius:0.6rem; padding:2rem 1.75rem; }
+.brand{ display:flex; align-items:center; gap:0.7rem; margin-bottom:1.6rem; }
+.brand img{ height:1.9rem; width:auto; display:block; }
+.brand div{ display:flex; flex-direction:column; align-items:flex-start; text-align:left; }
+.brand div .name{ font-size:0.95rem; font-weight:700; letter-spacing:0.1em; text-align:left; margin:0; }
+.brand div .tag{ font-size:0.625rem; letter-spacing:0.12em; color:var(--sub); margin-top:0.15rem; text-transform:uppercase; text-align:left; }
+h1{ font-size:1.25rem; margin:0 0 0.3rem; font-weight:700; }
+p.sub{ margin:0 0 1.4rem; color:var(--sub); font-size:0.875rem; }
+.field{ margin-bottom:1rem; }
+.field label{ display:block; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.04em; color:var(--sub); margin-bottom:0.35rem; }
+.field input{ width:100%; font-family:inherit; font-size:0.9375rem; padding:0.65rem 0.75rem; border:1px solid var(--line); border-radius:0.35rem; background:var(--bg); color:var(--ink); }
+.field input:focus{ outline:2px solid var(--gold); outline-offset:1px; }
+button{ width:100%; font-family:inherit; font-size:0.8125rem; font-weight:700; letter-spacing:0.04em; text-transform:uppercase; padding:0.75rem 1rem; border-radius:0.35rem; border:1px solid var(--gold-btn); background:var(--gold-btn); color:#17110a; cursor:pointer; margin-top:0.4rem; }
+button:hover{ opacity:0.9; }
+button:disabled{ opacity:0.5; cursor:default; }
+.msg{ font-size:0.8125rem; margin-top:0.9rem; min-height:1.1em; }
+.msg.err{ color:var(--bad); }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="brand"><img src="assets/favicon.svg" alt="Sunstone Towns"><div><div class="name">SUNSTONE TOWNS</div><div class="tag">Site Dashboard</div></div></div>
+  <h1>Sign in</h1>
+  <p class="sub">Enter your admin credentials to continue.</p>
+  <form id="login-form">
+    <div class="field"><label for="username">Username</label><input id="username" name="username" autocomplete="username" autofocus></div>
+    <div class="field"><label for="password">Password</label><input id="password" name="password" type="password" autocomplete="current-password"></div>
+    <button type="submit" id="login-btn">Sign in</button>
+    <div class="msg" id="login-msg"></div>
+  </form>
+</div>
+<script>
+const form = document.getElementById('login-form');
+const btn = document.getElementById('login-btn');
+const msg = document.getElementById('login-msg');
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const username = document.getElementById('username').value;
+  const password = document.getElementById('password').value;
+  btn.disabled = true; btn.textContent = 'Signing in…';
+  msg.className = 'msg'; msg.textContent = '';
+  try {
+    const res = await fetch('/api/login', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ username, password }) });
+    let body; try { body = await res.json(); } catch { body = null; }
+    if (!res.ok || !body || body.ok === false) throw new Error((body && body.error) || 'Sign in failed.');
+    const params = new URLSearchParams(location.search);
+    location.href = params.get('next') || '/admin.html';
+  } catch (err) {
+    msg.className = 'msg err'; msg.textContent = err.message;
+    btn.disabled = false; btn.textContent = 'Sign in';
+  }
+});
+</script>
+</body>
+</html>
