@@ -453,7 +453,11 @@
      background to /register (keepalive, so it survives Keap's page change).
      That stores the lead in the site's own database, emails the
      notification and sends the auto-reply. It never blocks or changes the
-     Keap submission; if it fails, Keap still gets the lead. */
+     Keap submission; if it fails, Keap still gets the lead.
+
+     GA: a valid submit also sends a generate_lead event to Google Analytics
+     (no personal data, skipped when the hidden inf-sbt spam trap is filled),
+     by beacon so it survives Keap's redirect. */
   var form = document.querySelector('.form');
   if (form) {
     var cmsCopySent = false;
@@ -478,6 +482,9 @@
         utmMedium: qs.get('utm_medium') || '',
         utmCampaign: qs.get('utm_campaign') || ''
       });
+      if (typeof gtag === 'function' && !val('inf-sbt')) {
+        try { gtag('event', 'generate_lead', { form_name: 'register', transport_type: 'beacon' }); } catch (e) { /* ignore */ }
+      }
       try {
         fetch('/register', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: payload, keepalive: true, credentials: 'same-origin' })
           .catch(function () {});
