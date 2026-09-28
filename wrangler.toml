@@ -1,4 +1,4 @@
-name = "sunstone-towns"
+name = "sunstone1"
 main = "src/worker.js"
 compatibility_date = "2026-09-28"
 # Keep plain-text variables the user sets in the Cloudflare dashboard when
