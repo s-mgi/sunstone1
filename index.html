@@ -261,69 +261,65 @@
       <p class="lede">Register for priority access to floorplans, pricing and updates.</p>
     </div>
 
-    <form class="form form--full" novalidate data-reveal>
-      <input type="hidden" name="access_key" value="f8cca284-8a5b-4c9b-82dd-0181cd101282">
-      <input type="checkbox" name="botcheck" class="hidden" style="display:none">
+    <form accept-charset="UTF-8" action="https://wu242.infusionsoft.com/app/form/process/aa647c629e08e55566e19dfacb734218" class="form form--full infusion-form" id="inf_form_aa647c629e08e55566e19dfacb734218" method="POST" novalidate data-reveal>
+      <input name="inf_form_xid" type="hidden" value="aa647c629e08e55566e19dfacb734218" />
+      <input name="inf_form_name" type="hidden" value="https://sunstonetowns.com/#register" />
+      <input name="infusionsoft_version" type="hidden" value="1.70.0.1010339" />
       <div class="form__row">
         <div class="field">
           <label for="firstName">First Name</label>
-          <input id="firstName" type="text" name="first" autocomplete="given-name" required>
+          <input id="firstName" type="text" name="inf_field_FirstName" autocomplete="given-name" required>
         </div>
         <div class="field">
           <label for="lastName">Last Name</label>
-          <input id="lastName" type="text" name="last" autocomplete="family-name" required>
+          <input id="lastName" type="text" name="inf_field_LastName" autocomplete="family-name" required>
         </div>
       </div>
 
       <div class="form__row">
         <div class="field">
           <label for="email">Email Address</label>
-          <input id="email" type="email" name="email" autocomplete="email" required>
+          <input id="email" type="email" name="inf_field_Email" autocomplete="email" required>
         </div>
         <div class="field">
           <label for="phone">Phone Number</label>
-          <input id="phone" type="tel" name="phone" autocomplete="tel" required>
+          <input id="phone" type="tel" name="inf_field_Phone1" autocomplete="tel" required>
         </div>
       </div>
 
-      <div class="form__row">
-        <div class="field">
-          <label for="postal">Postal Code</label>
-          <input id="postal" type="text" name="postal" autocomplete="postal-code" required>
-        </div>
-        <div class="field">
-          <label for="timeframe">Purchase Timeframe</label>
-          <select id="timeframe" name="timeframe" required>
-            <option value="">Select an option</option>
-            <option>Immediately</option>
-            <option>Within 6 months</option>
-            <option>6–12 months</option>
-            <option>Just exploring</option>
-          </select>
-        </div>
+      <div class="field">
+        <label for="timeframe">Purchase Timeframe</label>
+        <select id="timeframe" name="inf_custom_PurchaseTimeframe" required>
+          <option value="">Select an option</option>
+          <option>Immediately</option>
+          <option>Within 6 months</option>
+          <option>6–12 months</option>
+          <option>Just exploring</option>
+        </select>
       </div>
 
       <div class="field">
         <label for="howHeard">How Did You Hear About Us?</label>
-        <input id="howHeard" type="text" name="source" placeholder="Google, referral, signage, social media..." required>
+        <input id="howHeard" type="text" name="inf_custom_LeadSource" placeholder="Google, referral, signage, social media..." required>
       </div>
 
       <div class="field">
         <label for="comments">Comments</label>
-        <textarea id="comments" name="comments" rows="4" placeholder="Tell us anything else we should know."></textarea>
+        <textarea id="comments" name="inf_custom_SunstoneComments" rows="4" placeholder="Tell us anything else we should know."></textarea>
       </div>
 
       <label class="checkbox">
-        <input type="checkbox" name="consent" required>
+        <input type="checkbox" name="inf_custom_Consent" required>
         <span>I agree to receive updates from Sunstone Towns by Edenbrook Homes. You can unsubscribe at any time.</span>
       </label>
 
-      <button type="submit" class="btn btn--solid">Register Now</button>
+      <button class="infusion-recaptcha btn btn--solid" id="recaptcha_aa647c629e08e55566e19dfacb734218" type="submit">Register Now</button>
 
       <div class="form__done">
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
         Thank you — you're on the priority list. We'll be in touch shortly.
       </div>
+      <input type="text" name="inf-sbt" style="display:none !important;">
     </form>
   </div>
 </section>
@@ -368,6 +364,13 @@
 </footer>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-<script src="js/main.js?v=9"></script>
+<script type="text/javascript" src="https://wu242.infusionsoft.app/app/webTracking/getTrackingCode"></script>
+<script type="text/javascript" src="https://wu242.infusionsoft.com/resources/external/recaptcha/production/recaptcha.js?b=1.70.0.1010339"></script>
+<script type="text/javascript" src="https://wu242.infusionsoft.com/resources/external/recaptcha/production/enterpriseRecaptcha.js?b=1.70.0.1010339"></script>
+<script type="text/javascript" src="https://wu242.infusionsoft.com/app/timezone/timezoneInputJs?xid=aa647c629e08e55566e19dfacb734218"></script>
+<script type="text/javascript" src="https://wu242.infusionsoft.com/js/jquery/jquery-3.3.1.js"></script>
+<script type="text/javascript" src="https://wu242.infusionsoft.app/app/webform/overwriteRefererJs"></script>
+
+<script src="js/main.js?v=10"></script>
 </body>
 </html>

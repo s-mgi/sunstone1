@@ -443,46 +443,20 @@
     window.addEventListener('resize', function () { map.invalidateSize(); });
   }
 
-  /* 5. FORM ---------------------------------------------------------------- */
+  /* 5. FORM ----------------------------------------------------------------
+     Posts to Keap/Infusionsoft via the form's action. Keap's recaptcha.js
+     needs a real, non-intercepted POST, so this only runs native validation
+     and otherwise lets the browser submit. The post-submit destination is
+     set in the form's settings in Keap. */
   var form = document.querySelector('.form');
   if (form) {
     form.addEventListener('submit', function (e) {
-      e.preventDefault();
-      /* Every field is required except Comments — enforce that before
-         treating the submission as successful. The form has novalidate
-         so the browser doesn't block submission on its own; checkValidity
-         does the same check, and reportValidity surfaces the native
-         "please fill this in" bubble on the first empty required field. */
       if (!form.checkValidity()) {
+        e.preventDefault();
         form.reportValidity();
         return;
       }
-
-      var submitBtn = form.querySelector('button[type="submit"]');
-      if (submitBtn) { submitBtn.disabled = true; }
-
-      var formData = new FormData(form);
-      var payload = Object.fromEntries(formData.entries());
-
-      fetch('https://api.web3forms.com/submit', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-        body: JSON.stringify(payload)
-      })
-        .then(function (res) { return res.json(); })
-        .then(function (data) {
-          if (data.success) {
-            form.classList.add('is-sent');
-            window.location.href = 'thank-you.html';
-          } else {
-            if (submitBtn) { submitBtn.disabled = false; }
-            alert('Something went wrong submitting the form. Please try again.');
-          }
-        })
-        .catch(function () {
-          if (submitBtn) { submitBtn.disabled = false; }
-          alert('Something went wrong submitting the form. Please try again.');
-        });
+      form.classList.add('is-sent');
     });
   }
 
