@@ -472,7 +472,7 @@
         lastName: val('inf_field_LastName'),
         email: val('inf_field_Email'),
         phone: val('inf_field_Phone1'),
-        timeframe: val('inf_custom_PurchaseTimeframe'),
+        broker: val('inf_custom_Broker'),
         hearAbout: val('inf_custom_LeadSource'),
         comments: val('inf_custom_SunstoneComments'),
         consent: consentEl && consentEl.checked ? 'yes' : '',
@@ -496,8 +496,19 @@
     // Keap's reCAPTCHA can take over the button click and submit the form
     // itself, which skips the submit event, so the copy is sent from the
     // click as well. cmsCopySent makes sure it only goes once.
+    // Keap's reCAPTCHA handles the button click and submits the form itself,
+    // which skips the browser's required-field check. So check here first
+    // (capture phase runs before Keap) and stop the submit if anything is missing.
     var submitBtn = form.querySelector('button[type="submit"]');
-    if (submitBtn) submitBtn.addEventListener('click', sendCmsCopy, true);
+    if (submitBtn) submitBtn.addEventListener('click', function (e) {
+      if (!form.checkValidity()) {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        form.reportValidity();
+        return;
+      }
+      sendCmsCopy();
+    }, true);
 
     form.addEventListener('submit', function (e) {
       if (!form.checkValidity()) {

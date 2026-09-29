@@ -247,8 +247,14 @@ section{position:relative;scroll-margin-top:70px;}
 .homes__specs{display:flex;align-items:flex-start;gap:16px;}
 .homes__specs div:not(.divider){display:flex;flex-direction:column;gap:3px;}
 .homes__specs .divider{width:1px;height:36px;background:rgba(215,155,91,.28);margin-top:3px;}
-.homes__specs strong{font-family:var(--serif);font-size:clamp(32px,2.6vw,52px);color:var(--copper-light);font-weight:500;line-height:1.1;}
-.homes__specs span{font-size:var(--fs-1);letter-spacing:.13em;text-transform:uppercase;color:rgba(248,245,240,.72);}
+.homes__specs strong{white-space:nowrap;font-family:var(--serif);font-size:clamp(28px,2.3vw,46px);color:var(--copper-light);font-weight:500;line-height:1.1;}
+.homes__specs span{white-space:nowrap;font-size:var(--fs-1);letter-spacing:.13em;text-transform:uppercase;color:rgba(248,245,240,.72);}
+/* Phones: keep the three stats on one line by scaling them to the screen width. */
+@media (max-width:680px){
+  .homes__specs{gap:clamp(8px,2.6vw,16px);}
+  .homes__specs strong{font-size:clamp(18px,5.6vw,28px);}
+  .homes__specs span{font-size:clamp(9px,2.5vw,11px);letter-spacing:.08em;}
+}
 .homes__body .link-arrow{color:var(--copper-light);border-color:rgba(215,155,91,.35);margin-top:28px;}
 .homes__body .link-arrow:hover{border-color:var(--copper-light);}
 

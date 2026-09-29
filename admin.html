@@ -9,7 +9,7 @@
     EDIT_ANCHORS             section anchors in index.html
     patchHeroLive            DOM selectors of the hero (live draft preview)
     thankyouDefaults()       thank-you page draft/publish fields
-    Registrations columns    purchase_timeframe, hear_about, comments
+    Registrations columns    is_broker, hear_about, comments (purchase_timeframe kept in D1 for early rows)
   Removed for this site: Mailchimp, neighbourhood map pins (the map data lives in js/main.js).
   Defaults here must match src/lib/render.js and migrations/0001_init.sql.
 -->
@@ -753,7 +753,7 @@ p.hint{ font-size:0.8125rem; line-height:1.5; color:var(--sub); margin:0.6rem 0 
           <a class="btn" href="/api/inquiries?format=csv">Export CSV</a>
         </div>
         <div class="panel">
-          <table><thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Timeframe</th><th>Heard About</th><th>Comments</th><th>Source</th><th>Status</th><th>Received</th><th>Actions</th></tr></thead>
+          <table><thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Broker</th><th>Heard About</th><th>Comments</th><th>Source</th><th>Status</th><th>Received</th><th>Actions</th></tr></thead>
           <tbody id="reg-table"><tr><td colspan="10" class="empty">Loading…</td></tr></tbody></table>
         </div>
       </section>
@@ -2007,7 +2007,7 @@ function renderRegistrationsInto(tableSel, filterSel) {
   const rows = filter ? INQUIRIES.filter(i => i.status === filter) : INQUIRIES;
   tbody.innerHTML = rows.length ? rows.map(r => `
     <tr><td>${escapeHtml(r.first_name)} ${escapeHtml(r.last_name)}</td><td>${escapeHtml(r.email)}</td><td>${escapeHtml(r.phone||'—')}</td>
-      <td>${escapeHtml(r.purchase_timeframe||'—')}</td>
+      <td>${r.is_broker === 'yes' ? 'Yes' : (r.is_broker === 'no' ? 'No' : '—')}</td>
       <td>${escapeHtml(hearAboutLabel(r.hear_about))}</td>
       <td title="${escapeHtml(r.comments||'')}">${r.comments ? escapeHtml(r.comments.length > 60 ? r.comments.slice(0, 60) + '…' : r.comments) : '—'}</td>
       <td>${escapeHtml(r.source_path||'—')}</td>
