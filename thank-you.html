@@ -1,8 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<meta charset="utf-8">
 <!-- Google tag (gtag.js) -->
-<script>/* Don't count the admin dashboard's live preview as visits */ if (window.self !== window.top) window['ga-disable-G-79BMJG9WBP'] = true;</script>
+<script>/* Don't count the admin dashboard's live preview as visits */ if (window.self !== window.top) { window['ga-disable-G-79BMJG9WBP'] = true; window['ga-disable-AW-18490114228'] = true; }</script>
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-79BMJG9WBP"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
@@ -10,8 +11,19 @@
   gtag('js', new Date());
 
   gtag('config', 'G-79BMJG9WBP');
+  gtag('config', 'AW-18490114228'); // Google Ads (Sunstone campaign)
 </script>
-<meta charset="utf-8">
+<!-- Event snippet for Page view conversion page (Google Ads).
+     Skipped inside the admin dashboard's live preview so editing the page doesn't count as a conversion. -->
+<script>
+  if (window.self === window.top) {
+    gtag('event', 'conversion', {
+      'send_to': 'AW-18490114228/ArjtCJTiiY4dELSB4_BE',
+      'value': 1.0,
+      'currency': 'CAD'
+    });
+  }
+</script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Thank You — Sunstone Towns | Edenbrook Homes</title>
 <meta name="description" content="Thanks for registering for Sunstone Towns, a collection of freehold townhomes in Vaughan by Edenbrook Homes. Our team will be in touch soon.">
