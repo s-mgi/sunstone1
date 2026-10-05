@@ -1,26 +1,11 @@
-// Sunstone Towns render.js
-// Injects CMS-managed fields into index.html ("/") and thank-you.html.
-// Every token has a `plain` fallback equal to the current live copy (and to
-// the seed rows in migrations/0001_init.sql), so if D1 is unreachable or a
-// field was never set, the original page renders unchanged.
-//
-// Conventions:
-//   - Plain text is always HTML-escaped.
-//   - Keys in MULTILINE are headings: a line break typed in the admin
-//     becomes a <br> on the page.
-//   - Image fields hold a file name inside assets/images/.
-//   - List fields are JSON, read with safeParse and a fallback.
-//   - Absolute URLs (og:image, JSON-LD) are built from canonical_url.
 
 const IMG_DIR = 'assets/images/';
 
 export const HOME_PLAIN = {
-  seo_title: 'Sunstone Towns — Freehold Townhomes in Vaughan | Edenbrook Homes',
+  seo_title: 'Sunstone Towns, Freehold Townhomes in Vaughan | Edenbrook Homes',
   seo_description: "Coming soon to Vaughan: Sunstone Towns, a collection of freehold townhomes up to 2,427 sq.ft. from the $900's by Edenbrook Homes. Register today for priority access.",
-  // Single source for every absolute URL below. Also keep robots.txt and
-  // sitemap.xml (static files) pointing at the same domain.
   canonical_url: 'https://sunstonetowns.com/',
-  og_title: 'Sunstone Towns — Freehold Townhomes in Vaughan',
+  og_title: 'Sunstone Towns, Freehold Townhomes in Vaughan',
   og_description: "Freehold townhomes up to 2,427 sq.ft. from the $900's. A community by Edenbrook Homes. Register for priority access.",
   og_image: 'assets/images/hero.jpg',
   favicon_href: 'assets/favicon.svg',
@@ -32,7 +17,7 @@ export const HOME_PLAIN = {
   hero_price: "$900's",
 
   vision_heading: 'Designed\nFor The Way\nLife Moves.',
-  vision_copy: "Sunstone Towns is where inspired design meets everyday convenience in the heart of Vaughan. Freehold townhomes with the space you live today — and the life you're building tomorrow.",
+  vision_copy: "Sunstone Towns is where inspired design meets everyday convenience in the heart of Vaughan. Freehold townhomes with the space you live today, and the life you're building tomorrow.",
   vision_image: 'vision-building.jpg',
   vision_image_alt: 'Open parkland and meadow trails at sunset near Sunstone Towns',
 
@@ -41,7 +26,7 @@ export const HOME_PLAIN = {
   homes_image_main: 'homes-living.jpg',
   homes_image_main_alt: 'A couple relaxing in a sunlit open-concept living room',
   homes_image_thumb1: 'homes-details.jpg',
-  homes_image_thumb1_alt: 'Quiet afternoon at home — wooden puzzle and coffee on the living room table',
+  homes_image_thumb1_alt: 'Quiet afternoon at home, wooden puzzle and coffee on the living room table',
   homes_image_thumb2: 'homes-bedroom.jpg',
   homes_image_thumb2_alt: 'Primary bedroom with floor-to-ceiling windows',
   homes_image_side: 'homes-patio.jpg',
@@ -51,7 +36,7 @@ export const HOME_PLAIN = {
   setting_lede: 'A connected address in Vaughan with transit, shopping, dining, and major routes just minutes away.',
 
   map_heading: 'Everything Nearby.',
-  map_lede: 'Explore the amenities, transit, and green space that surround Sunstone Towns — click any point to locate it on the map.',
+  map_lede: 'Explore the amenities, transit, and green space that surround Sunstone Towns, click any point to locate it on the map.',
 
   community_heading: 'Rooted Here.\nConnected Everywhere.',
   community_copy: 'Beautifully planned streetscapes, green spaces, and gathering places create a neighbourhood where connections grow and life comes together.',
@@ -70,7 +55,7 @@ export const DEFAULT_HERO_IMAGES = [
 ];
 
 export const DEFAULT_HOMES_SPECS = [
-  { value: '2, 3, & 4', label: 'Bedrooms' },
+  { value: '3 & 4', label: 'Bedrooms' },
   { value: 'Up to 2,427', label: 'Sq. Ft.' },
   { value: 'Private', label: 'Outdoor Space' },
 ];
@@ -87,8 +72,6 @@ export const THANKYOU_PLAIN = {
   thankyou_note: 'In the meantime, take another look around the community.',
 };
 
-// Headings where a typed line break becomes <br>. register_heading keeps the
-// site's responsive break class.
 const MULTILINE = {
   hero_headline: '<br>',
   vision_heading: '<br>',
@@ -117,11 +100,10 @@ function fieldHtml(key, value) {
   return out;
 }
 
-// Renders "/" with CMS-managed fields injected into index.html.
 export async function renderHome(request, env) {
   const assetRes = await env.ASSETS.fetch(request);
   const contentType = assetRes.headers.get('content-type') || '';
-  if (!contentType.includes('text/html')) return assetRes; // safety net
+  if (!contentType.includes('text/html')) return assetRes;
 
   let html = await assetRes.text();
   const fields = await loadFields(env);
@@ -144,7 +126,6 @@ export async function renderHome(request, env) {
     .split('{{cms:jsonld_image}}').join(jsonStr(absolutize('assets/images/hero.jpg')))
     .split('{{cms:jsonld_logo}}').join(jsonStr(absolutize('assets/email/edenbrook-logo.png')));
 
-  // Hero slideshow + matching dots
   let heroImages = safeParse(fields.hero_images, DEFAULT_HERO_IMAGES);
   if (!Array.isArray(heroImages) || !heroImages.length) heroImages = DEFAULT_HERO_IMAGES;
   const slidesHtml = heroImages.map((img, i) => (
@@ -156,14 +137,12 @@ export async function renderHome(request, env) {
   )).join('\n      ');
   html = html.replace('{{cms:hero_slides_html}}', slidesHtml).replace('{{cms:hero_dots_html}}', dotsHtml);
 
-  // Homes spec strip
   let specs = safeParse(fields.homes_specs, DEFAULT_HOMES_SPECS);
   if (!Array.isArray(specs) || !specs.length) specs = DEFAULT_HOMES_SPECS;
   html = html.replace('{{cms:homes_specs_html}}', specs.map((s) => (
     `<div><strong>${escapeHtml(s.value || '')}</strong><span>${escapeHtml(s.label || '')}</span></div>`
   )).join('\n        <div class="divider"></div>\n        '));
 
-  // Setting list + photo row (same items drive both)
   let items = safeParse(fields.setting_items, DEFAULT_SETTING_ITEMS);
   if (!Array.isArray(items) || !items.length) items = DEFAULT_SETTING_ITEMS;
   html = html.replace('{{cms:setting_list_html}}', items.map((it, i) => (
@@ -178,11 +157,10 @@ export async function renderHome(request, env) {
   return new Response(html, { headers: { 'Content-Type': 'text/html; charset=UTF-8' } });
 }
 
-// Renders "/thank-you.html" (and "/thank-you").
 export async function renderThankYou(request, env) {
   const assetRes = await env.ASSETS.fetch(request);
   const contentType = assetRes.headers.get('content-type') || '';
-  if (!contentType.includes('text/html')) return assetRes; // safety net
+  if (!contentType.includes('text/html')) return assetRes;
 
   let html = await assetRes.text();
   const fields = await loadFields(env);
@@ -201,8 +179,6 @@ function safeParse(str, fallback) {
   try { return JSON.parse(str); } catch { return fallback; }
 }
 
-// For values placed inside a JSON-LD string: JSON-escape, drop the quotes,
-// and make sure nothing can close the <script> tag.
 function jsonStr(s) {
   return JSON.stringify(String(s)).slice(1, -1).replace(/</g, '\\u003c');
 }

@@ -2,8 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<!-- Google tag (gtag.js) -->
-<script>/* Don't count the admin dashboard's live preview as visits */ if (window.self !== window.top) { window['ga-disable-G-79BMJG9WBP'] = true; window['ga-disable-AW-18490114228'] = true; }</script>
+<script>if (window.self !== window.top) { window['ga-disable-G-79BMJG9WBP'] = true; window['ga-disable-AW-18490114228'] = true; }</script>
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-79BMJG9WBP"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
@@ -11,10 +10,9 @@
   gtag('js', new Date());
 
   gtag('config', 'G-79BMJG9WBP');
-  gtag('config', 'AW-18490114228'); // Google Ads (Sunstone campaign)
+  gtag('config', 'AW-18490114228');
 </script>
-<!-- Event snippet for Page view conversion page (Google Ads).
-     Skipped inside the admin dashboard's live preview so editing the page doesn't count as a conversion. -->
+
 <script>
   if (window.self === window.top) {
     gtag('event', 'conversion', {
@@ -25,7 +23,7 @@
   }
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Thank You — Sunstone Towns | Edenbrook Homes</title>
+<title>Thank You, Sunstone Towns | Edenbrook Homes</title>
 <meta name="description" content="Thanks for registering for Sunstone Towns, a collection of freehold townhomes in Vaughan by Edenbrook Homes. Our team will be in touch soon.">
 <meta name="theme-color" content="#15140F">
 <meta name="robots" content="noindex">
@@ -38,11 +36,10 @@
 </head>
 <body>
 
-<!-- ============================ HEADER ============================ -->
 <header class="site-header is-stuck">
   <div class="site-header__inner">
     <div class="header__brand-col">
-      <a href="index.html" class="brand" aria-label="Sunstone Towns — home">
+      <a href="index.html" class="brand" aria-label="Sunstone Towns, home">
         <img class="brand__logo brand__logo--landscape" src="assets/sunstonelogo-landscape.svg" alt="Sunstone Towns">
       </a>
     </div>
@@ -62,7 +59,6 @@
   </div>
 </header>
 
-<!-- ========================== THANK YOU ============================ -->
 <section class="thanks">
   <img class="thanks__bg" src="assets/images/homes-patio.jpg" alt="" loading="eager">
   <div class="wrap thanks__inner">
@@ -83,7 +79,6 @@
   </div>
 </section>
 
-<!-- ============================ FOOTER ============================ -->
 <footer class="site-footer">
   <div class="wrap">
     <div class="footer__top">
@@ -125,9 +120,6 @@
 <script>
   document.querySelectorAll('[data-reveal]').forEach(function (el) { el.classList.add('is-in'); });
 
-  /* Mobile nav toggle — same behaviour as js/main.js, duplicated here since
-     this page doesn't load the full script (its header never floats/scrolls
-     like the homepage's, so it skips that logic entirely). */
   (function () {
     var navToggle = document.getElementById('navToggle');
     var siteNav = document.getElementById('siteNav');

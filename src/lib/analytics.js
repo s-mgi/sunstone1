@@ -1,19 +1,7 @@
-// GET /api/analytics?range=7|28|90 — Google Analytics 4 numbers for the SEO
-// tab, read with the GA4 Data API using a Google Cloud service account.
-//
-// Worker variables (Settings > Variables and secrets):
-//   GA_PROPERTY_ID      — Text. The NUMERIC GA4 property ID (GA > Admin >
-//                         Property details), not the G-XXXX measurement ID.
-//   GA_SERVICE_ACCOUNT  — Secret. The whole JSON key file of the service
-//                         account. That account's email must be added in
-//                         GA > Admin > Property access management as a Viewer.
-//
-// Results are cached at the edge for 10 minutes per range so opening the tab
-// repeatedly doesn't burn GA API quota. Realtime is never cached.
 
 const SCOPE = 'https://www.googleapis.com/auth/analytics.readonly';
 const CACHE_SECONDS = 600;
-let tokenCache = null; // { token, exp } — survives while this Worker isolate lives
+let tokenCache = null;
 
 export async function analyticsReport(request, env, ctx) {
   const url = new URL(request.url);
@@ -34,7 +22,6 @@ export async function analyticsReport(request, env, ctx) {
 
   const api = (method, body) => gaFetch(`https://analyticsdata.googleapis.com/v1beta/properties/${propertyId}:${method}`, token, body);
 
-  // Realtime: always live.
   const realtimeP = api('runRealtimeReport', { metrics: [{ name: 'activeUsers' }] })
     .then((r) => Number(r.rows?.[0]?.metricValues?.[0]?.value || 0))
     .catch(() => null);
@@ -61,7 +48,6 @@ export async function analyticsReport(request, env, ctx) {
         api('runReport', { dateRanges: [cur], dimensions: [{ name: 'deviceCategory' }], metrics: [{ name: 'activeUsers' }], orderBys: [{ metric: { metricName: 'activeUsers' }, desc: true }] }),
       ]);
 
-      // With two date ranges GA adds a "dateRange" dimension to each row.
       const byRange = {};
       for (const row of totals.rows || []) {
         const name = row.dimensionValues?.[0]?.value || 'current';
@@ -73,7 +59,7 @@ export async function analyticsReport(request, env, ctx) {
         range,
         totals: { current: byRange.current || zero, previous: byRange.previous || zero },
         daily: (daily.rows || []).map((r) => ({
-          date: r.dimensionValues[0].value, // YYYYMMDD
+          date: r.dimensionValues[0].value,
           users: Number(r.metricValues[0].value || 0),
           sessions: Number(r.metricValues[1].value || 0),
           views: Number(r.metricValues[2].value || 0),

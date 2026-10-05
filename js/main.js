@@ -1,17 +1,8 @@
-/* ==========================================================================
-   SUNSTONE TOWNS — interaction layer
-   1. Header scroll state
-   2. Scroll reveals
-   3. Gallery drag-to-scroll
-   4. Leaflet amenities map + clickable list
-   5. Form handling
-   ========================================================================== */
 (function () {
   'use strict';
 
   var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  /* 1. HEADER SCROLL STATE ------------------------------------------------- */
   var header = document.querySelector('.site-header');
   var lastKnown = 0, ticking = false;
 
@@ -27,9 +18,6 @@
   }
   window.addEventListener('scroll', onScroll, { passive: true });
 
-  /* MOBILE NAV TOGGLE ------------------------------------------------------
-     Hamburger button shows/hides the dropdown nav panel below ~1100px,
-     where the inline nav no longer fits. */
   var navToggle = document.getElementById('navToggle');
   var siteNav = document.getElementById('siteNav');
   if (navToggle && siteNav) {
@@ -57,7 +45,6 @@
     });
   }
 
-  /* 2. SCROLL REVEALS ------------------------------------------------------ */
   var revealTargets = document.querySelectorAll('[data-reveal]');
 
   if ('IntersectionObserver' in window && !reduceMotion) {
@@ -75,10 +62,6 @@
     revealTargets.forEach(function (el) { el.classList.add('is-in'); });
   }
 
-  /* HERO SLIDER -------------------------------------------------------------
-     Two images cross-fade in the hero frame; arrows/dots let visitors step
-     through manually and it also auto-advances on a timer (paused while
-     the visitor is actively interacting with it). */
   var heroSlider = document.getElementById('heroSlider');
   if (heroSlider) {
     var heroSlides = heroSlider.querySelectorAll('.hero-slider__slide');
@@ -107,7 +90,6 @@
     startHeroAuto();
   }
 
-  /* 4. GALLERY DRAG-TO-SCROLL ----------------------------------------------- */
   var strip = document.querySelector('.gallery__strip');
   var progressBar = document.querySelector('.gallery__progress span');
 
@@ -139,11 +121,6 @@
     updateProgress();
   }
 
-  /* 4. LEAFLET AMENITIES MAP + CLICKABLE LIST -------------------------------
-     A shared "amenities" data set drives both the sidebar list and the map
-     markers, so clicking a list item pans/zooms the map to that marker and
-     opens its popup — and vice versa. Markers use an upright circular pin
-     (icon glyph is never rotated) with a small static pointer tail. */
   var mapEl = document.getElementById('sunstoneMap');
   var listEl = document.getElementById('amenityList');
   if (mapEl && listEl && window.L) {
@@ -159,12 +136,6 @@
     var mallSvg     = '<path d="M4 21V9l8-6 8 6v12"/><path d="M9 21v-6h6v6M4 9h16"/>';
     var flagSvg     = '<path d="M6 21V4M6 4h11l-3 4 3 4H6"/>';
 
-    /* ------------------------------------------------------------------
-       Every coordinate below was geocoded against OpenStreetMap /
-       Nominatim from the exact street address supplied by the client,
-       then bounds-checked to the Vaughan / Thornhill / Richmond Hill
-       area. These are real geocoder results, not estimates.
-       ------------------------------------------------------------------ */
     var amenities = [
       { key:'site', category:'Sunstone Towns', coords:[43.840950,-79.493795], modifier:'site', svg:homeSvg, zoom:16, title:'Sunstone Towns', addr:'Rutherford Rd &amp; Peter Rupert Ave, Vaughan' },
 
@@ -256,9 +227,6 @@
       { key:'hwy-407',            category:'Transit &amp; Major Connections', coords:[43.785500,-79.508000], modifier:'hwy', svg:roadSvg, zoom:12, title:'Highway 407 ETR', addr:'Access from Keele St or Hwy 400' }
     ];
 
-    /* A few entries genuinely share one address (same plaza). Nudge exact
-       duplicates onto a tiny ring so every pin stays individually clickable
-       instead of hiding underneath its neighbour. */
     (function spreadDuplicates() {
       var seen = {};
       amenities.forEach(function (a) {
@@ -281,7 +249,7 @@
     });
 
     L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
-      attribution: 'Tiles &copy; Esri &mdash; Esri, HERE, Garmin, &copy; OpenStreetMap contributors',
+      attribution: 'Tiles &copy; Esri, Esri, HERE, Garmin, &copy; OpenStreetMap contributors',
       maxZoom: 16
     }).addTo(map);
     L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Reference/MapServer/tile/{z}/{y}/{x}', {
@@ -289,10 +257,6 @@
     }).addTo(map);
 
     function makeIcon(a) {
-      /* The development's own pin ("Sunstone Towns") is deliberately bigger
-         and carries the brand mark instead of a generic glyph, so it reads
-         as the anchor point of the map at a glance instead of blending in
-         with the amenity pins around it. */
       var isSite = a.modifier === 'site';
       return L.divIcon({
         className: 'map-pin map-pin--' + a.modifier,
@@ -301,10 +265,6 @@
             '<span class="map-pin__tail"></span>'
           : '<span class="map-pin__circle"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + a.svg + '</svg></span>' +
             '<span class="map-pin__tail"></span>',
-        /* Must match .map-pin/.map-pin--site in styles.css: the box height
-           puts the tail's tip exactly on the coordinate, so popups and
-           tooltips sit centred directly above the pin instead of floating
-           away from it. */
         iconSize: isSite ? [52, 55] : [34, 36],
         iconAnchor: isSite ? [26, 55] : [17, 36],
         popupAnchor: isSite ? [0, -46] : [0, -34]
@@ -313,8 +273,6 @@
 
     var TIP_OPTS = { direction: 'top', offset: [0, -34], opacity: 1, className: 'map-tip' };
 
-    /* Build the scrollable sidebar list (grouped by category) and drop a
-       marker for every entry in one pass. */
     var lastCategory = null;
     function decode(s) {
       var d = document.createElement('textarea');
@@ -322,9 +280,6 @@
       return d.value;
     }
 
-    /* Directory groups are collapsed by default and expand on click — only
-       the development itself ("Sunstone Towns") starts open, since that's
-       the one thing the client wants visible without any interaction. */
     function slugify(s) { return s.toLowerCase().replace(/&[a-z]+;/g, '').replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''); }
 
     amenities.forEach(function (a) {
@@ -363,10 +318,6 @@
       a.marker.on('click', function () { setActive(a.key); });
     });
 
-    /* A selected pin already shows its full popup, so the hover label is
-       redundant there — and it renders straight over the popup, which looks
-       broken. Drop the tooltip while a pin's popup is open and restore it
-       once the popup closes (including via the popup's own close button). */
     map.on('popupopen', function (e) {
       var m = e.popup._source;
       if (m && m.getTooltip()) { m.closeTooltip(); m.unbindTooltip(); }
@@ -383,12 +334,6 @@
       var a = byKey[key];
       if (!a) return;
 
-      /* Leaflet caches the container size. If that cache goes stale — the
-         map lives in a stretched grid cell that settles after fonts and
-         tiles load — the pan lands in the wrong place and can leave the
-         target off-screen entirely. So: re-measure, close any open popup
-         (its auto-pan fights the next move), pan, then verify we actually
-         arrived and hard-set the view if we didn't. */
       if (openMarker) openMarker.closePopup();
       map.invalidateSize();
       map.setView(a.coords, a.zoom, { animate: true, duration: .6 });
@@ -412,8 +357,6 @@
       });
     });
 
-    /* Toggle a directory group open/closed. Clicking (or Enter/Space on)
-       a group heading shows or hides just that category's items. */
     var groupHeadings = listEl.querySelectorAll('li[data-group-toggle]');
     function toggleGroup(heading) {
       var slug = heading.getAttribute('data-group-toggle');
@@ -434,8 +377,6 @@
     mapEl.addEventListener('click', function () { map.scrollWheelZoom.enable(); });
     mapEl.addEventListener('mouseleave', function () { map.scrollWheelZoom.disable(); });
 
-    /* The map's height now matches the amenity list's rendered height
-       (CSS grid stretch), so re-measure after fonts/images settle. */
     window.addEventListener('load', function () { map.invalidateSize(); });
     if (window.ResizeObserver) {
       new ResizeObserver(function () { map.invalidateSize(); }).observe(mapEl);
@@ -443,21 +384,8 @@
     window.addEventListener('resize', function () { map.invalidateSize(); });
   }
 
-  /* 5. FORM ----------------------------------------------------------------
-     Posts to Keap/Infusionsoft via the form's action. Keap's recaptcha.js
-     needs a real, non-intercepted POST, so this only runs native validation
-     and otherwise lets the browser submit. The post-submit destination is
-     set in the form's settings in Keap.
 
-     CMS copy: as the visitor submits, the same fields are also sent in the
-     background to /register (keepalive, so it survives Keap's page change).
-     That stores the lead in the site's own database, emails the
-     notification and sends the auto-reply. It never blocks or changes the
-     Keap submission; if it fails, Keap still gets the lead.
 
-     GA: a valid submit also sends a generate_lead event to Google Analytics
-     (no personal data, skipped when the hidden inf-sbt spam trap is filled),
-     by beacon so it survives Keap's redirect. */
   var form = document.querySelector('.form');
   if (form) {
     var cmsCopySent = false;
@@ -472,33 +400,27 @@
         lastName: val('inf_field_LastName'),
         email: val('inf_field_Email'),
         phone: val('inf_field_Phone1'),
-        broker: val('inf_custom_Broker'),
+        broker: val('inf_custom_Broker2'),
         hearAbout: val('inf_custom_LeadSource'),
         comments: val('inf_custom_SunstoneComments'),
         consent: consentEl && consentEl.checked ? 'yes' : '',
-        company: val('inf-sbt'), // Keap's hidden honeypot: bots fill it, people don't
+        company: val('inf-sbt'),
         sourcePath: window.location.pathname + window.location.hash,
         utmSource: qs.get('utm_source') || '',
         utmMedium: qs.get('utm_medium') || '',
         utmCampaign: qs.get('utm_campaign') || ''
       });
       if (typeof gtag === 'function' && !val('inf-sbt')) {
-        try { gtag('event', 'generate_lead', { form_name: 'register', transport_type: 'beacon' }); } catch (e) { /* ignore */ }
+        try { gtag('event', 'generate_lead', { form_name: 'register', transport_type: 'beacon' }); } catch (e) {}
       }
       try {
         fetch('/register', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: payload, keepalive: true, credentials: 'same-origin' })
           .catch(function () {});
       } catch (err) {
-        try { navigator.sendBeacon && navigator.sendBeacon('/register', new Blob([payload], { type: 'application/json' })); } catch (e) { /* ignore */ }
+        try { navigator.sendBeacon && navigator.sendBeacon('/register', new Blob([payload], { type: 'application/json' })); } catch (e) {}
       }
     };
 
-    // Keap's reCAPTCHA can take over the button click and submit the form
-    // itself, which skips the submit event, so the copy is sent from the
-    // click as well. cmsCopySent makes sure it only goes once.
-    // Keap's reCAPTCHA handles the button click and submits the form itself,
-    // which skips the browser's required-field check. So check here first
-    // (capture phase runs before Keap) and stop the submit if anything is missing.
     var submitBtn = form.querySelector('button[type="submit"]');
     if (submitBtn) submitBtn.addEventListener('click', function (e) {
       if (!form.checkValidity()) {
@@ -521,6 +443,5 @@
     });
   }
 
-  /* init */
   onScroll();
 })();

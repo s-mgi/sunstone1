@@ -1,4 +1,3 @@
-// The admin API — inquiries, content fields, edit log, SEO check.
 import { renderHome } from './render.js';
 
 const VALID_STATUSES = ['new', 'contacted', 'qualified', 'toured', 'closed', 'lost', 'needs_review'];
@@ -16,7 +15,7 @@ export async function listInquiries(request, env) {
   const { results } = await env.DB.prepare(query).bind(...binds).all();
 
   if (format === 'csv') {
-    const cols = ['id', 'created_at', 'first_name', 'last_name', 'email', 'phone', 'purchase_timeframe', 'hear_about', 'comments', 'consent', 'source_path', 'utm_source', 'utm_medium', 'utm_campaign', 'status', 'note'];
+    const cols = ['id', 'created_at', 'first_name', 'last_name', 'email', 'phone', 'is_broker', 'hear_about', 'comments', 'consent', 'source_path', 'utm_source', 'utm_medium', 'utm_campaign', 'status', 'note'];
     const lines = [cols.join(',')];
     for (const row of results) lines.push(cols.map((c) => csvEscape(row[c])).join(','));
     return new Response(lines.join('\n'), {
@@ -26,12 +25,6 @@ export async function listInquiries(request, env) {
   return json({ ok: true, inquiries: results });
 }
 
-// The Contacts tab's "+ Add contact" button — a manual addition to the
-// eblast recipient list that didn't come through the registration form.
-// Lives in the same inquiries table Registrations and Eblast both already
-// read from, tagged source_path = 'manual' so Contacts can tell them apart;
-// nothing else in the pipeline (status, edit log, unsubscribe) needs to
-// know or care that this row didn't come from a real registration.
 export async function createInquiry(request, env) {
   let body;
   try { body = await request.json(); } catch { return json({ ok: false, error: 'Invalid JSON body.' }, 400); }
@@ -57,15 +50,9 @@ export async function createInquiry(request, env) {
   return json({ ok: true, inquiry: created });
 }
 
-const IMPORT_MAX_ROWS = 2000; // a sanity cap, not a real technical limit — keeps one bad paste from hanging the request
-const IMPORT_CHUNK = 50; // rows per D1 batch call, mirrors the eblast send chunking for the same subrequest-budget reason
+const IMPORT_MAX_ROWS = 2000;
+const IMPORT_CHUNK = 50;
 
-// The Contacts tab's "Import CSV" button — bulk-adds a mailing list a
-// client hands over (a spreadsheet export, a list from another platform).
-// Matches existing contacts by email (case-insensitive) and only fills in
-// name/phone where they're currently blank, so it never clobbers data
-// someone already entered by hand; anything new comes in tagged
-// source_path = 'import', same idea as 'manual' for the add-one-at-a-time flow.
 export async function importContacts(request, env) {
   let body;
   try { body = await request.json(); } catch { return json({ ok: false, error: 'Invalid JSON body.' }, 400); }
@@ -88,7 +75,7 @@ export async function importContacts(request, env) {
   const dataRows = rows.slice(1).filter((r) => r.some((c) => String(c || '').trim() !== ''));
   if (!dataRows.length) return json({ ok: false, error: 'That file has a header row but no contacts under it.' }, 400);
   if (dataRows.length > IMPORT_MAX_ROWS) {
-    return json({ ok: false, error: `That file has ${dataRows.length} rows — split it into batches of ${IMPORT_MAX_ROWS} or fewer and import each separately.` }, 400);
+    return json({ ok: false, error: `That file has ${dataRows.length} rows, split it into batches of ${IMPORT_MAX_ROWS} or fewer and import each separately.` }, 400);
   }
 
   const { results: existing } = await env.DB.prepare('SELECT id, email, first_name, last_name, phone FROM inquiries').all();
@@ -119,7 +106,6 @@ export async function importContacts(request, env) {
 
     const existingRow = byEmail.get(email);
     if (existingRow) {
-      // Only fill in blanks — never overwrite something already on file.
       const newFirst = !existingRow.first_name && firstName ? firstName : null;
       const newLast = !existingRow.last_name && lastName ? lastName : null;
       const newPhone = !existingRow.phone && phone ? phone : null;
@@ -130,7 +116,7 @@ export async function importContacts(request, env) {
       }
     } else {
       inserts.push({ email, first_name: firstName, last_name: lastName, phone });
-      byEmail.set(email, { id: null, email, first_name: firstName, last_name: lastName, phone }); // catch dupes within the same file
+      byEmail.set(email, { id: null, email, first_name: firstName, last_name: lastName, phone });
     }
   });
 
@@ -163,9 +149,6 @@ export async function importContacts(request, env) {
   return json({ ok: true, imported: inserts.length, updated: updates.length, skipped, total: dataRows.length, errors });
 }
 
-// Minimal RFC 4180-ish CSV parser: handles quoted fields, commas and
-// newlines inside quotes, and doubled "" as an escaped quote. Good enough
-// for a spreadsheet export without pulling in a dependency for one function.
 function parseCsv(text) {
   const rows = [];
   let row = [];
@@ -189,7 +172,6 @@ function parseCsv(text) {
     } else if (c === '\n') {
       pushRow();
     } else if (c === '\r') {
-      // swallow, \n (or end of text) handles the row break
     } else {
       field += c;
     }
@@ -282,12 +264,6 @@ export async function listContent(env) {
   return json({ ok: true, fields: results });
 }
 
-// Serves a gallery-uploaded image (stored as a base64 data URL in
-// content_fields under "gallery_upload__<name>") at a real, public URL —
-// needed because email clients can't load a data: URI, they need to fetch
-// an actual address. Static files under assets/images/ already have a real URL
-// (/assets/images/<file>) and don't need this. Public on purpose: recipients'
-// inboxes fetch it anonymously, so it isn't behind admin auth.
 export async function serveMedia(env, name) {
   const row = await env.DB.prepare('SELECT value FROM content_fields WHERE key = ?').bind('gallery_upload__' + name).first();
   if (!row || !row.value) return new Response('Not found', { status: 404 });
@@ -303,9 +279,6 @@ export async function serveMedia(env, name) {
   return new Response(bytes, { headers: { 'Content-Type': contentType, 'Cache-Control': 'public, max-age=3600' } });
 }
 
-// Fields written automatically by running an audit / performance check —
-// these shouldn't clutter the activity log with an entry every time someone
-// clicks "Run audit" or checks Lighthouse scores.
 const NO_LOG_KEYS = new Set(['seo_audit_history', 'seo_audit_last_score', 'perf_last_score_mobile', 'perf_last_score_desktop', 'perf_last_checked_at']);
 
 export async function putContent(request, env, key) {
@@ -356,10 +329,6 @@ export async function listEditLog(request, env) {
 
 export async function seoCheck(request, env) {
   const origin = new URL(request.url).origin;
-  // Run through the same CMS rendering the live site uses (not a raw asset
-  // fetch) so the audit reflects actual current field values, not the
-  // unfilled {{cms:...}} template — otherwise a fix made in the CMS would
-  // never show up here as resolved.
   const homeRes = await renderHome(new Request(origin + '/'), env);
   const html = await homeRes.text();
 
@@ -449,7 +418,7 @@ export async function perfCheck(request, env) {
   if (!res.ok) {
     const hint = env.PAGESPEED_API_KEY
       ? `PageSpeed Insights returned ${res.status}. Try again in a minute.`
-      : `PageSpeed Insights returned ${res.status}. Without an API key it's shared across everyone hitting Google's anonymous quota, so it gets rate-limited often — add a free PAGESPEED_API_KEY secret to fix this reliably.`;
+      : `PageSpeed Insights returned ${res.status}. Without an API key it's shared across everyone hitting Google's anonymous quota, so it gets rate-limited often, add a free PAGESPEED_API_KEY secret to fix this reliably.`;
     return json({ ok: false, error: hint }, 502);
   }
 

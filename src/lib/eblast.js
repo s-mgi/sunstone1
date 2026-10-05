@@ -1,26 +1,12 @@
 import { SITE } from '../site.config.js';
-// Eblast: lets a client send a "sliced image" marketing email to everyone
-// who's registered (minus anyone who's unsubscribed), via Resend.
-//
-// Reuses the same RESEND_API_KEY / FROM_EMAIL secrets already configured for
-// registration notifications (see register.js). TO_EMAIL is not used here —
-// the reply-to on an eblast is TO_EMAIL if set, otherwise FROM_EMAIL, so
-// replies from recipients land somewhere a human actually reads them.
-//
-// Required binding: DB (this site's D1 database) — same one everything
-// else uses. Needs the eblast_campaigns / eblast_sends tables and the
-// inquiries.unsubscribed column from migrations/0002_eblast.sql.
 
-const RESEND_BATCH_MAX = 100; // Resend's Batch Send API limit per call
-const CHUNK_DELAY_MS = 250;   // stays comfortably under Resend's rate limit
+const RESEND_BATCH_MAX = 100;
+const CHUNK_DELAY_MS = 250;
 
 export async function eblastState(env) {
   const [{ results: activeRows }, { results: unsubRows }, { results: campaigns }] = await Promise.all([
     env.DB.prepare(`SELECT COUNT(DISTINCT email) AS n FROM inquiries WHERE unsubscribed = 0 AND email IS NOT NULL AND TRIM(email) != ''`).all(),
     env.DB.prepare(`SELECT COUNT(DISTINCT email) AS n FROM inquiries WHERE unsubscribed = 1`).all(),
-    // Every campaign, drafts included — the admin's "Blasts" list is this
-    // whole list, not just sent ones, so past and unfinished drafts stay
-    // reachable instead of only ever being able to see one at a time.
     env.DB.prepare(`SELECT id, created_at, sent_at, editor, subject, status, recipient_count, sent_count, failed_count FROM eblast_campaigns ORDER BY created_at DESC LIMIT 100`).all(),
   ]);
 
@@ -40,9 +26,6 @@ export async function getCampaign(env, id) {
 export async function deleteCampaign(env, id) {
   const current = await env.DB.prepare('SELECT status FROM eblast_campaigns WHERE id = ?').bind(id).first();
   if (!current) return json({ ok: false, error: 'Blast not found.' }, 404);
-  // Deleting only clears this from the Blasts list — it doesn't touch
-  // anyone's inbox or unsubscribe. Any status can be removed, sent
-  // campaigns included, since this is just tidying up the list.
   await env.DB.batch([
     env.DB.prepare('DELETE FROM eblast_sends WHERE campaign_id = ?').bind(id),
     env.DB.prepare('DELETE FROM eblast_campaigns WHERE id = ?').bind(id),
@@ -50,11 +33,6 @@ export async function deleteCampaign(env, id) {
   return json({ ok: true, deleted: id });
 }
 
-// A sent (or failed/sending) campaign is never edited or re-sent in place —
-// its row is the historical record of that specific send (recipient_count,
-// sent_count, failed_count, the eblast_sends log). "Edit and resend" instead
-// clones its subject + blocks into a brand-new draft, which the client then
-// edits and sends like any other draft. The original stays untouched.
 export async function duplicateCampaign(env, id) {
   const source = await env.DB.prepare('SELECT * FROM eblast_campaigns WHERE id = ?').bind(id).first();
   if (!source) return json({ ok: false, error: 'Blast not found.' }, 404);
@@ -109,7 +87,7 @@ export async function sendCampaign(request, env) {
   const apiKey = env.RESEND_API_KEY;
   const fromEmail = env.FROM_EMAIL;
   if (!apiKey || !fromEmail) {
-    return json({ ok: false, error: 'Resend is not configured (RESEND_API_KEY / FROM_EMAIL missing) — add these in Cloudflare, same as the registration emails use.' }, 400);
+    return json({ ok: false, error: 'Resend is not configured (RESEND_API_KEY / FROM_EMAIL missing), add these in Cloudflare, same as the registration emails use.' }, 400);
   }
 
   const subject = (campaign.subject || '').trim();
@@ -118,7 +96,7 @@ export async function sendCampaign(request, env) {
   const blocks = safeParse(campaign.blocks, []);
   if (!blocks.length) return json({ ok: false, error: 'Add at least one image before sending.' }, 400);
   const missingAlt = blocks.find((b) => !b.alt || !b.alt.trim());
-  if (missingAlt) return json({ ok: false, error: 'Every image needs alt text before this can send — one is missing it.' }, 400);
+  if (missingAlt) return json({ ok: false, error: 'Every image needs alt text before this can send, one is missing it.' }, 400);
 
   const { results: recipients } = await env.DB.prepare(
     `SELECT DISTINCT email FROM inquiries WHERE unsubscribed = 0 AND email IS NOT NULL AND TRIM(email) != ''`
@@ -129,11 +107,6 @@ export async function sendCampaign(request, env) {
 
   const origin = new URL(request.url).origin;
   const replyTo = env.TO_EMAIL || fromEmail;
-  // Resend (and every other sender) shows whatever's before "@" as the
-  // sender name when the "from" field is a bare address — that's why an
-  // eblast from updates@kiarnovar.com showed up as "updates" in inboxes.
-  // Giving it a proper display name fixes that. Set FROM_NAME in Cloudflare
-  // to override the default, same way FROM_EMAIL / RESEND_API_KEY work.
   const fromName = (env.FROM_NAME || SITE.name).trim();
   const from = /[<>]/.test(fromEmail) ? fromEmail : `${fromName} <${fromEmail}>`;
   let sentCount = 0;
@@ -152,9 +125,6 @@ export async function sendCampaign(request, env) {
         subject,
         html: buildEmailHtml(blocks, unsubUrl, campaign.preview_text || ''),
         text: buildEmailText(subject, blocks, unsubUrl),
-        // Both headers together are what Gmail/Yahoo's bulk-sender rules
-        // require for a real one-click unsubscribe (not just a mailto/link)
-        // — mail providers use this as a trust signal, not just a courtesy.
         headers: { 'List-Unsubscribe': `<${unsubUrl}>`, 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click' },
       };
     }));
@@ -173,8 +143,6 @@ export async function sendCampaign(request, env) {
       detail = e.message;
     }
 
-    // One batched D1 write per chunk (not one insert per recipient) so a
-    // large send list doesn't blow through the Worker's subrequest budget.
     const stmt = env.DB.prepare(`INSERT INTO eblast_sends (campaign_id, email, status, error, sent_at) VALUES (?, ?, ?, ?, datetime('now'))`);
     await env.DB.batch(chunk.map((r) => stmt.bind(id, r.email, ok ? 'sent' : 'failed', ok ? null : (detail || 'Send failed').slice(0, 500))));
 
@@ -203,13 +171,12 @@ export async function handleUnsubscribe(request, env) {
     await env.DB.prepare('UPDATE inquiries SET unsubscribed = 1 WHERE lower(email) = ?').bind(email.toLowerCase()).run();
   } catch (err) {
     console.error('Unsubscribe update failed:', err);
-    return htmlPage('Unsubscribe', 'Something went wrong on our end — please try again in a moment.');
+    return htmlPage('Unsubscribe', 'Something went wrong on our end, please try again in a moment.');
   }
 
   return htmlPage('Unsubscribed', `${escapeHtml(email)} has been unsubscribed and won't receive future emails from us.`);
 }
 
-/* ---------- email builders ---------- */
 
 function buildEmailHtml(blocks, unsubscribeUrl, previewText) {
   const rows = blocks.map((b) => {
@@ -218,11 +185,6 @@ function buildEmailHtml(blocks, unsubscribeUrl, previewText) {
     return `<tr><td style="padding:0;line-height:0;font-size:0;">${cell}</td></tr>`;
   }).join('');
 
-  // The hidden preheader: without it, most inboxes pull the first visible
-  // text in the body for that preview snippet next to the subject line —
-  // which, in an image-only email, was the unsubscribe footer. The
-  // trailing &nbsp;/&zwnj; run pads it out so clients don't fall through
-  // and grab real body text once the preview text itself runs out.
   const preheader = (previewText || '').trim()
     ? `<div style="display:none;font-size:1px;line-height:1px;max-height:0;max-width:0;opacity:0;overflow:hidden;mso-hide:all;color:#f4f4f4;">${escapeHtml(previewText)}${'&nbsp;&zwnj;'.repeat(80)}</div>`
     : '';
@@ -252,7 +214,6 @@ function buildEmailText(subject, blocks, unsubscribeUrl) {
   return lines.join('\n');
 }
 
-/* ---------- helpers ---------- */
 
 function cleanBlock(b) {
   if (!b || typeof b !== 'object') return null;
@@ -286,7 +247,7 @@ function escapeHtml(str) {
 
 function htmlPage(title, message) {
   return new Response(
-    `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${escapeHtml(title)} — ${escapeHtml(SITE.name)}</title>
+    `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${escapeHtml(title)}, ${escapeHtml(SITE.name)}</title>
 <style>body{font-family:Arial,Helvetica,sans-serif;background:#141219;color:#f4efe3;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;}
 .card{max-width:26rem;margin:1rem;padding:2rem;border:1px solid rgba(244,239,227,.16);border-radius:0.6rem;text-align:center;}
 h1{font-size:1.25rem;margin:0 0 0.75rem;}p{color:rgba(244,239,227,.75);}</style></head>

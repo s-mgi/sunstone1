@@ -2,8 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<!-- Google tag (gtag.js) -->
-<script>/* Don't count the admin dashboard's live preview as visits */ if (window.self !== window.top) { window['ga-disable-G-79BMJG9WBP'] = true; window['ga-disable-AW-18490114228'] = true; }</script>
+<script>if (window.self !== window.top) { window['ga-disable-G-79BMJG9WBP'] = true; window['ga-disable-AW-18490114228'] = true; }</script>
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-79BMJG9WBP"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
@@ -11,7 +10,7 @@
   gtag('js', new Date());
 
   gtag('config', 'G-79BMJG9WBP');
-  gtag('config', 'AW-18490114228'); // Google Ads (Sunstone campaign)
+  gtag('config', 'AW-18490114228');
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{{cms:seo_title}}</title>
@@ -53,11 +52,11 @@
 </head>
 <body>
 
-<!-- ============================ HEADER ============================ -->
+
 <header class="site-header">
   <div class="site-header__inner">
     <div class="header__brand-col">
-      <a href="#hero" class="brand" aria-label="Sunstone Towns — home">
+      <a href="#hero" class="brand" aria-label="Sunstone Towns, home">
         <img class="brand__logo brand__logo--landscape brand__logo--white" src="assets/sunstonelogo-landscape-white-text.svg" alt="Sunstone Towns">
         <img class="brand__logo brand__logo--landscape brand__logo--dark" src="assets/sunstonelogo-landscape.svg" alt="" aria-hidden="true">
       </a>
@@ -78,7 +77,7 @@
   </div>
 </header>
 
-<!-- ============================= HERO ============================= -->
+
 <section class="hero-split" id="hero">
   <div class="hero-split__media hero-slider" id="heroSlider">
     <div class="hero-slider__track">
@@ -118,7 +117,7 @@
   </div>
 </section>
 
-<!-- ========================== THE VISION ========================== -->
+
 <section class="vision" id="vision">
   <div class="wrap vision__grid" data-reveal>
     <h2>{{cms:vision_heading}}</h2>
@@ -129,7 +128,7 @@
   </div>
 </section>
 
-<!-- ============================ HOMES ============================= -->
+
 <section class="homes" id="homes">
   <div class="wrap homes__grid" data-reveal>
     <div class="homes__gallery">
@@ -160,7 +159,7 @@
   </div>
 </section>
 
-<!-- =========================== SETTING ============================= -->
+
 <section class="setting" id="setting">
   <div class="wrap" data-reveal>
     <div class="setting__head">
@@ -180,7 +179,7 @@
   </div>
 </section>
 
-<!-- ============================ MAP ================================ -->
+
 <section class="map-section" id="map">
   <div class="wrap map-section__head" data-reveal>
     <h2>{{cms:map_heading}}</h2>
@@ -188,7 +187,7 @@
   </div>
   <div class="wrap map-section__frame" data-reveal>
     <ul class="map-section__list" id="amenityList">
-      <!-- Populated dynamically by js/main.js from the shared amenities data set -->
+
     </ul>
     <div class="map-section__map-wrap">
       <div id="sunstoneMap" aria-label="Map showing Sunstone Towns and nearby amenities near Rutherford Rd &amp; Peter Rupert Ave, Vaughan"></div>
@@ -196,7 +195,7 @@
   </div>
 </section>
 
-<!-- ========================== COMMUNITY ============================ -->
+
 <section class="community" id="community">
   <div class="community__media">
     <img src="assets/images/{{cms:community_image}}" alt="{{cms:community_image_alt}}" loading="lazy">
@@ -208,30 +207,9 @@
   </div>
 </section>
 
-<!-- =========================== GALLERY =============================
-     Temporarily hidden until better renderings are ready.
-     Un-comment this whole block (and restore the nav/footer links below)
-     to bring it back.
-<section class="gallery" id="gallery">
-  <div class="wrap gallery__head" data-reveal>
-    <div>
-      <h2>See Life<br>at Sunstone</h2>
-      <span class="gallery__drag">Drag to Explore <span class="arw">→</span></span>
-    </div>
-  </div>
 
-  <div class="gallery__strip" data-reveal>
-    <figure><figcaption>01</figcaption><img src="assets/images/gallery-01.jpg" alt="The Highway 400 corridor minutes from the community" loading="lazy"></figure>
-    <figure><figcaption>02</figcaption><img src="assets/images/gallery-02.jpg" alt="Stephen Lewis Secondary School, minutes from Sunstone Towns" loading="lazy"></figure>
-    <figure><figcaption>03</figcaption><img src="assets/images/gallery-03.jpg" alt="Friends sharing an outdoor dinner under string lights" loading="lazy"></figure>
-    <figure><figcaption>04</figcaption><img src="assets/images/gallery-04.jpg" alt="GO Transit train at a nearby Vaughan station" loading="lazy"></figure>
-    <figure><figcaption>05</figcaption><img src="assets/images/gallery-05.jpg" alt="Open parkland and meadow trails at sunset" loading="lazy"></figure>
-  </div>
-  <div class="wrap"><div class="gallery__progress"><span></span></div></div>
-</section>
--->
 
-<!-- =========================== REGISTER ============================= -->
+
 <section class="register" id="register">
   <img class="register__bg" src="assets/images/register-bg.jpg" alt="" loading="lazy">
   <div class="wrap register__inner">
@@ -273,7 +251,7 @@
       <div class="form__row">
         <div class="field">
           <label for="broker">Are You a Broker?</label>
-          <select id="broker" name="inf_custom_Broker" required>
+          <select id="broker" name="inf_custom_Broker2" required>
             <option value="">Select an option</option>
             <option value="Yes">Yes</option>
             <option value="No">No</option>
@@ -308,14 +286,14 @@
 
       <div class="form__done">
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></svg>
-        Thank you — you're on the priority list. We'll be in touch shortly.
+        Thank you, you're on the priority list. We'll be in touch shortly.
       </div>
       <input type="text" name="inf-sbt" style="display:none !important;">
     </form>
   </div>
 </section>
 
-<!-- ============================ FOOTER ============================ -->
+
 <footer class="site-footer">
   <div class="wrap">
     <div class="footer__top">
@@ -362,6 +340,6 @@
 <script type="text/javascript" src="https://wu242.infusionsoft.com/js/jquery/jquery-3.3.1.js"></script>
 <script type="text/javascript" src="https://wu242.infusionsoft.app/app/webform/overwriteRefererJs"></script>
 
-<script src="js/main.js?v=13"></script>
+<script src="js/main.js?v=14"></script>
 </body>
 </html>

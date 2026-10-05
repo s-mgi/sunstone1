@@ -1,18 +1,3 @@
-// "Thank you for registering" auto-reply sent to each person who registers,
-// via Resend (same account/key as the internal notification).
-//
-// Uses the existing Worker variables:
-//   RESEND_API_KEY, FROM_EMAIL, FROM_NAME (optional), ADMIN_PASSWORD (signs
-//   the unsubscribe link, same as eblasts)
-// Optional overrides:
-//   AUTOREPLY_ENABLED   — set to "false" to turn the auto-reply off
-//   AUTOREPLY_REPLY_TO  — where replies go (default SITE.defaultReplyTo)
-//
-// CASL: the footer carries SITE.company + mailing address and a working
-// unsubscribe link (plus List-Unsubscribe headers for Gmail/Yahoo's
-// one-click button). The link hits the same /api/unsubscribe handler as
-// eblasts.
-// All names, copy, images and colours come from ../site.config.js.
 import { signToken } from './eblast.js';
 import { SITE } from '../site.config.js';
 
@@ -21,7 +6,6 @@ const DEFAULT_REPLY_TO = SITE.defaultReplyTo;
 
 const C = { ...SITE.colors, maroon: SITE.colors.brand, gold: SITE.colors.accent };
 
-// Never throws: a failed auto-reply must not affect the registration.
 export async function sendAutoReply(env, origin, { firstName, email }) {
   try {
     if (env.AUTOREPLY_ENABLED === 'false') return;

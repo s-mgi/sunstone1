@@ -1,10 +1,3 @@
-// Cookie-based session auth for /admin(.html) and /api/* routes.
-// Set ADMIN_USER and ADMIN_PASSWORD as Worker secrets/vars (Settings ->
-// Variables and secrets) — unchanged from before. Logging in exchanges
-// those credentials (via POST /api/login) for a signed session cookie;
-// there's no server-side session store, so "logging out" just clears the
-// cookie. The signature is an HMAC keyed off ADMIN_PASSWORD, so no extra
-// secret is needed and a session can't be forged without knowing it.
 import { SITE } from '../site.config.js';
 const COOKIE_NAME = SITE.cookieName;
 const SESSION_DAYS = 7;
@@ -54,7 +47,6 @@ async function verifySession(cookieHeader, env) {
   return true;
 }
 
-// Returns null if authorized, or a Response to send back if not.
 export async function requireAuth(request, env) {
   if (!env.ADMIN_USER || !env.ADMIN_PASSWORD) {
     return unauthorized('Admin auth is not configured (ADMIN_USER / ADMIN_PASSWORD missing).');
@@ -64,7 +56,6 @@ export async function requireAuth(request, env) {
   return null;
 }
 
-// Checks a login POST body against the configured credentials.
 export async function checkLogin(request, env) {
   if (!env.ADMIN_USER || !env.ADMIN_PASSWORD) {
     return { ok: false, error: 'Admin auth is not configured (ADMIN_USER / ADMIN_PASSWORD missing).' };
