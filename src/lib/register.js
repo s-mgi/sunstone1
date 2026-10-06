@@ -1,6 +1,10 @@
 import { sendAutoReply } from './autoreply.js';
 import { SITE } from '../site.config.js';
 
+export const FORM_VERSION = '2026-10-05';
+
+const KEEP_PROVIDER = true;
+
 export const HEAR_ABOUT_OPTIONS = ['Google', 'Instagram', 'Facebook', 'Friend or Family', 'Realtor or Broker', 'Signage or Drove By', 'Other'];
 
 export async function handleRegister(request, env, ctx) {
@@ -30,15 +34,32 @@ export async function handleRegister(request, env, ctx) {
     const utmMedium = clip(data.utmMedium, 255);
     const utmCampaign = clip(data.utmCampaign, 255);
 
-    if (!firstName || !lastName || !email || !phone || !broker || !hearAbout || !consent) {
-      return json({ ok: false, error: 'Please complete the highlighted fields.' }, 400);
+    const required = { firstName, lastName, email, phone, broker, hearAbout, consent };
+    const missing = Object.keys(required).filter((k) => !required[k]);
+    const badOptions = [];
+    if (broker && !['yes', 'no'].includes(broker)) badOptions.push(`broker "${broker}" is not Yes or No`);
+    if (hearAbout && !HEAR_ABOUT_OPTIONS.includes(hearAbout)) badOptions.push(`hearAbout "${hearAbout}" is not one of the dropdown options`);
+    const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    const sentVersion = clip(data.formVersion, 40);
+
+    if (!email || (!KEEP_PROVIDER && (missing.length || badOptions.length))) {
+      return json({ ok: false, error: 'Please complete the highlighted fields.', missing, badOptions, formVersion: FORM_VERSION }, 400);
     }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      return json({ ok: false, error: 'Please enter a valid email address.' }, 400);
+    if (!KEEP_PROVIDER && !emailOk) {
+      return json({ ok: false, error: 'Please enter a valid email address.', missing: ['email'], formVersion: FORM_VERSION }, 400);
     }
-    if (!['yes', 'no'].includes(broker) || !HEAR_ABOUT_OPTIONS.includes(hearAbout)) {
-      return json({ ok: false, error: 'Please complete the highlighted fields.' }, 400);
+
+    const issues = [];
+    if (missing.length) issues.push(`Missing: ${missing.join(', ')}`);
+    issues.push(...badOptions);
+    if (!emailOk) issues.push('Email address looks invalid');
+    if (sentVersion !== FORM_VERSION) {
+      issues.push(sentVersion
+        ? `Site files are on form version ${sentVersion} but the Worker is on ${FORM_VERSION}. Re-upload the site files and the Worker together.`
+        : `The site didn't send a form version (Worker is on ${FORM_VERSION}). The site JS may be out of date.`);
     }
+    const status = issues.length ? 'needs_review' : 'new';
+    const note = issues.length ? `Form check: ${issues.join(' | ')}` : null;
 
     let returning = false;
     if (env.DB) {
@@ -51,16 +72,17 @@ export async function handleRegister(request, env, ctx) {
           await env.DB.prepare(
             `UPDATE inquiries SET first_name = ?, last_name = ?, phone = COALESCE(?, phone), is_broker = ?, hear_about = ?,
                comments = COALESCE(?, comments), consent = ?,
+               status = CASE WHEN ? = 'needs_review' THEN 'needs_review' ELSE status END, note = COALESCE(?, note),
                utm_source = COALESCE(?, utm_source), utm_medium = COALESCE(?, utm_medium), utm_campaign = COALESCE(?, utm_campaign)
              WHERE id = ?`
           ).bind(firstName, lastName, phone || null, broker, hearAbout, comments || null, consent,
-            utmSource || null, utmMedium || null, utmCampaign || null, existing.id).run();
+            status, note, utmSource || null, utmMedium || null, utmCampaign || null, existing.id).run();
         } else {
           await env.DB.prepare(
-            `INSERT INTO inquiries (first_name, last_name, email, phone, is_broker, hear_about, comments, consent, source_path, utm_source, utm_medium, utm_campaign, status)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'new')`
+            `INSERT INTO inquiries (first_name, last_name, email, phone, is_broker, hear_about, comments, consent, source_path, utm_source, utm_medium, utm_campaign, status, note)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
           ).bind(firstName, lastName, email.toLowerCase(), phone || null, broker, hearAbout, comments || null, consent,
-            sourcePath || null, utmSource || null, utmMedium || null, utmCampaign || null).run();
+            sourcePath || null, utmSource || null, utmMedium || null, utmCampaign || null, status, note).run();
         }
       } catch (dbErr) {
         console.error('D1 insert failed (inquiry still emailed if Resend is configured):', dbErr);
@@ -69,8 +91,10 @@ export async function handleRegister(request, env, ctx) {
       console.error('No DB binding, inquiry was not stored, only emailed (if configured).');
     }
 
-    const reply = sendAutoReply(env, new URL(request.url).origin, { firstName, email });
-    if (ctx && ctx.waitUntil) ctx.waitUntil(reply); else await reply;
+    if (emailOk) {
+      const reply = sendAutoReply(env, new URL(request.url).origin, { firstName, email });
+      if (ctx && ctx.waitUntil) ctx.waitUntil(reply); else await reply;
+    }
 
     const apiKey = env.RESEND_API_KEY;
     const fromEmail = env.FROM_EMAIL;
@@ -78,21 +102,22 @@ export async function handleRegister(request, env, ctx) {
 
     if (!apiKey || !fromEmail || !toEmail) {
       console.error('Resend is not configured: missing RESEND_API_KEY, FROM_EMAIL, or TO_EMAIL.');
-      return json({ ok: true, warning: 'stored_without_email' });
+      return json({ ok: true, warning: 'stored_without_email', formVersion: FORM_VERSION, issues });
     }
 
     const html = [
+      issues.length ? `<p style="font-family:sans-serif;font-size:14px;background:#fdecea;color:#8a1c12;padding:10px 12px;border-radius:4px;margin:0 0 14px;"><strong>Some fields didn't match the form setup.</strong><br>${issues.map(escapeHtml).join('<br>')}</p>` : '',
       `<h2 style="margin:0 0 12px;font-family:sans-serif;">${returning ? 'Returning registration (details updated)' : 'New registration'} &middot; ${escapeHtml(SITE.name)}</h2>`,
       '<table style="font-family:sans-serif;font-size:14px;border-collapse:collapse;">',
       row('Name', `${escapeHtml(firstName)} ${escapeHtml(lastName)}`),
       row('Email', escapeHtml(email)),
-      row('Phone', phone ? escapeHtml(phone) : ', '),
+      row('Phone', phone ? escapeHtml(phone) : '-'),
       row('Broker?', broker === 'yes' ? 'Yes' : 'No'),
       row('Heard about us via', escapeHtml(hearAbout)),
-      row('Comments', comments ? escapeHtml(comments).replace(/\n/g, '<br>') : ', '),
+      row('Comments', comments ? escapeHtml(comments).replace(/\n/g, '<br>') : '-'),
       row('Consent to updates', consent === 'yes' ? 'Yes' : 'No'),
-      row('Source', sourcePath ? escapeHtml(sourcePath) : ', '),
-      row('UTM', [utmSource, utmMedium, utmCampaign].filter(Boolean).map(escapeHtml).join(' / ') || ', '),
+      row('Source', sourcePath ? escapeHtml(sourcePath) : '-'),
+      row('UTM', [utmSource, utmMedium, utmCampaign].filter(Boolean).map(escapeHtml).join(' / ') || '-'),
       '</table>',
     ].join('');
 
@@ -102,8 +127,8 @@ export async function handleRegister(request, env, ctx) {
       body: JSON.stringify({
         from: fromEmail,
         to: toEmail.split(',').map((s) => s.trim()).filter(Boolean),
-        reply_to: email,
-        subject: `${returning ? 'Returning registration' : 'New registration'}: ${firstName} ${lastName}`,
+        reply_to: emailOk ? email : undefined,
+        subject: `${issues.length ? '[Check] ' : ''}${returning ? 'Returning registration' : 'New registration'}: ${firstName} ${lastName}`,
         html,
       }),
     });
@@ -111,10 +136,10 @@ export async function handleRegister(request, env, ctx) {
     if (!resendRes.ok) {
       const detail = await resendRes.text();
       console.error('Resend API error:', resendRes.status, detail);
-      return json({ ok: true, warning: 'stored_without_email' });
+      return json({ ok: true, warning: 'stored_without_email', formVersion: FORM_VERSION, issues });
     }
 
-    return json({ ok: true });
+    return json({ ok: true, formVersion: FORM_VERSION, issues });
   } catch (err) {
     console.error('register.js error:', err);
     return json({ ok: false, error: 'Unexpected error. Please try again.' }, 500);

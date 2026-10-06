@@ -386,6 +386,7 @@
 
 
 
+  var FORM_VERSION = '2026-10-05';
   var form = document.querySelector('.form');
   if (form) {
     var cmsCopySent = false;
@@ -408,14 +409,28 @@
         sourcePath: window.location.pathname + window.location.hash,
         utmSource: qs.get('utm_source') || '',
         utmMedium: qs.get('utm_medium') || '',
-        utmCampaign: qs.get('utm_campaign') || ''
+        utmCampaign: qs.get('utm_campaign') || '',
+        formVersion: FORM_VERSION
       });
+      var reportCopy = function (status, info) {
+        var missing = info && info.missing ? info.missing.join(',') : '';
+        try { console.warn('[cms] register copy failed', status, missing); } catch (e) {}
+        if (typeof gtag === 'function') {
+          try { gtag('event', 'cms_register_failed', { http_status: String(status), missing_fields: missing, transport_type: 'beacon' }); } catch (e) {}
+        }
+      };
       if (typeof gtag === 'function' && !val('inf-sbt')) {
         try { gtag('event', 'generate_lead', { form_name: 'register', transport_type: 'beacon' }); } catch (e) {}
       }
       try {
         fetch('/register', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: payload, keepalive: true, credentials: 'same-origin' })
-          .catch(function () {});
+          .then(function (r) {
+            return r.json().catch(function () { return {}; }).then(function (info) {
+              if (!r.ok || !info.ok) reportCopy(r.status, info);
+              else if (info.issues && info.issues.length) { try { console.warn('[cms] lead saved for review', info.issues); } catch (e) {} }
+            });
+          })
+          .catch(function () { reportCopy('network', null); });
       } catch (err) {
         try { navigator.sendBeacon && navigator.sendBeacon('/register', new Blob([payload], { type: 'application/json' })); } catch (e) {}
       }

@@ -245,6 +245,7 @@ tr:hover td{ background:var(--line-soft); }
 .field-row{ display:grid; grid-template-columns:1fr 1fr; gap:0.9rem; }
 .field-row .field{ margin-bottom:0; }
 
+.lead-alert{ padding:0.8rem 1rem; border-radius:0.3rem; background:rgba(224,122,106,.14); color:var(--bad); font-size:0.8125rem; line-height:1.5; margin-bottom:1rem; }
 .status-badge{ font-size:0.75rem; font-weight:600; padding:0.3rem 0.7rem; border-radius:1rem; }
 .status-badge.dirty{ background:rgba(231,177,98,.14); color:var(--gold); }
 .status-badge.pending{ background:var(--tag-blue-bg); color:var(--tag-blue-tx); }
@@ -428,11 +429,12 @@ p.hint{ font-size:0.8125rem; line-height:1.5; color:var(--sub); margin:0.6rem 0 
             <button class="btn btn-gold" data-page-link="homepage">Edit site</button>
           </div>
         </div>
+        <div id="lead-alert"></div>
         <div class="stats">
-          <div class="stat-card"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg></div><div><div class="label">Published pages</div><div class="value" id="stat-pages">, </div></div></div>
-          <div class="stat-card"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l9-7 9 7"/><path d="M5 10v9a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1v-9"/></svg></div><div><div class="label">Total registrations</div><div class="value" id="stat-total">, </div></div></div>
-          <div class="stat-card"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div><div><div class="label">New registrations</div><div class="value" id="stat-newregs">, </div></div></div>
-          <div class="stat-card"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></div><div><div class="label">SEO health</div><div class="value" id="stat-seo">, </div></div></div>
+          <div class="stat-card"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg></div><div><div class="label">Published pages</div><div class="value" id="stat-pages">-</div></div></div>
+          <div class="stat-card"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l9-7 9 7"/><path d="M5 10v9a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1v-9"/></svg></div><div><div class="label">Total registrations</div><div class="value" id="stat-total">-</div></div></div>
+          <div class="stat-card"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div><div><div class="label">New registrations</div><div class="value" id="stat-newregs">-</div></div></div>
+          <div class="stat-card"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></div><div><div class="label">SEO health</div><div class="value" id="stat-seo">-</div></div></div>
         </div>
         <div class="grid-2">
           <div>
@@ -454,7 +456,7 @@ p.hint{ font-size:0.8125rem; line-height:1.5; color:var(--sub); margin:0.6rem 0 
             </div>
           </div>
         </div>
-        <div class="footer-bar"><span id="last-published">, </span><a href="#" data-page-link="settings">View activity log →</a></div>
+        <div class="footer-bar"><span id="last-published">-</span><a href="#" data-page-link="settings">View activity log →</a></div>
       </section>
 
       <section class="page hidden" id="page-homepage">
@@ -841,14 +843,14 @@ p.hint{ font-size:0.8125rem; line-height:1.5; color:var(--sub); margin:0.6rem 0 
           <div class="grid-3">
             <div class="panel">
               <div class="panel-head"><h2>Site health</h2></div>
-              <div class="score-big" id="audit-score">, </div>
+              <div class="score-big" id="audit-score">-</div>
               <span class="muted">/ 100</span>
               <div class="score-bar"><div id="audit-score-bar" style="width:0%"></div></div>
               <p class="muted" style="margin-top:0.6rem; font-size:0.8125rem;" id="audit-summary">Custom audit score · 1 page checked</p>
             </div>
             <div class="panel">
               <div class="panel-head"><h2>Audit categories</h2></div>
-              <div id="audit-categories"><div class="empty">, </div></div>
+              <div id="audit-categories"><div class="empty">-</div></div>
             </div>
             <div class="panel">
               <div class="panel-head"><h2>Performance</h2>
@@ -856,7 +858,7 @@ p.hint{ font-size:0.8125rem; line-height:1.5; color:var(--sub); margin:0.6rem 0 
               </div>
               <div class="score-big" style="font-size:1.9rem;" id="perf-score">Not checked</div>
               <p class="muted" style="margin-top:0.3rem; font-size:0.8125rem;" id="perf-summary">Click Mobile or Desktop to run a live Google PageSpeed Insights check.</p>
-              <div class="cwv-note" id="perf-cwv">Core Web Vitals: <b style="color:var(--ink);">, </b></div>
+              <div class="cwv-note" id="perf-cwv">Core Web Vitals: <b style="color:var(--ink);">-</b></div>
             </div>
           </div>
           <div class="panel">
@@ -1019,15 +1021,15 @@ async function api(path, opts) {
 function safeParse(str, fallback) { try { return JSON.parse(str); } catch { return fallback; } }
 function initials(first, last) { return ((first||'')[0]||'').toUpperCase() + ((last||'')[0]||'').toUpperCase(); }
 function timeAgo(iso) {
-  if (!iso) return ', ';
+  if (!iso) return '-';
   const d = new Date(iso.includes('T') ? iso : iso.replace(' ', 'T') + 'Z');
   if (isNaN(d)) return iso;
   return d.toLocaleDateString(undefined, { month:'short', day:'numeric', year:'numeric' });
 }
 function escapeHtml(str) { return String(str ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
-function hearAboutLabel(value) { return value || ', '; }
+function hearAboutLabel(value) { return value || '-'; }
 function dateAndTime(iso) {
-  if (!iso) return ', ';
+  if (!iso) return '-';
   const d = new Date(iso.includes('T') ? iso : iso.replace(' ', 'T') + 'Z');
   if (isNaN(d)) return iso;
   return d.toLocaleString(undefined, { month:'short', day:'numeric', year:'numeric', hour:'numeric', minute:'2-digit' });
@@ -1118,7 +1120,9 @@ function renderOverview() {
   $('#stat-pages').textContent = '2';
   $('#stat-total').textContent = INQUIRIES.length;
   $('#stat-newregs').textContent = INQUIRIES.filter(i => i.status === 'new').length;
-  $('#stat-seo').textContent = CONTENT.seo_audit_last_score ? `${CONTENT.seo_audit_last_score}/100` : ', ';
+  const flagged = INQUIRIES.filter(i => i.status === 'needs_review' && String(i.note || '').startsWith('Form check:'));
+  $('#lead-alert').innerHTML = flagged.length ? `<div class="lead-alert"><strong>${flagged.length} registration${flagged.length === 1 ? '' : 's'} came in with fields that didn't match the form setup.</strong> They were saved, but check them in Registrations (status: needs review). If it says the site and Worker versions differ, re-upload the site files and the Worker together.</div>` : '';
+  $('#stat-seo').textContent = CONTENT.seo_audit_last_score ? `${CONTENT.seo_audit_last_score}/100` : '-';
 
   if (CONTENT.og_image) $('#hero-image').style.backgroundImage = `url(${JSON.stringify(CONTENT.og_image).slice(1,-1)})`;
 
@@ -1722,9 +1726,9 @@ function renderEblastList() {
       <td>${escapeHtml(c.subject || '(no subject)')}</td>
       <td><span class="tag ${badgeClass[c.status] || ''}">${escapeHtml(c.status)}</span></td>
       <td>${c.sent_at ? dateAndTime(c.sent_at) : dateAndTime(c.created_at)}</td>
-      <td>${c.recipient_count ?? ', '}</td>
-      <td>${c.sent_count ?? ', '}</td>
-      <td>${c.failed_count ? c.failed_count : ', '}</td>
+      <td>${c.recipient_count ?? '-'}</td>
+      <td>${c.sent_count ?? '-'}</td>
+      <td>${c.failed_count ? c.failed_count : '-'}</td>
       <td>
         <button type="button" class="edit" data-open-eblast="${c.id}">${c.status === 'draft' ? 'Edit ›' : 'View ›'}</button>
         ${c.status !== 'draft' ? `<button type="button" class="edit" data-duplicate-eblast="${c.id}" style="margin-left:0.4rem;">Edit &amp; resend ›</button>` : ''}
@@ -1935,11 +1939,11 @@ function renderRegistrationsInto(tableSel, filterSel) {
   const filter = filterEl ? filterEl.value : '';
   const rows = filter ? INQUIRIES.filter(i => i.status === filter) : INQUIRIES;
   tbody.innerHTML = rows.length ? rows.map(r => `
-    <tr><td>${escapeHtml(r.first_name)} ${escapeHtml(r.last_name)}</td><td>${escapeHtml(r.email)}</td><td>${escapeHtml(r.phone||', ')}</td>
-      <td>${r.is_broker === 'yes' ? 'Yes' : (r.is_broker === 'no' ? 'No' : ', ')}</td>
+    <tr><td>${escapeHtml(r.first_name)} ${escapeHtml(r.last_name)}</td><td>${escapeHtml(r.email)}</td><td>${escapeHtml(r.phone||'-')}</td>
+      <td>${r.is_broker === 'yes' ? 'Yes' : (r.is_broker === 'no' ? 'No' : '-')}</td>
       <td>${escapeHtml(hearAboutLabel(r.hear_about))}</td>
-      <td title="${escapeHtml(r.comments||'')}">${r.comments ? escapeHtml(r.comments.length > 60 ? r.comments.slice(0, 60) + '…' : r.comments) : ', '}</td>
-      <td>${escapeHtml(r.source_path||', ')}</td>
+      <td title="${escapeHtml(r.comments||'')}">${r.comments ? escapeHtml(r.comments.length > 60 ? r.comments.slice(0, 60) + '…' : r.comments) : '-'}</td>
+      <td>${escapeHtml(r.source_path||'-')}</td>
       <td><select data-status-for="${r.id}">${['new','contacted','qualified','toured','closed','lost','needs_review'].map(s => `<option value="${s}" ${s===r.status?'selected':''}>${s.replace('_',' ')}</option>`).join('')}</select></td>
       <td>${timeAgo(r.created_at)}</td>
       <td><div style="display:flex; gap:0.4rem; flex-wrap:wrap;">
@@ -2436,11 +2440,11 @@ const CHECK_LOCATIONS = {
   internal_anchors: { label: 'Site template (code)' },
   placeholder_content: { label: 'Site template (code)' },
 };
-function locationForCheck(id) { return (CHECK_LOCATIONS[id] || {}).label || ', '; }
+function locationForCheck(id) { return (CHECK_LOCATIONS[id] || {}).label || '-'; }
 function actionForCheck(id) {
   const loc = CHECK_LOCATIONS[id];
   if (loc && loc.page) return `<button class="edit" data-fix-goto="${loc.page}|${loc.sub||''}">Fix ›</button>`;
-  return '<span class="muted">, </span>';
+  return '<span class="muted">-</span>';
 }
 document.addEventListener('click', (e) => {
   const btn = e.target.closest('[data-fix-goto]'); if (!btn) return;
@@ -2472,13 +2476,13 @@ async function runPerfCheck(strategy) {
   $('#perf-desktop').classList.toggle('active', strategy === 'desktop');
   $('#perf-score').textContent = '…';
   $('#perf-summary').textContent = 'Checking Google PageSpeed Insights, this can take up to 30 seconds…';
-  $('#perf-cwv').innerHTML = 'Core Web Vitals: <b style="color:var(--ink);">, </b>';
+  $('#perf-cwv').innerHTML = 'Core Web Vitals: <b style="color:var(--ink);">-</b>';
   try {
     const res = await api(`/api/perf-check?strategy=${strategy}`);
     $('#perf-score').textContent = res.score;
     $('#perf-summary').textContent = `Live Lighthouse ${strategy} performance score · checked ${new Date(res.checked_at).toLocaleTimeString()}`;
     const m = res.metrics || {};
-    $('#perf-cwv').innerHTML = `LCP: <b style="color:var(--ink);">${escapeHtml(m.lcp || ', ')}</b> &middot; CLS: <b style="color:var(--ink);">${escapeHtml(m.cls || ', ')}</b> &middot; FCP: <b style="color:var(--ink);">${escapeHtml(m.fcp || ', ')}</b>`;
+    $('#perf-cwv').innerHTML = `LCP: <b style="color:var(--ink);">${escapeHtml(m.lcp || '-')}</b> &middot; CLS: <b style="color:var(--ink);">${escapeHtml(m.cls || '-')}</b> &middot; FCP: <b style="color:var(--ink);">${escapeHtml(m.fcp || '-')}</b>`;
     try {
       await putField(`perf_last_score_${strategy}`, String(res.score));
       await putField('perf_last_checked_at', res.checked_at);
@@ -2556,7 +2560,7 @@ function perfSummaryText() {
 }
 function renderAuditHistory() {
   const history = getAuditHistory();
-  $('#audit-history').innerHTML = history.length ? history.map((h, i) => `<tr><td>${new Date(h.date).toLocaleString()}</td><td>${h.score}</td><td class="muted">${i === 0 ? perfSummaryText() : ', '}</td></tr>`).join('') : `<tr><td colspan="3" class="empty">No history yet, run an audit.</td></tr>`;
+  $('#audit-history').innerHTML = history.length ? history.map((h, i) => `<tr><td>${new Date(h.date).toLocaleString()}</td><td>${h.score}</td><td class="muted">${i === 0 ? perfSummaryText() : '-'}</td></tr>`).join('') : `<tr><td colspan="3" class="empty">No history yet, run an audit.</td></tr>`;
   if (history.length) { $('#audit-score').textContent = history[0].score; $('#audit-score-bar').style.width = history[0].score + '%'; $('#audit-when').textContent = 'Last checked ' + new Date(history[0].date).toLocaleString(); }
 }
 
@@ -2726,7 +2730,7 @@ function renderLogPage() {
   const start = logPage * LOG_PAGE_SIZE;
   const rows = LOGENTRIES.slice(start, start + LOG_PAGE_SIZE);
   $('#log-table').innerHTML = rows.length ? rows.map(l => `
-    <tr><td>${dateAndTime(l.created_at)}</td><td>${escapeHtml(l.editor||', ')}</td><td>${escapeHtml(l.entity_type)}:${escapeHtml(l.entity_key)}</td><td>${escapeHtml(l.note||'')}</td></tr>
+    <tr><td>${dateAndTime(l.created_at)}</td><td>${escapeHtml(l.editor||'-')}</td><td>${escapeHtml(l.entity_type)}:${escapeHtml(l.entity_key)}</td><td>${escapeHtml(l.note||'')}</td></tr>
   `).join('') : `<tr><td colspan="4" class="empty">No activity yet.</td></tr>`;
   const pager = $('#log-pager');
   if (pager) {
