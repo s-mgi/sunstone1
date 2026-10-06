@@ -1,4 +1,5 @@
 import { renderHome } from './render.js';
+import { HEAR_ABOUT_OPTIONS } from './register.js';
 
 const VALID_STATUSES = ['new', 'contacted', 'qualified', 'toured', 'closed', 'lost', 'needs_review'];
 
@@ -147,6 +148,72 @@ export async function importContacts(request, env) {
   }
 
   return json({ ok: true, imported: inserts.length, updated: updates.length, skipped, total: dataRows.length, errors });
+}
+
+export async function importRegistrations(request, env) {
+  let body;
+  try { body = await request.json(); } catch { return json({ ok: false, error: 'Invalid JSON body.' }, 400); }
+  const rows = Array.isArray(body.rows) ? body.rows : [];
+  if (!rows.length) return json({ ok: false, error: 'No rows received.' }, 400);
+  if (rows.length > IMPORT_MAX_ROWS) return json({ ok: false, error: `That's ${rows.length} rows, split it into batches of ${IMPORT_MAX_ROWS} or fewer.` }, 400);
+  const mode = ['fill', 'overwrite', 'skip'].includes(body.existing) ? body.existing : 'fill';
+  const status = VALID_STATUSES.includes(body.status) ? body.status : 'new';
+
+  const clip = (v, n) => String(v == null ? '' : v).trim().slice(0, n);
+  const yesNo = (v) => { const t = clip(v, 10).toLowerCase(); return ['yes', 'y', 'true', '1'].includes(t) ? 'yes' : (['no', 'n', 'false', '0'].includes(t) ? 'no' : null); };
+  const hear = (v) => { const t = clip(v, 255); if (!t) return null; const m = HEAR_ABOUT_OPTIONS.find((o) => o.toLowerCase() === t.toLowerCase()); return m || t; };
+  const consentOf = (v) => { const t = clip(v, 10).toLowerCase(); return ['yes', 'on', 'true', '1', 'y'].includes(t) ? 'yes' : (t ? 'no' : null); };
+  const dateOf = (v) => { const t = clip(v, 25); return /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/.test(t) ? t : null; };
+  const comm = (v) => { const t = clip(v, 4000); return !t || t.toLowerCase() === 'null' ? null : t; };
+
+  const { results: existing } = await env.DB.prepare('SELECT * FROM inquiries').all();
+  const byEmail = new Map(existing.map((r) => [String(r.email).toLowerCase(), r]));
+  const seen = new Set();
+  const inserts = [], updates = [], errors = [];
+  let skipped = 0;
+
+  rows.forEach((r, i) => {
+    const email = clip(r.email, 254).toLowerCase();
+    const line = r.line || i + 2;
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { skipped++; if (errors.length < 20) errors.push(`Row ${line}: missing or invalid email`); return; }
+    if (seen.has(email)) { skipped++; if (errors.length < 20) errors.push(`Row ${line}: ${email} appears twice in the file, kept the first`); return; }
+    seen.add(email);
+    const v = {
+      first_name: clip(r.firstName, 100), last_name: clip(r.lastName, 100), phone: clip(r.phone, 40) || null,
+      is_broker: yesNo(r.broker), hear_about: hear(r.hearAbout), comments: comm(r.comments), consent: consentOf(r.consent),
+      created_at: dateOf(r.createdAt),
+    };
+    const ex = byEmail.get(email);
+    if (!ex) { inserts.push({ email, ...v }); return; }
+    if (mode === 'skip') { skipped++; return; }
+    const sets = [], binds = [];
+    for (const k of ['first_name', 'last_name', 'phone', 'is_broker', 'hear_about', 'comments', 'consent']) {
+      if (v[k] == null || v[k] === '') continue;
+      if (mode === 'fill' && ex[k] != null && String(ex[k]).trim() !== '') continue;
+      if (String(ex[k] ?? '') === String(v[k])) continue;
+      sets.push(`${k} = ?`); binds.push(v[k]);
+    }
+    if (v.created_at && (ex.source_path === 'manual' || ex.source_path === 'import')) { sets.push('created_at = ?', "source_path = 'keap-import'"); binds.push(v.created_at); }
+    if (!sets.length) { skipped++; return; }
+    updates.push({ id: ex.id, sets, binds });
+  });
+
+  for (let i = 0; i < inserts.length; i += IMPORT_CHUNK) {
+    const stmt = env.DB.prepare(
+      `INSERT INTO inquiries (first_name, last_name, email, phone, is_broker, hear_about, comments, consent, source_path, status, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'keap-import', ?, COALESCE(?, datetime('now')))`
+    );
+    await env.DB.batch(inserts.slice(i, i + IMPORT_CHUNK).map((c) => stmt.bind(c.first_name, c.last_name, c.email, c.phone, c.is_broker, c.hear_about, c.comments, c.consent, status, c.created_at)));
+  }
+  for (let i = 0; i < updates.length; i += IMPORT_CHUNK) {
+    await env.DB.batch(updates.slice(i, i + IMPORT_CHUNK).map((u) => env.DB.prepare(`UPDATE inquiries SET ${u.sets.join(', ')} WHERE id = ?`).bind(...u.binds, u.id)));
+  }
+  if (inserts.length || updates.length) {
+    await env.DB.prepare(
+      'INSERT INTO edit_log (editor, entity_type, entity_key, old_value, new_value, note) VALUES (?, ?, ?, ?, ?, ?)'
+    ).bind(decodeEditor(env), 'inquiry', 'bulk', null, null, `Registrations import: ${inserts.length} added, ${updates.length} updated, ${skipped} skipped`).run();
+  }
+  return json({ ok: true, imported: inserts.length, updated: updates.length, skipped, total: rows.length, errors });
 }
 
 function parseCsv(text) {

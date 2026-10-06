@@ -359,6 +359,13 @@ p.hint{ font-size:0.8125rem; line-height:1.5; color:var(--sub); margin:0.6rem 0 
 .drag-row .meta input{ font-size:0.8125rem; }
 .drag-row .fname{ font-size:0.8125rem; font-weight:600; margin-bottom:0.25rem; }
 
+.regimp-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(15rem, 1fr)); gap:0.75rem 1rem; }
+.regimp-grid label{ display:flex; flex-direction:column; gap:0.3rem; font-size:0.75rem; font-weight:600; color:var(--sub); }
+.regimp-grid select{ width:100%; }
+.regimp-tag{ font-size:0.6875rem; font-weight:700; padding:0.15rem 0.5rem; border-radius:1rem; white-space:nowrap; }
+.regimp-tag.new{ background:var(--tag-gold-bg); color:var(--tag-gold-tx); }
+.regimp-tag.upd{ background:var(--tag-blue-bg); color:var(--tag-blue-tx); }
+.regimp-tag.skip{ background:var(--line-soft); color:var(--sub); }
 .overlay{ position:fixed; inset:0; background:rgba(4,3,2,.6); display:flex; align-items:center; justify-content:center; z-index:50; padding:1rem; }
 .overlay.hidden{ display:none; }
 .modal{ background:var(--card); border:1px solid var(--line); border-radius:0.4rem; width:100%; max-width:34rem; max-height:88vh; overflow:auto; padding:1.5rem; }
@@ -728,6 +735,11 @@ p.hint{ font-size:0.8125rem; line-height:1.5; color:var(--sub); margin:0.6rem 0 
 
       <section class="page hidden" id="page-registrations">
         <div class="page-head"><div><h1>Registrations</h1><p>Everyone who has submitted the registration form.</p></div></div>
+        <div class="subtabs">
+          <button data-sub="reglist" class="active">All registrations</button>
+          <button data-sub="regimport">Import</button>
+        </div>
+        <div class="subpage" id="sub-reglist">
         <div class="toolbar">
           <select id="reg-filter">
             <option value="">All statuses</option>
@@ -739,6 +751,40 @@ p.hint{ font-size:0.8125rem; line-height:1.5; color:var(--sub); margin:0.6rem 0 
         <div class="panel">
           <table><thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Broker</th><th>Heard About</th><th>Comments</th><th>Source</th><th>Status</th><th>Received</th><th>Actions</th></tr></thead>
           <tbody id="reg-table"><tr><td colspan="10" class="empty">Loading…</td></tr></tbody></table>
+        </div>
+        </div>
+        <div class="subpage hidden" id="sub-regimport">
+          <div class="panel">
+            <h2 style="margin:0 0 0.4rem; font-size:1rem;">Import registrations from a CSV</h2>
+            <p class="muted" style="margin:0 0 1rem; font-size:0.875rem;">For example a contact export from Keap. You'll match the columns and see a preview before anything is saved. Nobody is emailed.</p>
+            <div class="toolbar" style="margin:0;">
+              <button class="btn btn-gold" id="regimp-choose" type="button">Choose CSV file</button>
+              <input type="file" id="regimp-file" accept=".csv,text/csv" class="hidden">
+              <span class="muted" id="regimp-filename" style="font-size:0.8125rem;"></span>
+            </div>
+          </div>
+          <div id="regimp-step2" class="hidden">
+            <div class="panel">
+              <h2 style="margin:0 0 0.4rem; font-size:1rem;">Match the columns</h2>
+              <p class="muted" style="margin:0 0 1rem; font-size:0.8125rem;">These were picked automatically. Change any that look wrong. Only Email is required.</p>
+              <div id="regimp-map" class="regimp-grid"></div>
+              <div class="regimp-grid" style="margin-top:1rem;">
+                <label>Dates in the file are in<select id="regimp-tz"><option value="America/Toronto">Eastern time (Toronto)</option><option value="America/Vancouver">Pacific time (Vancouver)</option><option value="America/Edmonton">Mountain time</option><option value="America/Winnipeg">Central time</option></select></label>
+                <label>Status for new registrations<select id="regimp-status"><option value="new">New</option><option value="contacted">Contacted</option><option value="qualified">Qualified</option><option value="toured">Toured</option><option value="closed">Closed</option><option value="lost">Lost</option></select></label>
+                <label>If an email is already in the CMS<select id="regimp-existing"><option value="fill">Only fill in blank fields</option><option value="overwrite">Replace with the file's values</option><option value="skip">Leave it as is</option></select></label>
+              </div>
+            </div>
+            <div class="panel">
+              <h2 style="margin:0 0 0.4rem; font-size:1rem;">Preview</h2>
+              <p class="muted" id="regimp-summary" style="margin:0 0 0.75rem; font-size:0.875rem;"></p>
+              <div style="overflow-x:auto;"><table><thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Broker</th><th>Heard about</th><th>Comments</th><th>Registered</th><th></th></tr></thead><tbody id="regimp-preview"></tbody></table></div>
+              <div class="toolbar" style="margin:1rem 0 0;">
+                <button class="btn btn-gold" id="regimp-go" type="button">Import</button>
+                <button class="btn" id="regimp-reset" type="button">Start over</button>
+                <span class="msg" id="regimp-msg" style="margin:0;"></span>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -1068,6 +1114,168 @@ document.addEventListener('click', (e) => {
     if (subtabs) showSubtab(subtabs, link.dataset.subtabLink);
     else if (link.dataset.pageLink === 'homepage') switchEditSection(link.dataset.subtabLink);
     else $('#sub-' + link.dataset.subtabLink)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+});
+
+const REGIMP_FIELDS = [
+  { key: 'email', label: 'Email', hints: ['email', 'email address', 'e-mail'] },
+  { key: 'firstName', label: 'First name', hints: ['first name', 'first_name', 'firstname', 'first'] },
+  { key: 'lastName', label: 'Last name', hints: ['last name', 'last_name', 'lastname', 'last'] },
+  { key: 'phone', label: 'Phone', hints: ['phone 1', 'phone', 'phone number', 'mobile'] },
+  { key: 'broker', label: 'Broker?', hints: ['broker', 'is_broker', 'are you a broker?'] },
+  { key: 'hearAbout', label: 'How they heard about us', hints: ['sunstone-leadsource', 'hear_about', 'how did you hear about us?'] },
+  { key: 'comments', label: 'Comments', hints: ['sunstone-comments', 'comments'] },
+  { key: 'consent', label: 'Consent', hints: ['consent'] },
+  { key: 'createdAt', label: 'Date registered', hints: ['date created', 'created_at', 'date registered', 'received'] },
+];
+let REGIMP = null;
+
+function regimpParseCsv(text) {
+  const rows = []; let row = []; let f = ''; let q = false;
+  text = text.replace(/^﻿/, '');
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (q) {
+      if (c === '"') { if (text[i + 1] === '"') { f += '"'; i++; } else q = false; }
+      else f += c;
+    } else if (c === '"') q = true;
+    else if (c === ',') { row.push(f); f = ''; }
+    else if (c === '\n' || c === '\r') {
+      if (c === '\r' && text[i + 1] === '\n') i++;
+      row.push(f); f = ''; rows.push(row); row = [];
+    } else f += c;
+  }
+  if (f !== '' || row.length) { row.push(f); rows.push(row); }
+  return rows.filter(r => r.some(c => String(c).trim() !== ''));
+}
+
+function regimpTzOffset(tz, ts) {
+  const p = {};
+  new Intl.DateTimeFormat('en-US', { timeZone: tz, hourCycle: 'h23', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' })
+    .formatToParts(new Date(ts)).forEach(x => { p[x.type] = x.value; });
+  return Date.UTC(+p.year, +p.month - 1, +p.day, +p.hour % 24, +p.minute, +p.second) - ts;
+}
+function regimpDate(str, tz) {
+  const t = String(str || '').trim();
+  if (!t) return '';
+  let y, mo, d, h = 0, mi = 0;
+  let m = t.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:\s+(\d{1,2}):(\d{2})(?::\d{2})?\s*(AM|PM)?)?$/i);
+  if (m) {
+    mo = +m[1]; d = +m[2]; y = +m[3]; h = +(m[4] || 0); mi = +(m[5] || 0);
+    if (m[6]) { const pm = m[6].toUpperCase() === 'PM'; if (h === 12) h = pm ? 12 : 0; else if (pm) h += 12; }
+  } else if ((m = t.match(/^(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{2}):(\d{2}))?/))) {
+    y = +m[1]; mo = +m[2]; d = +m[3]; h = +(m[4] || 0); mi = +(m[5] || 0);
+  } else return '';
+  const guess = Date.UTC(y, mo - 1, d, h, mi);
+  const utc = new Date(guess - regimpTzOffset(tz, guess - regimpTzOffset(tz, guess)));
+  return isNaN(utc) ? '' : utc.toISOString().slice(0, 19).replace('T', ' ');
+}
+
+function regimpAutoMap(header, data) {
+  const lower = header.map(h => String(h).trim().toLowerCase());
+  const filled = (i) => data.reduce((n, r) => n + (String(r[i] || '').trim() ? 1 : 0), 0);
+  const map = {};
+  REGIMP_FIELDS.forEach(f => {
+    for (const hint of f.hints) {
+      const idx = lower.map((h, i) => h === hint ? i : -1).filter(i => i !== -1);
+      if (idx.length) { map[f.key] = idx.sort((a, b) => filled(b) - filled(a))[0]; return; }
+    }
+    map[f.key] = -1;
+  });
+  return map;
+}
+
+function regimpRows() {
+  const tz = $('#regimp-tz').value;
+  const get = (r, k) => { const i = REGIMP.map[k]; return i >= 0 ? String(r[i] || '').trim() : ''; };
+  return REGIMP.data.map((r, n) => {
+    let firstName = get(r, 'firstName'), lastName = get(r, 'lastName');
+    return {
+      line: n + 2, email: get(r, 'email').toLowerCase(), firstName, lastName, phone: get(r, 'phone'),
+      broker: get(r, 'broker'), hearAbout: get(r, 'hearAbout'), comments: get(r, 'comments').replace(/^null\s*$/i, ''),
+      consent: get(r, 'consent'), createdAt: regimpDate(get(r, 'createdAt'), tz), createdRaw: get(r, 'createdAt'),
+    };
+  });
+}
+
+function regimpRender() {
+  const { header, data, map } = REGIMP;
+  const sample = (i) => { const r = data.find(x => String(x[i] || '').trim()); return r ? String(r[i]).trim().slice(0, 28) : 'empty'; };
+  const dupCount = (h) => header.filter(x => x === h).length;
+  const opt = (i) => `${escapeHtml(header[i] || ('Column ' + (i + 1)))}${dupCount(header[i]) > 1 ? ' (col ' + (i + 1) + ')' : ''} · ${escapeHtml(sample(i))}`;
+  $('#regimp-map').innerHTML = REGIMP_FIELDS.map(f => `<label>${f.label}<select data-regimp-field="${f.key}"><option value="-1">Not in this file</option>${header.map((h, i) => `<option value="${i}" ${map[f.key] === i ? 'selected' : ''}>${opt(i)}</option>`).join('')}</select></label>`).join('');
+  $$('[data-regimp-field]').forEach(sel => sel.addEventListener('change', () => { REGIMP.map[sel.dataset.regimpField] = Number(sel.value); regimpPreview(); }));
+  regimpPreview();
+}
+
+function regimpPreview() {
+  const rows = regimpRows();
+  const known = new Set(INQUIRIES.map(i => String(i.email || '').toLowerCase()));
+  const seen = new Set();
+  let nNew = 0, nUpd = 0, nBad = 0;
+  const tagged = rows.map(r => {
+    let tag;
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(r.email) || seen.has(r.email)) { tag = 'skip'; nBad++; }
+    else if (known.has(r.email)) { tag = 'upd'; nUpd++; }
+    else { tag = 'new'; nNew++; }
+    seen.add(r.email);
+    return { r, tag };
+  });
+  const ex = $('#regimp-existing').value;
+  $('#regimp-summary').textContent = `${rows.length} row${rows.length === 1 ? '' : 's'} in the file: ${nNew} new, ${nUpd} already in the CMS (${ex === 'skip' ? 'left as is' : ex === 'fill' ? 'blank fields filled in' : 'updated from the file'}), ${nBad} skipped (no valid email or a repeat).` + (REGIMP.map.email < 0 ? ' Pick the Email column first.' : '');
+  const label = { new: 'New', upd: 'Already in CMS', skip: 'Skipped' };
+  $('#regimp-preview').innerHTML = tagged.slice(0, 50).map(({ r, tag }) => `<tr>
+    <td>${escapeHtml((r.firstName + ' ' + r.lastName).trim() || '-')}</td><td>${escapeHtml(r.email || '-')}</td><td>${escapeHtml(r.phone || '-')}</td>
+    <td>${escapeHtml(r.broker || '-')}</td><td>${escapeHtml(r.hearAbout || '-')}</td>
+    <td title="${escapeHtml(r.comments)}">${escapeHtml(r.comments ? (r.comments.length > 40 ? r.comments.slice(0, 40) + '…' : r.comments) : '-')}</td>
+    <td>${r.createdAt ? escapeHtml(new Date(r.createdAt.replace(' ', 'T') + 'Z').toLocaleDateString()) : escapeHtml(r.createdRaw || '-')}</td>
+    <td><span class="regimp-tag ${tag}">${label[tag]}</span></td></tr>`).join('') + (rows.length > 50 ? `<tr><td colspan="8" class="empty">…and ${rows.length - 50} more</td></tr>` : '');
+  $('#regimp-go').disabled = REGIMP.map.email < 0 || !nNew && (!nUpd || ex === 'skip');
+  $('#regimp-go').textContent = `Import ${nNew} new${nUpd && ex !== 'skip' ? ` + update ${nUpd}` : ''}`;
+}
+
+function regimpReset() {
+  REGIMP = null;
+  $('#regimp-step2').classList.add('hidden');
+  $('#regimp-filename').textContent = '';
+  $('#regimp-msg').textContent = '';
+}
+
+$('#regimp-choose').addEventListener('click', () => $('#regimp-file').click());
+$('#regimp-file').addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  e.target.value = '';
+  if (!file) return;
+  $('#regimp-msg').textContent = '';
+  let text;
+  try { text = await file.text(); } catch { $('#regimp-filename').textContent = 'Could not read that file.'; return; }
+  const rows = regimpParseCsv(text);
+  if (rows.length < 2) { $('#regimp-filename').textContent = 'That file has no rows under the header.'; return; }
+  const header = rows[0].map(h => String(h).trim());
+  const data = rows.slice(1);
+  REGIMP = { header, data, map: regimpAutoMap(header, data) };
+  $('#regimp-filename').textContent = `${file.name} · ${data.length} row${data.length === 1 ? '' : 's'}`;
+  $('#regimp-step2').classList.remove('hidden');
+  regimpRender();
+});
+['#regimp-tz', '#regimp-existing'].forEach(s => $(s).addEventListener('change', () => REGIMP && regimpPreview()));
+$('#regimp-reset').addEventListener('click', regimpReset);
+$('#regimp-go').addEventListener('click', async () => {
+  if (!REGIMP) return;
+  const btn = $('#regimp-go'); const msg = $('#regimp-msg');
+  btn.disabled = true; msg.className = 'msg'; msg.textContent = 'Importing…';
+  try {
+    const rows = regimpRows().map(({ createdRaw, ...r }) => r);
+    const data = await api('/api/inquiries/import-registrations', { method: 'POST', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ rows, existing: $('#regimp-existing').value, status: $('#regimp-status').value }) });
+    const inqRes = await api('/api/inquiries');
+    INQUIRIES = inqRes.inquiries;
+    renderRegistrations(); renderOverview(); if (typeof renderContacts === 'function') renderContacts();
+    regimpReset();
+    msg.className = 'msg ok';
+    $('#regimp-filename').textContent = `Done: ${data.imported} added, ${data.updated} updated, ${data.skipped} skipped.` + (data.errors && data.errors.length ? ' ' + data.errors.slice(0, 3).join('; ') : '');
+  } catch (err) {
+    msg.className = 'msg err'; msg.textContent = err.message; btn.disabled = false;
   }
 });
 

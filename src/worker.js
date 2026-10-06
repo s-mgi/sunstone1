@@ -1,7 +1,7 @@
 import { requireAuth, checkLogin, createSessionCookie, clearSessionCookie } from './lib/auth.js';
 import { renderHome, renderThankYou } from './lib/render.js';
 import { handleRegister } from './lib/register.js';
-import { listInquiries, createInquiry, importContacts, patchInquiry, deleteInquiry, listContent, putContent, listEditLog, seoCheck, perfCheck, serveMedia } from './lib/api.js';
+import { listInquiries, createInquiry, importContacts, importRegistrations, patchInquiry, deleteInquiry, listContent, putContent, listEditLog, seoCheck, perfCheck, serveMedia } from './lib/api.js';
 import { analyticsReport } from './lib/analytics.js';
 import { eblastState, saveDraft, sendCampaign, handleUnsubscribe, getCampaign, deleteCampaign, duplicateCampaign } from './lib/eblast.js';
 
@@ -38,6 +38,7 @@ export default {
     if (path === '/api/inquiries' && method === 'GET') return listInquiries(request, env);
     if (path === '/api/inquiries' && method === 'POST') return createInquiry(request, env);
     if (path === '/api/inquiries/import' && method === 'POST') return importContacts(request, env);
+    if (path === '/api/inquiries/import-registrations' && method === 'POST') return importRegistrations(request, env);
     const inquiryMatch = path.match(/^\/api\/inquiries\/([^/]+)$/);
     if (inquiryMatch && method === 'PATCH') return patchInquiry(request, env, inquiryMatch[1]);
     if (inquiryMatch && method === 'DELETE') return deleteInquiry(request, env, inquiryMatch[1]);
