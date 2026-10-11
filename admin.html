@@ -1054,6 +1054,15 @@ const DRAFT_PREFIX = 'draft__';
 
 const IMG_DIR = 'assets/images/';
 const MEDIA_FILES = ['hero.jpg','hero-2.jpg','hero-3.jpg','hero-4.jpg','vision-building.jpg','homes-living.jpg','homes-details.jpg','homes-bedroom.jpg','homes-kitchen.jpg','homes-patio.jpg','setting-transit.jpg','setting-shops.jpg','setting-schools.jpg','setting-highway.jpg','community-trail.jpg','community-aerial.jpg','register-bg.jpg','band-texture.jpg','gallery-01.jpg','gallery-02.jpg','gallery-03.jpg','gallery-04.jpg','gallery-05.jpg'];
+function imgSrc(v) { v = String(v || ''); return /^(\/|https?:)/i.test(v) ? v : IMG_DIR + v; }
+function uploadImageValues() { return getGalleryUploads().filter(n => /\.(jpe?g|png|webp|gif|avif)$/i.test(n)).map(n => '/media/' + encodeURIComponent(n)); }
+function imageLabel(v) { v = String(v || ''); return v.startsWith('/media/') ? decodeURIComponent(v.slice(7)) + ' (upload)' : v; }
+function imageChoices(current) {
+  const site = MEDIA_FILES.slice(); const up = uploadImageValues();
+  if (current && !site.includes(current) && !up.includes(current)) (String(current).startsWith('/media/') ? up : site).unshift(current);
+  const opt = (v) => `<option value="${escapeHtml(v)}" ${v === current ? 'selected' : ''}>${escapeHtml(imageLabel(v))}</option>`;
+  return `<optgroup label="Site images">${site.map(opt).join('')}</optgroup>` + (up.length ? `<optgroup label="Your uploads">${up.map(opt).join('')}</optgroup>` : '');
+}
 const HERO_CANDIDATE_FILES = MEDIA_FILES;
 function linesHtml(str) { return escapeHtml(str).replace(/\s*\r?\n\s*/g, '<br>'); }
 
@@ -1414,10 +1423,10 @@ function renderHeroSlideList() {
   list.innerHTML = heroDraft.hero_images.map((img, i) => `
     <div class="drag-row" draggable="true" data-idx="${i}">
       <span class="handle">⠿⠿</span>
-      <div class="thumb" style="background-image:url(${IMG_DIR}${escapeHtml(img.file)})"></div>
+      <div class="thumb" style="background-image:url('${escapeHtml(imgSrc(img.file))}')"></div>
       <div class="meta">
         <div class="fname">
-          <select data-slide-file="${i}">${HERO_CANDIDATE_FILES.map(f => `<option value="${f}" ${f===img.file?'selected':''}>${f}</option>`).join('')}</select>
+          <select data-slide-file="${i}">${imageChoices(img.file)}</select>
         </div>
         <input type="text" data-slide-alt="${i}" value="${escapeHtml(img.alt||'')}" placeholder="Alt text (for accessibility & SEO)">
       </div>
@@ -1642,7 +1651,7 @@ function patchHeroLive(doc) {
 function patchHeroSlidesLive(doc, images) {
   const track = doc.querySelector('#heroSlider .hero-slider__track');
   const dots = doc.querySelector('#heroSlider .hero-slider__dots');
-  if (track) track.innerHTML = (images || []).map((img, i) => `<div class="hero-slider__slide${i === 0 ? ' is-active' : ''}"><img src="${IMG_DIR}${escapeHtml(img.file)}" alt="${escapeHtml(img.alt || '')}"></div>`).join('');
+  if (track) track.innerHTML = (images || []).map((img, i) => `<div class="hero-slider__slide${i === 0 ? ' is-active' : ''}"><img src="${escapeHtml(imgSrc(img.file))}" alt="${escapeHtml(img.alt || '')}"></div>`).join('');
   if (dots) dots.innerHTML = (images || []).map((_, i) => `<button type="button" class="hero-slider__dot${i === 0 ? ' is-active' : ''}" aria-label="Show image ${i + 1}"></button>`).join('');
 }
 
@@ -1710,11 +1719,7 @@ const DEFAULT_SETTING_ITEMS = [
 ];
 function getHomesSpecs() { const v = safeParse(CONTENT.homes_specs, null); return Array.isArray(v) && v.length ? v : DEFAULT_HOMES_SPECS.map(x => ({ ...x })); }
 function getSettingItems() { const v = safeParse(CONTENT.setting_items, null); return Array.isArray(v) && v.length ? v : DEFAULT_SETTING_ITEMS.map(x => ({ ...x })); }
-function imageOptionsHtml(current) {
-  const files = MEDIA_FILES.slice();
-  if (current && !files.includes(current)) files.unshift(current);
-  return files.map(f => `<option value="${escapeHtml(f)}" ${f === current ? 'selected' : ''}>${escapeHtml(f)}</option>`).join('');
-}
+function imageOptionsHtml(current) { return imageChoices(current); }
 function cleanValue(el) {
   if (el.tagName !== 'TEXTAREA') return el.value.trim();
   return el.value.split('\n').map(l => l.trim()).filter(Boolean).join('\n');
@@ -1844,7 +1849,9 @@ function renderMedia() {
   $$('[data-remove-upload]', $('#media-gallery')).forEach(a => a.addEventListener('click', async (e) => {
     e.preventDefault();
     const name = a.dataset.removeUpload;
-    if (!confirm(`Remove uploaded image "${name}"?`)) return;
+    const ref = '/media/' + encodeURIComponent(name);
+    const inUse = Object.keys(CONTENT).some(k => !k.startsWith('gallery_upload__') && String(CONTENT[k] || '').includes(ref));
+    if (!confirm(inUse ? `"${name}" is used on the site (or in a draft). Removing it will leave a broken image there until you pick another one. Remove anyway?` : `Remove uploaded image "${name}"?`)) return;
     try {
       const list = getGalleryUploads().filter(n => n !== name);
       await putField('gallery_upload_index', JSON.stringify(list));
@@ -1890,7 +1897,8 @@ $('#gallery-upload-input')?.addEventListener('change', async () => {
       CONTENT.gallery_upload_index = JSON.stringify(list);
       if (folder) CONTENT[galleryFolderKey(safeName)] = folder;
       renderMedia();
-      show('ok', `Uploaded "${safeName}"${folder ? ` to "${folder}"` : ''}.`);
+      try { renderInstantFields(); if (typeof heroDraft !== 'undefined' && heroDraft) renderHeroSlideList(); } catch (e) {}
+      show('ok', `Uploaded "${safeName}"${folder ? ` to "${folder}"` : ''}. It's now in the image pickers under "Your uploads".`);
     } catch (err) { show('err', 'Could not upload: ' + err.message); }
     input.value = '';
   };
@@ -2853,9 +2861,9 @@ let socialDraft = null; let socialMirror = false;
 function populateOgImageOptions(current) {
   const sel = $('#s-og-image');
   if (!sel) return;
-  const options = MEDIA_FILES.filter(f => /\.(jpe?g|png)$/i.test(f)).map(f => `${IMG_DIR}${f}`);
+  const options = MEDIA_FILES.filter(f => /\.(jpe?g|png)$/i.test(f)).map(f => `${IMG_DIR}${f}`).concat(uploadImageValues().filter(v => /\.(jpe?g|png)$/i.test(v)));
   if (current && !options.includes(current)) options.unshift(current);
-  sel.innerHTML = options.map(v => `<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join('');
+  sel.innerHTML = options.map(v => `<option value="${escapeHtml(v)}">${escapeHtml(imageLabel(v))}</option>`).join('');
   sel.value = current || options[0] || '';
 }
 function initSocialSharing() {

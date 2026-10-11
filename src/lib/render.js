@@ -1,5 +1,7 @@
 
 const IMG_DIR = 'assets/images/';
+const IMAGE_KEYS = ['vision_image', 'homes_image_main', 'homes_image_thumb1', 'homes_image_thumb2', 'homes_image_side', 'community_image'];
+function imgSrc(v) { v = String(v || ''); return /^(\/|https?:)/i.test(v) ? v : IMG_DIR + v; }
 
 export const HOME_PLAIN = {
   seo_title: 'Sunstone Towns, Freehold Townhomes in Vaughan | Edenbrook Homes',
@@ -118,6 +120,9 @@ export async function renderHome(request, env) {
   const absolutize = (path) => (/^https?:\/\//i.test(path) ? path : `${origin}/${String(path).replace(/^\//, '')}`);
   resolved.og_image = absolutize(resolved.og_image);
 
+  for (const key of IMAGE_KEYS) {
+    if (resolved[key] !== undefined) html = html.split(`${IMG_DIR}{{cms:${key}}}`).join(escapeHtml(imgSrc(resolved[key])));
+  }
   for (const [key, value] of Object.entries(resolved)) {
     html = html.split(`{{cms:${key}}}`).join(fieldHtml(key, value));
   }
@@ -130,7 +135,7 @@ export async function renderHome(request, env) {
   if (!Array.isArray(heroImages) || !heroImages.length) heroImages = DEFAULT_HERO_IMAGES;
   const slidesHtml = heroImages.map((img, i) => (
     `<div class="hero-slider__slide${i === 0 ? ' is-active' : ''}">\n        ` +
-    `<img src="${IMG_DIR}${escapeHtml(img.file)}" alt="${escapeHtml(img.alt || '')}" loading="${i === 0 ? 'eager' : 'lazy'}">\n      </div>`
+    `<img src="${escapeHtml(imgSrc(img.file))}" alt="${escapeHtml(img.alt || '')}" loading="${i === 0 ? 'eager' : 'lazy'}">\n      </div>`
   )).join('\n      ');
   const dotsHtml = heroImages.map((_, i) => (
     `<button type="button" class="hero-slider__dot${i === 0 ? ' is-active' : ''}" aria-label="Show image ${i + 1}"></button>`
@@ -150,7 +155,7 @@ export async function renderHome(request, env) {
     `<strong>${escapeHtml(it.title || '')}</strong>\n            <span>${escapeHtml(it.place || '')}<br>${escapeHtml(it.distance || '')}</span>\n          </div>\n        </li>`
   )).join('\n        '));
   html = html.replace('{{cms:setting_photos_html}}', items.map((it) => (
-    `<div class="setting__photo">\n        <img src="${IMG_DIR}${escapeHtml(it.image || '')}" alt="${escapeHtml(it.alt || '')}" loading="lazy">\n        ` +
+    `<div class="setting__photo">\n        <img src="${escapeHtml(imgSrc(it.image))}" alt="${escapeHtml(it.alt || '')}" loading="lazy">\n        ` +
     `<span class="setting__photo-tag">${escapeHtml(it.title || '')}</span>\n      </div>`
   )).join('\n      '));
 
