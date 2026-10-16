@@ -1,5 +1,6 @@
 import { sendAutoReply } from './autoreply.js';
 import { SITE } from '../site.config.js';
+import { logError } from './errors.js';
 
 export const FORM_VERSION = '2026-10-05';
 
@@ -59,6 +60,9 @@ export async function handleRegister(request, env, ctx) {
         : `The site didn't send a form version (Worker is on ${FORM_VERSION}). The site JS may be out of date.`);
     }
     const status = issues.length ? 'needs_review' : 'new';
+    const leadName = `${firstName} ${lastName}`.trim() || email;
+    const bg = (p) => { if (ctx && ctx.waitUntil) ctx.waitUntil(p); return p; };
+    if (issues.length) bg(logError(env, { area: 'form', level: 'warning', message: 'A registration came in with fields that did not match the form setup', detail: `${leadName}\n${issues.join('\n')}`, path: sourcePath }));
     const note = issues.length ? `Form check: ${issues.join(' | ')}` : null;
 
     let returning = false;
@@ -86,9 +90,11 @@ export async function handleRegister(request, env, ctx) {
         }
       } catch (dbErr) {
         console.error('D1 insert failed (inquiry still emailed if Resend is configured):', dbErr);
+        await logError(env, { area: 'form', message: 'A registration could not be saved to the CMS', detail: `${leadName} <${email}>\n${dbErr && dbErr.message ? dbErr.message : dbErr}`, path: sourcePath });
       }
     } else {
       console.error('No DB binding, inquiry was not stored, only emailed (if configured).');
+      await logError(env, { area: 'form', message: 'A registration could not be saved: the Worker has no database connected', detail: `${leadName} <${email}>\nCheck the D1 binding "DB" in wrangler.toml.` });
     }
 
     if (emailOk) {
@@ -102,6 +108,7 @@ export async function handleRegister(request, env, ctx) {
 
     if (!apiKey || !fromEmail || !toEmail) {
       console.error('Resend is not configured: missing RESEND_API_KEY, FROM_EMAIL, or TO_EMAIL.');
+      await logError(env, { area: 'email', message: 'New-registration emails are not being sent: Resend is not set up', detail: 'Add RESEND_API_KEY, FROM_EMAIL and TO_EMAIL in Cloudflare > Workers > sunstone1 > Settings > Variables.' });
       return json({ ok: true, warning: 'stored_without_email', formVersion: FORM_VERSION, issues });
     }
 
@@ -136,12 +143,14 @@ export async function handleRegister(request, env, ctx) {
     if (!resendRes.ok) {
       const detail = await resendRes.text();
       console.error('Resend API error:', resendRes.status, detail);
+      await logError(env, { area: 'email', message: 'A new-registration email was rejected by Resend', detail: `Lead: ${leadName} <${email}> (saved in the CMS)\nResend said (${resendRes.status}): ${detail}` });
       return json({ ok: true, warning: 'stored_without_email', formVersion: FORM_VERSION, issues });
     }
 
     return json({ ok: true, formVersion: FORM_VERSION, issues });
   } catch (err) {
     console.error('register.js error:', err);
+    await logError(env, { area: 'form', message: 'The registration handler crashed', detail: err });
     return json({ ok: false, error: 'Unexpected error. Please try again.' }, 500);
   }
 }

@@ -525,7 +525,7 @@ function csvEscape(v) {
 }
 
 function decodeEditor(env) {
-  return (env && env.ADMIN_USER) || 'admin';
+  return (env && env.CURRENT_USER && env.CURRENT_USER.name) || (env && env.ADMIN_USER) || 'admin';
 }
 
 function json(obj, status = 200) {

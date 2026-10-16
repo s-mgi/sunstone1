@@ -1,3 +1,4 @@
+import { injectTags } from './tags.js';
 
 const IMG_DIR = 'assets/images/';
 const IMAGE_KEYS = ['vision_image', 'homes_image_main', 'homes_image_thumb1', 'homes_image_thumb2', 'homes_image_side', 'community_image'];
@@ -159,6 +160,7 @@ export async function renderHome(request, env) {
     `<span class="setting__photo-tag">${escapeHtml(it.title || '')}</span>\n      </div>`
   )).join('\n      '));
 
+  html = await injectTags(html, request, env, 'home');
   return new Response(html, { headers: { 'Content-Type': 'text/html; charset=UTF-8' } });
 }
 
@@ -176,7 +178,16 @@ export async function renderThankYou(request, env) {
     html = html.split(`{{cms:${key}}}`).join(fieldHtml(key, value));
   }
 
+  html = await injectTags(html, request, env, 'thankyou');
   return new Response(html, { headers: { 'Content-Type': 'text/html; charset=UTF-8' } });
+}
+
+export async function renderPlainPage(request, env) {
+  const assetRes = await env.ASSETS.fetch(request);
+  const contentType = assetRes.headers.get('content-type') || '';
+  if (!contentType.includes('text/html')) return assetRes;
+  const html = await injectTags(await assetRes.text(), request, env, 'page');
+  return new Response(html, { status: assetRes.status, headers: { 'Content-Type': 'text/html; charset=UTF-8' } });
 }
 
 function safeParse(str, fallback) {

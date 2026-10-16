@@ -1,3 +1,4 @@
+import { logError } from './errors.js';
 import { SITE } from '../site.config.js';
 
 const RESEND_BATCH_MAX = 100;
@@ -150,6 +151,7 @@ export async function sendCampaign(request, env) {
     if (i + RESEND_BATCH_MAX < recipients.length) await sleep(CHUNK_DELAY_MS);
   }
 
+  if (failedCount) await logError(env, { area: 'email', message: `Eblast "${subject.slice(0, 80)}" failed for ${failedCount} of ${recipients.length} recipients`, detail: 'See the campaign in the Eblast tab for each address. The most common causes are a Resend sending limit or an unverified sending domain.' });
   const finalStatus = failedCount === 0 ? 'sent' : (sentCount === 0 ? 'failed' : 'sent');
   await env.DB.prepare(`UPDATE eblast_campaigns SET status = ?, sent_at = datetime('now'), sent_count = ?, failed_count = ? WHERE id = ?`)
     .bind(finalStatus, sentCount, failedCount, id).run();
@@ -171,6 +173,7 @@ export async function handleUnsubscribe(request, env) {
     await env.DB.prepare('UPDATE inquiries SET unsubscribed = 1 WHERE lower(email) = ?').bind(email.toLowerCase()).run();
   } catch (err) {
     console.error('Unsubscribe update failed:', err);
+    await logError(env, { area: 'email', message: 'An unsubscribe request could not be saved', detail: `${email}\n${err && err.message ? err.message : err}` });
     return htmlPage('Unsubscribe', 'Something went wrong on our end, please try again in a moment.');
   }
 
@@ -237,7 +240,7 @@ function sleep(ms) { return new Promise((resolve) => setTimeout(resolve, ms)); }
 
 function safeParse(str, fallback) { try { return JSON.parse(str); } catch { return fallback; } }
 
-function decodeEditor(env) { return (env && env.ADMIN_USER) || 'admin'; }
+function decodeEditor(env) { return (env && env.CURRENT_USER && env.CURRENT_USER.name) || (env && env.ADMIN_USER) || 'admin'; }
 
 function escapeHtml(str) {
   return String(str ?? '').replace(/[&<>"']/g, (c) => ({

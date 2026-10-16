@@ -1,5 +1,7 @@
 import { signToken } from './eblast.js';
 import { SITE } from '../site.config.js';
+import { logError } from './errors.js';
+import { getFeatures } from './settings.js';
 
 const MAILING_ADDRESS = [SITE.company, ...SITE.mailingAddress].filter(Boolean);
 const DEFAULT_REPLY_TO = SITE.defaultReplyTo;
@@ -9,6 +11,7 @@ const C = { ...SITE.colors, maroon: SITE.colors.brand, gold: SITE.colors.accent 
 export async function sendAutoReply(env, origin, { firstName, email }) {
   try {
     if (env.AUTOREPLY_ENABLED === 'false') return;
+    if (!(await getFeatures(env)).autoreply) return;
     const apiKey = env.RESEND_API_KEY;
     const fromEmail = env.FROM_EMAIL;
     if (!apiKey || !fromEmail) return;
@@ -41,9 +44,14 @@ export async function sendAutoReply(env, origin, { firstName, email }) {
         },
       }),
     });
-    if (!res.ok) console.error('Auto-reply (Resend) error:', res.status, await res.text());
+    if (!res.ok) {
+      const detail = await res.text();
+      console.error('Auto-reply (Resend) error:', res.status, detail);
+      await logError(env, { area: 'email', message: 'An auto-reply email was rejected by Resend', detail: `To: ${to}\nResend said (${res.status}): ${detail}` });
+    }
   } catch (err) {
     console.error('Auto-reply failed:', err);
+    await logError(env, { area: 'email', message: 'An auto-reply email could not be sent', detail: `To: ${email}\n${err && err.message ? err.message : err}` });
   }
 }
 

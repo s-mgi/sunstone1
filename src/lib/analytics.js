@@ -1,3 +1,4 @@
+import { logError } from './errors.js';
 
 const SCOPE = 'https://www.googleapis.com/auth/analytics.readonly';
 const CACHE_SECONDS = 600;
@@ -18,7 +19,10 @@ export async function analyticsReport(request, env, ctx) {
 
   let token;
   try { token = await getAccessToken(env); }
-  catch (e) { return json({ ok: false, configured: true, error: e.message }, 502); }
+  catch (e) {
+    await logError(env, { area: 'analytics', message: 'Google Analytics sign-in failed', detail: e.message });
+    return json({ ok: false, configured: true, error: e.message }, 502);
+  }
 
   const api = (method, body) => gaFetch(`https://analyticsdata.googleapis.com/v1beta/properties/${propertyId}:${method}`, token, body);
 
@@ -75,6 +79,7 @@ export async function analyticsReport(request, env, ctx) {
         if (ctx && ctx.waitUntil) ctx.waitUntil(put); else await put;
       }
     } catch (e) {
+      await logError(env, { area: 'analytics', message: 'Google Analytics report could not be loaded', detail: e.message });
       return json({ ok: false, configured: true, error: e.message }, 502);
     }
   }

@@ -1,0 +1,5 @@
+CREATE TABLE IF NOT EXISTS site_settings (key TEXT PRIMARY KEY, value TEXT NOT NULL, updated_at TEXT NOT NULL DEFAULT (datetime('now')));
+CREATE TABLE IF NOT EXISTS error_log (id INTEGER PRIMARY KEY AUTOINCREMENT, created_at TEXT NOT NULL DEFAULT (datetime('now')), last_seen TEXT NOT NULL DEFAULT (datetime('now')), area TEXT NOT NULL, level TEXT NOT NULL DEFAULT 'error', message TEXT NOT NULL, detail TEXT, path TEXT, count INTEGER NOT NULL DEFAULT 1, resolved INTEGER NOT NULL DEFAULT 0);
+CREATE INDEX IF NOT EXISTS idx_error_log_seen ON error_log(last_seen);
+CREATE INDEX IF NOT EXISTS idx_error_log_resolved ON error_log(resolved);
+CREATE TABLE IF NOT EXISTS admin_users (id INTEGER PRIMARY KEY AUTOINCREMENT, created_at TEXT NOT NULL DEFAULT (datetime('now')), email TEXT NOT NULL UNIQUE, name TEXT NOT NULL DEFAULT '', role TEXT NOT NULL DEFAULT 'editor', pass_hash TEXT NOT NULL, pass_salt TEXT NOT NULL, session_ver INTEGER NOT NULL DEFAULT 1, disabled INTEGER NOT NULL DEFAULT 0, last_login TEXT);

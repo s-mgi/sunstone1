@@ -415,6 +415,11 @@
       var reportCopy = function (status, info) {
         var missing = info && info.missing ? info.missing.join(',') : '';
         try { console.warn('[cms] register copy failed', status, missing); } catch (e) {}
+        try {
+          var report = JSON.stringify({ kind: 'register_copy_failed', status: String(status), missing: missing, error: info && info.error ? String(info.error) : '', page: window.location.pathname });
+          if (navigator.sendBeacon) navigator.sendBeacon('/log-error', new Blob([report], { type: 'application/json' }));
+          else fetch('/log-error', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: report, keepalive: true });
+        } catch (e) {}
         if (typeof gtag === 'function') {
           try { gtag('event', 'cms_register_failed', { http_status: String(status), missing_fields: missing, transport_type: 'beacon' }); } catch (e) {}
         }
