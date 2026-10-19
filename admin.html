@@ -907,6 +907,11 @@ p.hint{ font-size:0.8125rem; line-height:1.5; color:var(--sub); margin:0.6rem 0 
               <input id="eb-preview-text" placeholder="e.g. Take a first look at the new layouts" maxlength="150">
               <p class="muted" style="margin:0.35rem 0 0;">The snippet of text most inboxes show next to the subject line. Leave it blank and it'll just show the unsubscribe footer instead, so it's worth filling in.</p>
             </div>
+            <div class="field" style="margin-top:0.75rem;">
+              <label>Tracking name</label>
+              <input id="eb-tracking-name" placeholder="e.g. floorplans-release" maxlength="80">
+              <p class="muted" style="margin:0.35rem 0 0;">The name this blast shows up under in Google Analytics (as the campaign) and on registrations it brings in. It fills in from the subject, change it to anything you like. Lowercase letters, numbers and dashes.</p>
+            </div>
           </div>
 
           <div class="panel">
@@ -2225,7 +2230,7 @@ async function openEblastEditor(id) {
   try {
     const data = await api('/api/eblast/campaigns/' + id);
     const c = data.campaign;
-    EB_DRAFT = { id: c.id, subject: c.subject || '', previewText: c.preview_text || '', blocks: c.blocks || [] };
+    EB_DRAFT = { id: c.id, subject: c.subject || '', previewText: c.preview_text || '', trackingName: c.tracking_name || '', blocks: c.blocks || [] };
     EB_READONLY = c.status !== 'draft';
     $('#eb-status-banner').innerHTML = EB_READONLY
       ? `<div class="eb-status-banner">This blast was already ${c.status === 'sending' ? 'sent (still finishing up)' : c.status} on ${dateAndTime(c.sent_at)}, it can't be edited or sent again.</div>` : '';
@@ -2233,6 +2238,9 @@ async function openEblastEditor(id) {
     $('#eb-subject').disabled = EB_READONLY;
     $('#eb-preview-text').value = EB_DRAFT.previewText;
     $('#eb-preview-text').disabled = EB_READONLY;
+    $('#eb-tracking-name').value = EB_DRAFT.trackingName || trackingSlug(EB_DRAFT.subject);
+    $('#eb-tracking-name').disabled = EB_READONLY;
+    EB_TRACKING_EDITED = !!EB_DRAFT.trackingName && EB_DRAFT.trackingName !== trackingSlug(EB_DRAFT.subject);
     $('#eb-add-row').style.display = EB_READONLY ? 'none' : '';
     $('#eb-save-btn').style.display = EB_READONLY ? 'none' : '';
     $('#eb-send-btn').style.display = EB_READONLY ? 'none' : '';
@@ -2338,14 +2346,31 @@ function renderEblastPreview() {
     </div>`).join('');
 }
 
+function trackingSlug(text) {
+  return String(text || '').toLowerCase().normalize('NFKD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 80).replace(/-+$/, '');
+}
+let EB_TRACKING_EDITED = false;
+$('#eb-subject').addEventListener('input', () => {
+  if (!EB_TRACKING_EDITED) $('#eb-tracking-name').value = trackingSlug($('#eb-subject').value);
+});
+$('#eb-tracking-name').addEventListener('input', () => { EB_TRACKING_EDITED = true; });
+$('#eb-tracking-name').addEventListener('change', () => {
+  const el = $('#eb-tracking-name');
+  el.value = trackingSlug(el.value) || trackingSlug($('#eb-subject').value);
+  EB_TRACKING_EDITED = el.value !== trackingSlug($('#eb-subject').value);
+});
+
 async function saveEblastDraft() {
   const msg = $('#eb-save-msg');
   EB_DRAFT.subject = $('#eb-subject').value.trim();
   EB_DRAFT.previewText = $('#eb-preview-text').value.trim();
+  EB_DRAFT.trackingName = trackingSlug($('#eb-tracking-name').value) || trackingSlug(EB_DRAFT.subject);
   msg.className = 'msg'; msg.textContent = 'Saving…';
   try {
     const data = await api('/api/eblast/draft', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(EB_DRAFT) });
-    EB_DRAFT = { id: data.campaign.id, subject: data.campaign.subject || '', previewText: data.campaign.preview_text || '', blocks: data.campaign.blocks || [] };
+    EB_DRAFT = { id: data.campaign.id, subject: data.campaign.subject || '', previewText: data.campaign.preview_text || '', trackingName: data.campaign.tracking_name || EB_DRAFT.trackingName, blocks: data.campaign.blocks || [] };
+    $('#eb-tracking-name').value = EB_DRAFT.trackingName;
     msg.className = 'msg ok'; msg.textContent = 'Draft saved.';
     return true;
   } catch (e) {

@@ -42,8 +42,8 @@ export async function duplicateCampaign(env, id) {
   const subject = source.subject || '';
   const previewText = source.preview_text || '';
   const blocks = source.blocks || JSON.stringify([]);
-  const res = await env.DB.prepare('INSERT INTO eblast_campaigns (editor, subject, preview_text, blocks, status) VALUES (?, ?, ?, ?, ?)')
-    .bind(editor, subject, previewText, blocks, 'draft').run();
+  const trackingName = cleanTrackingName(source.tracking_name) || trackingSlug(subject);
+  const res = await insertCampaign(env, editor, subject, previewText, blocks, trackingName);
   const id2 = res.meta.last_row_id;
   const created = await env.DB.prepare('SELECT * FROM eblast_campaigns WHERE id = ?').bind(id2).first();
   return json({ ok: true, campaign: { ...created, blocks: safeParse(created.blocks, []) } });
@@ -56,20 +56,26 @@ export async function saveDraft(request, env) {
   const subject = String(body.subject || '').trim();
   const previewText = String(body.previewText || '').trim().slice(0, 150);
   const blocks = Array.isArray(body.blocks) ? body.blocks.map(cleanBlock).filter(Boolean) : [];
+  const trackingName = cleanTrackingName(body.trackingName) || trackingSlug(subject);
   const editor = decodeEditor(env);
 
   if (body.id) {
     const current = await env.DB.prepare('SELECT * FROM eblast_campaigns WHERE id = ?').bind(body.id).first();
     if (!current) return json({ ok: false, error: 'Draft not found.' }, 404);
     if (current.status !== 'draft') return json({ ok: false, error: 'That campaign has already been sent and can no longer be edited.' }, 400);
-    await env.DB.prepare('UPDATE eblast_campaigns SET subject = ?, preview_text = ?, blocks = ?, editor = ? WHERE id = ?')
-      .bind(subject, previewText, JSON.stringify(blocks), editor, body.id).run();
+    try {
+      await env.DB.prepare('UPDATE eblast_campaigns SET subject = ?, preview_text = ?, blocks = ?, editor = ?, tracking_name = ? WHERE id = ?')
+        .bind(subject, previewText, JSON.stringify(blocks), editor, trackingName, body.id).run();
+    } catch (err) {
+      if (!missingTrackingColumn(err)) throw err;
+      await env.DB.prepare('UPDATE eblast_campaigns SET subject = ?, preview_text = ?, blocks = ?, editor = ? WHERE id = ?')
+        .bind(subject, previewText, JSON.stringify(blocks), editor, body.id).run();
+    }
     const updated = await env.DB.prepare('SELECT * FROM eblast_campaigns WHERE id = ?').bind(body.id).first();
     return json({ ok: true, campaign: { ...updated, blocks: safeParse(updated.blocks, []) } });
   }
 
-  const res = await env.DB.prepare('INSERT INTO eblast_campaigns (editor, subject, preview_text, blocks, status) VALUES (?, ?, ?, ?, ?)')
-    .bind(editor, subject, previewText, JSON.stringify(blocks), 'draft').run();
+  const res = await insertCampaign(env, editor, subject, previewText, JSON.stringify(blocks), trackingName);
   const id = res.meta.last_row_id;
   const created = await env.DB.prepare('SELECT * FROM eblast_campaigns WHERE id = ?').bind(id).first();
   return json({ ok: true, campaign: { ...created, blocks: safeParse(created.blocks, []) } });
@@ -107,6 +113,8 @@ export async function sendCampaign(request, env) {
   await env.DB.prepare(`UPDATE eblast_campaigns SET status = 'sending', recipient_count = ? WHERE id = ?`).bind(recipients.length, id).run();
 
   const origin = new URL(request.url).origin;
+  const trackingName = cleanTrackingName(campaign.tracking_name) || trackingSlug(subject);
+  const trackedBlocks = blocks.map((b) => ({ ...b, link: addTracking(b.link, trackingName) }));
   const replyTo = env.TO_EMAIL || fromEmail;
   const fromName = (env.FROM_NAME || SITE.name).trim();
   const from = /[<>]/.test(fromEmail) ? fromEmail : `${fromName} <${fromEmail}>`;
@@ -124,8 +132,8 @@ export async function sendCampaign(request, env) {
         to: [r.email],
         reply_to: replyTo,
         subject,
-        html: buildEmailHtml(blocks, unsubUrl, campaign.preview_text || ''),
-        text: buildEmailText(subject, blocks, unsubUrl),
+        html: buildEmailHtml(trackedBlocks, unsubUrl, campaign.preview_text || ''),
+        text: buildEmailText(subject, trackedBlocks, unsubUrl),
         headers: { 'List-Unsubscribe': `<${unsubUrl}>`, 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click' },
       };
     }));
@@ -217,6 +225,41 @@ function buildEmailText(subject, blocks, unsubscribeUrl) {
   return lines.join('\n');
 }
 
+
+async function insertCampaign(env, editor, subject, previewText, blocks, trackingName) {
+  try {
+    return await env.DB.prepare('INSERT INTO eblast_campaigns (editor, subject, preview_text, blocks, status, tracking_name) VALUES (?, ?, ?, ?, ?, ?)')
+      .bind(editor, subject, previewText, blocks, 'draft', trackingName).run();
+  } catch (err) {
+    if (!missingTrackingColumn(err)) throw err;
+    return env.DB.prepare('INSERT INTO eblast_campaigns (editor, subject, preview_text, blocks, status) VALUES (?, ?, ?, ?, ?)')
+      .bind(editor, subject, previewText, blocks, 'draft').run();
+  }
+}
+
+function missingTrackingColumn(err) {
+  return /tracking_name/i.test(String(err && err.message ? err.message : err));
+}
+
+export function trackingSlug(text) {
+  return String(text || '').toLowerCase().normalize('NFKD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 80).replace(/-+$/, '');
+}
+
+function cleanTrackingName(value) {
+  return trackingSlug(value);
+}
+
+export function addTracking(link, trackingName) {
+  if (!link || !trackingName || !/^https?:\/\//i.test(link)) return link;
+  let url;
+  try { url = new URL(link); } catch { return link; }
+  if ([...url.searchParams.keys()].some((k) => k.toLowerCase().startsWith('utm_'))) return link;
+  url.searchParams.set('utm_source', 'eblast');
+  url.searchParams.set('utm_medium', 'email');
+  url.searchParams.set('utm_campaign', trackingName);
+  return url.toString();
+}
 
 function cleanBlock(b) {
   if (!b || typeof b !== 'object') return null;

@@ -1,6 +1,15 @@
-export const CMS_VERSION = '2.9.1';
+export const CMS_VERSION = '2.10.0';
 
 export const CHANGELOG = [
+  {
+    version: '2.10.0',
+    date: '2026-10-19',
+    title: 'Eblast tracking',
+    changes: [
+      'New: Each eblast has a Tracking name. It fills in from the subject and you can change it.',
+      'New: Links in an eblast get tracking tags, so visits show in Google Analytics under that name and registrations from the blast record it as their campaign.',
+    ],
+  },
   {
     version: '2.9.1',
     date: '2026-10-19',
