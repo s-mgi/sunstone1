@@ -85,6 +85,10 @@ const MULTILINE = {
   thankyou_headline: '<br>',
 };
 
+const LITE = new Set(['vision_copy', 'homes_copy', 'setting_lede', 'map_lede', 'community_copy', 'register_lede', 'thankyou_lede', 'thankyou_note']);
+
+export const SITEMAP_PATHS = ['/', '/privacy-policy'];
+
 async function loadFields(env) {
   const fields = {};
   try {
@@ -97,6 +101,7 @@ async function loadFields(env) {
 }
 
 function fieldHtml(key, value) {
+  if (LITE.has(key)) return liteToHtml(value);
   let out = escapeHtml(value);
   if (MULTILINE[key]) out = out.replace(/\s*\r?\n\s*/g, MULTILINE[key]);
   if (key === 'hero_tag') out = out.replace(/ · /g, '&nbsp;·&nbsp;');
@@ -188,6 +193,38 @@ export async function renderPlainPage(request, env) {
   if (!contentType.includes('text/html')) return assetRes;
   const html = await injectTags(await assetRes.text(), request, env, 'page');
   return new Response(html, { status: assetRes.status, headers: { 'Content-Type': 'text/html; charset=UTF-8' } });
+}
+
+export function liteToHtml(text) {
+  return escapeHtml(String(text ?? '').replace(/\r\n/g, '\n').trim())
+    .replace(/\[([^\]\n]+)\]\(([^)\s]+)\)/g, (m, label, url) => {
+      if (!/^(https?:|mailto:|tel:|\/|#|[a-z0-9_-]+\.html)/i.test(url)) return label;
+      const outside = /^https?:/i.test(url) ? ' target="_blank" rel="noopener"' : '';
+      return `<a href="${url}"${outside}>${label}</a>`;
+    })
+    .replace(/\*([^*\n]+)\*/g, '<em>$1</em>')
+    .replace(/\n/g, '<br>');
+}
+
+export async function siteUrlOf(env) {
+  try {
+    const row = await env.DB.prepare('SELECT value FROM content_fields WHERE key = ?').bind('canonical_url').first();
+    if (row && row.value && row.value.trim()) return row.value.trim().replace(/\/+$/, '');
+  } catch (err) { console.error('canonical_url read failed:', err); }
+  return HOME_PLAIN.canonical_url.replace(/\/+$/, '');
+}
+export function robotsTxt(siteUrl) {
+  return ['User-agent: *', 'Allow: /', 'Disallow: /admin', 'Disallow: /admin.html', 'Disallow: /login.html', 'Disallow: /api/', 'Disallow: /register', 'Disallow: /thank-you', '', `Sitemap: ${siteUrl}/sitemap.xml`, ''].join('\n');
+}
+export function sitemapXml(siteUrl) {
+  const urls = SITEMAP_PATHS.map((p) => `  <url><loc>${escapeHtml(siteUrl + p)}</loc></url>`);
+  return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.join('\n')}\n</urlset>\n`;
+}
+export async function renderRobots(env) {
+  return new Response(robotsTxt(await siteUrlOf(env)), { headers: { 'Content-Type': 'text/plain; charset=UTF-8', 'Cache-Control': 'public, max-age=3600' } });
+}
+export async function renderSitemap(env) {
+  return new Response(sitemapXml(await siteUrlOf(env)), { headers: { 'Content-Type': 'application/xml; charset=UTF-8', 'Cache-Control': 'public, max-age=3600' } });
 }
 
 function safeParse(str, fallback) {

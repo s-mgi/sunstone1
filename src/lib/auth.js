@@ -1,3 +1,16 @@
+// Cookie-based session auth for /admin(.html) and /api/* routes.
+//
+// Two kinds of account:
+//   the owner: ADMIN_USER / ADMIN_PASSWORD in Cloudflare (required, always admin,
+//     can't be removed from the dashboard; the break-glass login)
+//   users added in Manage: admin_users table, sign in with their email or an
+//     optional username (admin_usernames, migration 0004), PBKDF2 password
+//     hashes, role admin, manager or editor (see Manage > Roles). Forgotten passwords: see reset.js.
+// The owner username is matched case-insensitively and both values are trimmed,
+// so a stray space pasted into Cloudflare doesn't lock the owner out.
+// The session cookie is signed with ADMIN_PASSWORD, so changing it signs
+// everyone out. A user's cookie carries their session_ver; bumping it (role,
+// password or on/off change in Manage) signs just that user out.
 import { SITE } from '../site.config.js';
 const COOKIE_NAME = SITE.cookieName;
 const SESSION_DAYS = 7;
@@ -72,7 +85,7 @@ export async function getUser(request, env) {
   if (!m || !env.DB) return null;
   const row = await env.DB.prepare('SELECT id, email, name, role, session_ver, disabled FROM admin_users WHERE id = ?').bind(Number(m[1])).first();
   if (!row || row.disabled || String(row.session_ver) !== m[2]) return null;
-  return { id: row.id, owner: false, name: row.name || row.email, email: row.email, role: row.role === 'admin' ? 'admin' : 'editor', session_ver: row.session_ver };
+  return { id: row.id, owner: false, name: row.name || row.email, email: row.email, role: ['admin', 'manager'].includes(row.role) ? row.role : 'editor', session_ver: row.session_ver };
 }
 
 export async function checkLogin(request, env) {
@@ -86,7 +99,7 @@ export async function checkLogin(request, env) {
   const fail = { ok: false, error: 'Incorrect username or password.' };
   if (!username || !password) return fail;
 
-  if (sameString(username, env.ADMIN_USER) && sameString(password, env.ADMIN_PASSWORD)) return { ok: true, user: ownerUser(env) };
+  if (sameString(username.toLowerCase(), String(env.ADMIN_USER).trim().toLowerCase()) && sameString(password, String(env.ADMIN_PASSWORD).trim())) return { ok: true, user: ownerUser(env) };
 
   if (!env.DB) return fail;
   let row = null;
@@ -95,6 +108,11 @@ export async function checkLogin(request, env) {
   } catch (err) {
     console.error('admin_users lookup failed (has migration 0003 run?):', err);
     return fail;
+  }
+  if (!row && !username.includes('@')) {
+    try {
+      row = await env.DB.prepare('SELECT u.* FROM admin_users u JOIN admin_usernames n ON n.user_id = u.id WHERE n.username = ?').bind(username.toLowerCase()).first();
+    } catch {}
   }
   if (!row || row.disabled) return fail;
   const { hash } = await hashPassword(password, row.pass_salt);

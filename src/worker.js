@@ -1,14 +1,51 @@
+// Client-site CMS: single Worker entry point (from cms-template v2).
+//
+// This project deploys as a Cloudflare Worker with static assets (not
+// Pages), so there is no functions/ directory-based routing: every route
+// is dispatched here by hand, and anything not matched below falls through
+// to env.ASSETS.fetch(request), which serves the static files as-is.
+// Every path handled here before the auth gate must also be listed in
+// run_worker_first in wrangler.toml.
+//
+// Who is signed in: the owner (ADMIN_USER / ADMIN_PASSWORD in Cloudflare) or a
+// user added in Manage (admin_users table). What each role may call is in
+// permissionFor() (checked against Manage > Roles); paths a Manage feature
+// switch can turn off are in featureFor().
+// Any unhandled error is recorded in Logs (error_log table) before the 500.
 import { getUser, checkLogin, createSessionCookie, clearSessionCookie, unauthorized } from './lib/auth.js';
-import { renderHome, renderThankYou, renderPlainPage } from './lib/render.js';
+import { renderHome, renderThankYou, renderPlainPage, renderRobots, renderSitemap } from './lib/render.js';
 import { handleRegister } from './lib/register.js';
 import { listInquiries, createInquiry, importContacts, importRegistrations, patchInquiry, deleteInquiry, listContent, putContent, listEditLog, seoCheck, perfCheck, serveMedia } from './lib/api.js';
 import { analyticsReport } from './lib/analytics.js';
 import { eblastState, saveDraft, sendCampaign, handleUnsubscribe, getCampaign, deleteCampaign, duplicateCampaign } from './lib/eblast.js';
 import { logError, handleClientError, listErrors, patchError, resolveAllErrors } from './lib/errors.js';
-import { me, listUsers, createUser, patchUser, deleteUser, changeOwnPassword, getAdminSettings, putFeatures, putTags, putLogSettings } from './lib/manage.js';
-import { getFeatures } from './lib/settings.js';
+import { me, updateMe, listUsers, createUser, patchUser, deleteUser, changeOwnPassword, getAdminSettings, putPermissions, putFeatures, putTags, putLogSettings } from './lib/manage.js';
+import { getFeatures, getSettings, userPermissions } from './lib/settings.js';
+import { requestReset, confirmReset } from './lib/reset.js';
 
-const ADMIN_ONLY = [/^\/api\/users(\/|$)/, /^\/api\/settings(\/|$)/, /^\/api\/logs(\/|$)/];
+const SEO_KEYS = /^(seo_|canonical_url$|og_|favicon_href$|perf_)/;
+
+function permissionFor(path, method) {
+  if (/^\/api\/users(\/|$)/.test(path)) return ['users'];
+  if (path === '/api/settings' && method === 'GET') return ['users', 'features', 'tags', 'notifications'];
+  if (path === '/api/settings/features') return ['features'];
+  if (path === '/api/settings/tags') return ['tags'];
+  if (path === '/api/settings/logs') return ['notifications'];
+  if (/^\/api\/logs(\/|$)/.test(path)) return ['logs'];
+  if (path.startsWith('/api/eblast/')) return ['eblast'];
+  if (path === '/api/inquiries/import-registrations') return ['registrations'];
+  if (path === '/api/inquiries/import') return ['contacts'];
+  if (/^\/api\/inquiries(\/|$)/.test(path)) return ['registrations', 'contacts'];
+  if (path === '/api/seo-check' || path === '/api/perf-check' || path === '/api/analytics') return ['seo'];
+  const content = path.match(/^\/api\/content\/([^/]+)$/);
+  if (content && method === 'PUT') {
+    const key = decodeURIComponent(content[1]).replace(/^draft__/, '');
+    if (key.startsWith('gallery_')) return ['gallery'];
+    if (SEO_KEYS.test(key)) return ['seo'];
+    return ['edit'];
+  }
+  return null;
+}
 
 function featureFor(path, method) {
   if (path.startsWith('/api/eblast/')) return ['eblast'];
@@ -44,6 +81,8 @@ async function route(request, env, ctx) {
     if (!result.ok) return json({ ok: false, error: result.error }, 401);
     return json({ ok: true }, 200, { 'Set-Cookie': await createSessionCookie(env, result.user) });
   }
+  if (path === '/api/password-reset' && method === 'POST') return requestReset(request, env);
+  if (path === '/api/password-reset/confirm' && method === 'POST') return confirmReset(request, env);
   if (path === '/api/logout' && method === 'POST') {
     return json({ ok: true }, 200, { 'Set-Cookie': clearSessionCookie() });
   }
@@ -51,8 +90,12 @@ async function route(request, env, ctx) {
   if (path === '/api/unsubscribe' && (method === 'GET' || method === 'POST')) return handleUnsubscribe(request, env);
   if (path === '/log-error' && method === 'POST') return handleClientError(request, env);
 
+  if (path === '/robots.txt' && method === 'GET') return renderRobots(env);
+  if (path === '/sitemap.xml' && method === 'GET') return renderSitemap(env);
   if (path === '/' && method === 'GET') return renderHome(request, env);
   if ((path === '/thank-you.html' || path === '/thank-you') && method === 'GET') return renderThankYou(request, env);
+  // Other public pages that need the tags: add each one here (both spellings)
+  // and to run_worker_first in wrangler.toml. SITE-SPECIFIC.
   if ((path === '/privacy-policy.html' || path === '/privacy-policy') && method === 'GET') return renderPlainPage(request, env);
   if (path === '/register' && method === 'POST') return handleRegister(request, env, ctx);
 
@@ -73,7 +116,11 @@ async function route(request, env, ctx) {
 }
 
 async function api(request, env, ctx, user, path, method) {
-  if (ADMIN_ONLY.some((re) => re.test(path)) && user.role !== 'admin') return unauthorized('Only admins can do this.', 403);
+  const perm = permissionFor(path, method);
+  if (perm) {
+    const allowed = userPermissions(user, await getSettings(env));
+    if (!perm.some((p) => allowed[p])) return unauthorized("Your role doesn't allow this. An admin can change it in Manage > Roles.", 403);
+  }
   const needs = featureFor(path, method);
   if (needs) {
     const features = await getFeatures(env);
@@ -81,6 +128,7 @@ async function api(request, env, ctx, user, path, method) {
   }
 
   if (path === '/api/me' && method === 'GET') return me(env, user);
+  if (path === '/api/me' && method === 'PATCH') return updateMe(request, env, user);
   if (path === '/api/me/password' && method === 'POST') return changeOwnPassword(request, env, user);
 
   if (path === '/api/users' && method === 'GET') return listUsers(env);
@@ -90,6 +138,7 @@ async function api(request, env, ctx, user, path, method) {
   if (userMatch && method === 'DELETE') return deleteUser(env, user, Number(userMatch[1]));
 
   if (path === '/api/settings' && method === 'GET') return getAdminSettings(env);
+  if (path === '/api/settings/permissions' && method === 'PUT') return putPermissions(request, env, user);
   if (path === '/api/settings/features' && method === 'PUT') return putFeatures(request, env, user);
   if (path === '/api/settings/tags' && method === 'PUT') return putTags(request, env, user);
   if (path === '/api/settings/logs' && method === 'PUT') return putLogSettings(request, env, user);
@@ -115,6 +164,7 @@ async function api(request, env, ctx, user, path, method) {
   if (path === '/api/seo-check' && method === 'GET') return seoCheck(request, env);
   if (path === '/api/perf-check' && method === 'GET') return perfCheck(request, env);
   if (path === '/api/analytics' && method === 'GET') return analyticsReport(request, env, ctx);
+
 
   if (path === '/api/eblast/state' && method === 'GET') return eblastState(env);
   if (path === '/api/eblast/draft' && method === 'POST') return saveDraft(request, env);

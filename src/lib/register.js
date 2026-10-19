@@ -66,21 +66,27 @@ export async function handleRegister(request, env, ctx) {
     const note = issues.length ? `Form check: ${issues.join(' | ')}` : null;
 
     let returning = false;
+    let firstRegistered = null;
     if (env.DB) {
       try {
         const existing = await env.DB.prepare(
-          'SELECT id FROM inquiries WHERE lower(email) = ? ORDER BY id LIMIT 1'
+          'SELECT id, created_at, source_path FROM inquiries WHERE lower(email) = ? ORDER BY id LIMIT 1'
         ).bind(email.toLowerCase()).first();
         if (existing) {
           returning = true;
+          firstRegistered = existing.created_at || null;
+          const wasContactOnly = existing.source_path === 'manual' || existing.source_path === 'import';
           await env.DB.prepare(
             `UPDATE inquiries SET first_name = ?, last_name = ?, phone = COALESCE(?, phone), is_broker = ?, hear_about = ?,
                comments = COALESCE(?, comments), consent = ?,
                status = CASE WHEN ? = 'needs_review' THEN 'needs_review' ELSE status END, note = COALESCE(?, note),
-               utm_source = COALESCE(?, utm_source), utm_medium = COALESCE(?, utm_medium), utm_campaign = COALESCE(?, utm_campaign)
+               utm_source = COALESCE(?, utm_source), utm_medium = COALESCE(?, utm_medium), utm_campaign = COALESCE(?, utm_campaign),
+               source_path = CASE WHEN ? THEN ? ELSE source_path END,
+               created_at = datetime('now')
              WHERE id = ?`
           ).bind(firstName, lastName, phone || null, broker, hearAbout, comments || null, consent,
-            status, note, utmSource || null, utmMedium || null, utmCampaign || null, existing.id).run();
+            status, note, utmSource || null, utmMedium || null, utmCampaign || null,
+            wasContactOnly ? 1 : 0, sourcePath || null, existing.id).run();
         } else {
           await env.DB.prepare(
             `INSERT INTO inquiries (first_name, last_name, email, phone, is_broker, hear_about, comments, consent, source_path, utm_source, utm_medium, utm_campaign, status, note)
@@ -124,6 +130,7 @@ export async function handleRegister(request, env, ctx) {
       row('Comments', comments ? escapeHtml(comments).replace(/\n/g, '<br>') : '-'),
       row('Consent to updates', consent === 'yes' ? 'Yes' : 'No'),
       row('Source', sourcePath ? escapeHtml(sourcePath) : '-'),
+      ...(returning && firstRegistered ? [row('First registered', escapeHtml(String(firstRegistered).slice(0, 10)))] : []),
       row('UTM', [utmSource, utmMedium, utmCampaign].filter(Boolean).map(escapeHtml).join(' / ') || '-'),
       '</table>',
     ].join('');

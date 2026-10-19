@@ -1,4 +1,4 @@
-import { renderHome } from './render.js';
+import { renderHome, renderRobots, renderSitemap } from './render.js';
 import { HEAR_ABOUT_OPTIONS } from './register.js';
 
 const VALID_STATUSES = ['new', 'contacted', 'qualified', 'toured', 'closed', 'lost', 'needs_review'];
@@ -431,14 +431,14 @@ export async function seoCheck(request, env) {
   push('image_alt', 'All images have alt text (decorative images excluded)', 'blocker', missingAlt.length === 0,
     missingAlt.length === 0 ? `${imgTags.length} images, ${decorative.length} marked decorative` : `${missingAlt.length} of ${imgTags.length} images missing alt`);
 
-  const robotsRes = await env.ASSETS.fetch(new Request(origin + '/robots.txt'));
+  const robotsRes = await renderRobots(env);
   const robotsOk = robotsRes.ok;
   let robotsHasSitemap = false;
   if (robotsOk) robotsHasSitemap = /sitemap:/i.test(await robotsRes.text());
   push('robots', 'robots.txt present and references a sitemap', 'warn', robotsOk && robotsHasSitemap,
     robotsOk ? (robotsHasSitemap ? 'ok' : 'present, but no Sitemap: line') : `robots.txt returned ${robotsRes.status}`);
 
-  const sitemapRes = await env.ASSETS.fetch(new Request(origin + '/sitemap.xml'));
+  const sitemapRes = await renderSitemap(env);
   let sitemapValid = false;
   if (sitemapRes.ok) {
     const sitemapText = await sitemapRes.text();
@@ -483,10 +483,24 @@ export async function perfCheck(request, env) {
     return json({ ok: false, error: `Could not reach Google PageSpeed Insights: ${e.message}` }, 502);
   }
   if (!res.ok) {
-    const hint = env.PAGESPEED_API_KEY
-      ? `PageSpeed Insights returned ${res.status}. Try again in a minute.`
-      : `PageSpeed Insights returned ${res.status}. Without an API key it's shared across everyone hitting Google's anonymous quota, so it gets rate-limited often, add a free PAGESPEED_API_KEY secret to fix this reliably.`;
-    return json({ ok: false, error: hint }, 502);
+    // Pass Google's own reason through, with a plain next step for the common cases.
+    let reason = '';
+    try { const e = await res.json(); reason = (e && e.error && e.error.message) || ''; } catch { /* not JSON */ }
+    let hint;
+    if (!env.PAGESPEED_API_KEY) {
+      hint = 'Google needs an API key for this check. Add a PAGESPEED_API_KEY secret in Cloudflare (see YOUR-TURN.md), then try again.';
+    } else if (/has not been used|is disabled|SERVICE_DISABLED/i.test(reason)) {
+      hint = 'The PageSpeed Insights API is not turned on for your API key. In Google Cloud, open APIs & Services > Library, search "PageSpeed Insights API", click Enable, wait a few minutes and try again.';
+    } else if (/referer|referrer|API_KEY_HTTP_REFERRER_BLOCKED|IP address|API key not valid|API_KEY_INVALID/i.test(reason)) {
+      hint = 'Google rejected the API key. In Google Cloud > APIs & Services > Credentials, open the key: set Application restrictions to None, and under API restrictions allow only "PageSpeed Insights API". If you just made it, check it was pasted in full.';
+    } else if (res.status === 429 || /quota/i.test(reason)) {
+      hint = 'Google is rate-limiting the check right now. Wait a minute and try again.';
+    } else if (res.status >= 500) {
+      hint = `Google couldn't test the page this time (${res.status}). This usually passes on a second try.`;
+    } else {
+      hint = `PageSpeed Insights returned ${res.status}.`;
+    }
+    return json({ ok: false, error: hint + (reason ? ` (Google said: ${reason.slice(0, 200)})` : '') }, 502);
   }
 
   let data;

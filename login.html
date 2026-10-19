@@ -28,21 +28,94 @@ button:hover{ opacity:0.9; }
 button:disabled{ opacity:0.5; cursor:default; }
 .msg{ font-size:0.8125rem; margin-top:0.9rem; min-height:1.1em; }
 .msg.err{ color:var(--bad); }
+.msg.ok{ color:var(--gold); }
+.linkbtn{ width:auto; background:none; border:0; padding:0; margin:1rem 0 0; color:var(--sub); font-size:0.8125rem; font-weight:400; letter-spacing:0; text-transform:none; text-decoration:underline; cursor:pointer; }
+.linkbtn:hover{ color:var(--ink); opacity:1; }
+.hidden{ display:none; }
+p.note{ margin:1rem 0 0; color:var(--sub); font-size:0.75rem; line-height:1.5; }
 </style>
 </head>
 <body>
 <div class="card">
   <div class="brand"><img src="assets/favicon.svg" alt="Sunstone Towns"><div><div class="name">SUNSTONE TOWNS</div><div class="tag">Site Dashboard</div></div></div>
+  <div id="view-login">
   <h1>Sign in</h1>
-  <p class="sub">Enter your admin credentials to continue.</p>
+  <p class="sub">Sign in with your email or username.</p>
   <form id="login-form">
-    <div class="field"><label for="username">Username</label><input id="username" name="username" autocomplete="username" autofocus></div>
+    <div class="field"><label for="username">Email or username</label><input id="username" name="username" autocomplete="username" autofocus></div>
     <div class="field"><label for="password">Password</label><input id="password" name="password" type="password" autocomplete="current-password"></div>
     <button type="submit" id="login-btn">Sign in</button>
     <div class="msg" id="login-msg"></div>
   </form>
+  <button type="button" class="linkbtn" data-show="forgot">Forgot password?</button>
+  </div>
+  <div id="view-forgot" class="hidden">
+  <h1>Reset your password</h1>
+  <p class="sub">Enter your email or username and we'll email you a link to choose a new password.</p>
+  <form id="forgot-form">
+    <div class="field"><label for="forgot-email">Email or username</label><input id="forgot-email" autocomplete="username"></div>
+    <button type="submit" id="forgot-btn">Send reset link</button>
+    <div class="msg" id="forgot-msg"></div>
+  </form>
+  <button type="button" class="linkbtn" data-show="login">Back to sign in</button>
+  <p class="note">The owner login can't be reset here. Its password is ADMIN_PASSWORD in Cloudflare.</p>
+  </div>
+  <div id="view-reset" class="hidden">
+  <h1>Choose a new password</h1>
+  <p class="sub">At least 10 characters. This signs you out on other devices.</p>
+  <form id="reset-form">
+    <div class="field"><label for="reset-pass">New password</label><input id="reset-pass" type="password" autocomplete="new-password"></div>
+    <div class="field"><label for="reset-pass2">Type it again</label><input id="reset-pass2" type="password" autocomplete="new-password"></div>
+    <button type="submit" id="reset-btn">Save new password</button>
+    <div class="msg" id="reset-msg"></div>
+  </form>
+  <button type="button" class="linkbtn" data-show="forgot">Send a new link</button>
+  </div>
 </div>
 <script>
+const resetToken = new URLSearchParams(location.search).get('reset');
+function show(view) {
+  ['login', 'forgot', 'reset'].forEach((v) => document.getElementById('view-' + v).classList.toggle('hidden', v !== view));
+  const first = document.querySelector('#view-' + view + ' input');
+  if (first) first.focus();
+}
+document.querySelectorAll('[data-show]').forEach((b) => b.addEventListener('click', () => show(b.dataset.show)));
+async function post(url, data) {
+  const res = await fetch(url, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(data) });
+  let body; try { body = await res.json(); } catch { body = null; }
+  if (!res.ok || !body || body.ok === false) throw new Error((body && body.error) || 'Something went wrong. Please try again.');
+  return body;
+}
+if (resetToken) {
+  history.replaceState(null, '', location.pathname);
+  show('reset');
+}
+document.getElementById('forgot-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const b = document.getElementById('forgot-btn'); const m = document.getElementById('forgot-msg');
+  b.disabled = true; m.className = 'msg'; m.textContent = '';
+  try {
+    const body = await post('/api/password-reset', { email: document.getElementById('forgot-email').value });
+    m.className = 'msg ok'; m.textContent = body.message;
+  } catch (err) { m.className = 'msg err'; m.textContent = err.message; }
+  b.disabled = false;
+});
+document.getElementById('reset-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const b = document.getElementById('reset-btn'); const m = document.getElementById('reset-msg');
+  const p1 = document.getElementById('reset-pass').value; const p2 = document.getElementById('reset-pass2').value;
+  m.className = 'msg err';
+  if (p1.length < 10) { m.textContent = 'Passwords need at least 10 characters.'; return; }
+  if (p1 !== p2) { m.textContent = "The two passwords don't match."; return; }
+  b.disabled = true; m.className = 'msg'; m.textContent = '';
+  try {
+    const body = await post('/api/password-reset/confirm', { token: resetToken, password: p1 });
+    show('login');
+    document.getElementById('username').value = body.email || '';
+    document.getElementById('password').focus();
+    msg.className = 'msg ok'; msg.textContent = 'Password changed. Sign in with your new password.';
+  } catch (err) { m.className = 'msg err'; m.textContent = err.message; b.disabled = false; }
+});
 const form = document.getElementById('login-form');
 const btn = document.getElementById('login-btn');
 const msg = document.getElementById('login-msg');

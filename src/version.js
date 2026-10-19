@@ -1,6 +1,49 @@
-export const CMS_VERSION = '2.6.0';
+export const CMS_VERSION = '2.9.1';
 
 export const CHANGELOG = [
+  {
+    version: '2.9.1',
+    date: '2026-10-19',
+    title: 'Publish bar in Manage, favicon from the Gallery',
+    changes: [
+      'Changed: In Manage, role and feature changes wait for a Publish changes button at the bottom, so you can undo them before they go live.',
+      'New: Pick the site icon (favicon) from your site images or Gallery uploads in SEO & Analytics > Search appearance.',
+      'Changed: The Logs tab is hidden for anyone whose role does not include Logs. Updates still open from the version number in the sidebar.',
+    ],
+  },
+  {
+    version: '2.9.0',
+    date: '2026-10-19',
+    title: 'Roles',
+    changes: [
+      'New: Users are Admin, Manager or Editor. Admins choose what Managers and Editors can do in Manage > Roles.',
+      'Changed: This list of updates moved to Logs > Updates.',
+    ],
+  },
+  {
+    version: '2.8.0',
+    date: '2026-10-19',
+    title: 'Accounts',
+    changes: [
+      'New: "Forgot password?" on the sign-in page emails a one-time link to reset your password.',
+      'New: Optional usernames. Sign in with your email or your username.',
+      'New: Settings > My account to change your name, email, username and password.',
+      'Changed: Logs has two tabs, Problems and Activity log. The form error email alert moved to Settings > Notifications.',
+    ],
+  },
+  {
+    version: '2.7.0',
+    date: '2026-10-19',
+    title: 'Formatting, search suggestions and smaller fixes',
+    changes: [
+      'New: Copy fields take simple formatting: *italic*, [link text](https://example.com) and Enter for a line break.',
+      'New: SEO title and description show a length meter and a suggested version you can use with one click.',
+      'Changed: robots.txt and sitemap.xml are now made from the Canonical URL in SEO, so they always match the site address.',
+      'Changed: Someone who registers again moves back to the top of Registrations, and the email shows when they first registered.',
+      'Changed: Registrations > Import sends big files in parts with a progress count, and you can choose the date order in the file.',
+      'Changed: The PageSpeed check explains how to fix the problem when Google refuses it.',
+    ],
+  },
   {
     version: '2.6.0',
     date: '2026-10-16',
