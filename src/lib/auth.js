@@ -1,16 +1,3 @@
-// Cookie-based session auth for /admin(.html) and /api/* routes.
-//
-// Two kinds of account:
-//   the owner: ADMIN_USER / ADMIN_PASSWORD in Cloudflare (required, always admin,
-//     can't be removed from the dashboard; the break-glass login)
-//   users added in Manage: admin_users table, sign in with their email or an
-//     optional username (admin_usernames, migration 0004), PBKDF2 password
-//     hashes, role admin, manager or editor (see Manage > Roles). Forgotten passwords: see reset.js.
-// The owner username is matched case-insensitively and both values are trimmed,
-// so a stray space pasted into Cloudflare doesn't lock the owner out.
-// The session cookie is signed with ADMIN_PASSWORD, so changing it signs
-// everyone out. A user's cookie carries their session_ver; bumping it (role,
-// password or on/off change in Manage) signs just that user out.
 import { SITE } from '../site.config.js';
 const COOKIE_NAME = SITE.cookieName;
 const SESSION_DAYS = 7;

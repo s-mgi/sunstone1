@@ -1,7 +1,3 @@
-// Manage tab and the signed-in user's own account: users, roles, optional
-// usernames (admin_usernames, migration 0004), feature switches, tag and log
-// settings, /api/me (GET returns the user, switches, version and changelog;
-// PATCH lets a Manage user change their own name, email and username).
 import { hashPassword, createSessionCookie } from './auth.js';
 import { FEATURES, PERMISSIONS, EDITABLE_ROLES, getSettings, putSetting, featuresFrom, tagsFrom, logSettingsFrom, permissionsFrom, userPermissions } from './settings.js';
 import { openErrorCount } from './errors.js';

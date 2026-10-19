@@ -1,11 +1,3 @@
-// "Forgot password?" on login.html, for users added in Manage (the owner's
-// password is ADMIN_PASSWORD in Cloudflare and can't be reset here).
-// POST /api/password-reset {email} accepts an email or a username and always
-// gives the same answer, so it never reveals who has a login. The link
-// (login.html?reset=TOKEN) lasts 30 minutes and works once; only a SHA-256 of
-// the token is stored (password_resets, migration 0004), at most 3 per user per
-// hour. POST /api/password-reset/confirm {token, password} sets the password
-// and bumps session_ver, which signs that user out everywhere. Needs Resend.
 import { SITE } from '../site.config.js';
 import { hashPassword } from './auth.js';
 import { logError } from './errors.js';

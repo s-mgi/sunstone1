@@ -192,7 +192,7 @@ tr:hover td{ background:var(--line-soft); }
 .gallery figcaption a:hover{ text-decoration:underline; }
 .sp-favicon img{ width:100%; height:100%; object-fit:cover; border-radius:50%; }
 
-/* form fields (editor pages) */
+
 .field{ margin-bottom:1rem; }
 .field label{ display:block; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.04em; color:var(--sub); margin-bottom:0.35rem; }
 .field .hint{ font-size:0.75rem; color:var(--sub); margin-top:0.3rem; }
@@ -251,7 +251,7 @@ tr:hover td{ background:var(--line-soft); }
 .status-badge.pending{ background:var(--tag-blue-bg); color:var(--tag-blue-tx); }
 .status-badge.clean{ color:var(--sub); }
 
-/* live preview panels */
+
 .preview-frame{ background:var(--bg); border:1px solid var(--line); border-radius:0.4rem; overflow:hidden; position:sticky; top:1rem; }
 .preview-frame .pf-head{ display:flex; align-items:center; justify-content:space-between; padding:0.7rem 1rem; border-bottom:1px solid var(--line); font-size:0.8125rem; font-weight:600; flex-wrap:wrap; gap:0.6rem; }
 .preview-frame iframe{ vertical-align:top; }
@@ -301,7 +301,7 @@ tr:hover td{ background:var(--line-soft); }
 .ga-table-toggle summary{ cursor:pointer; }
 .ga-table-toggle table{ margin-top:0.5rem; }
 p.hint{ font-size:0.8125rem; line-height:1.5; color:var(--sub); margin:0.6rem 0 0; }
-.pf-scaler.is-phone .pf-iframe{ border-radius:44px; box-shadow:0 0 0 14px #1d1b22, 0 24px 80px rgba(0,0,0,.5); } /* scaled with the frame */
+.pf-scaler.is-phone .pf-iframe{ border-radius:44px; box-shadow:0 0 0 14px #1d1b22, 0 24px 80px rgba(0,0,0,.5); } 
 .pf-scaler{ transform-origin:top left; }
 .pf-iframe{ display:block; border:0; background:#050408; }
 
@@ -428,8 +428,7 @@ p.hint{ font-size:0.8125rem; line-height:1.5; color:var(--sub); margin:0.6rem 0 
   .field-row{ grid-template-columns:1fr; }
 }
 
-/* Generic hide utility, placed last so it wins over same-specificity
-   component rules like .toolbar{display:flex}. */
+
 .hidden{ display:none; }
 .len-help{ font-size:0.8125rem; margin-top:0.5rem; line-height:1.45; }
 .len-help b{ font-weight:700; } .len-help.ok b{ color:var(--ok); } .len-help.warn b{ color:var(--warn); }
@@ -438,7 +437,7 @@ p.hint{ font-size:0.8125rem; line-height:1.5; color:var(--sub); margin:0.6rem 0 
 .suggest-box{ margin-top:0.7rem; padding:0.7rem 0.8rem; border:1px dashed var(--line); border-radius:0.35rem; font-size:0.8125rem; line-height:1.5; }
 .suggest-box .muted{ font-size:0.72rem; text-transform:uppercase; letter-spacing:0.04em; font-weight:700; }
 .suggest-box p{ margin:0.35rem 0 0.55rem; }
-/* Light theme: darkens a light-coloured admin mark. Remove if assets/favicon.svg is already dark. */
+
 :root[data-theme="light"] #brand-logo{ filter: brightness(0.3) sepia(0.4); }
 </style>
 </head>
@@ -490,7 +489,6 @@ p.hint{ font-size:0.8125rem; line-height:1.5; color:var(--sub); margin:0.6rem 0 
 
     <div class="content">
 
-      <!-- OVERVIEW -->
       <section class="page" id="page-overview">
         <div class="page-head">
           <div><h1>Overview</h1><p>Manage the Sunstone Towns site.</p></div>
@@ -530,7 +528,6 @@ p.hint{ font-size:0.8125rem; line-height:1.5; color:var(--sub); margin:0.6rem 0 
         <div class="footer-bar"><span id="last-published">-</span><a href="#" data-page-link="logs" data-subtab-link="activity" data-perm="logs">View activity log →</a></div>
       </section>
 
-      <!-- HOMEPAGE -->
       <section class="page hidden" id="page-homepage">
         <div class="page-head"><div><h1>Edit</h1><p>Everything on the page, in the order it appears on the site.</p></div>
           <div class="page-head-right" id="edit-homepage-actions">
@@ -782,7 +779,6 @@ p.hint{ font-size:0.8125rem; line-height:1.5; color:var(--sub); margin:0.6rem 0 
         </div>
       </section>
 
-      <!-- GALLERY -->
       <section class="page hidden" id="page-gallery">
         <div class="page-head"><div><h1>Gallery</h1><p>Photos used across the site, plus your uploads.</p></div>
           <div class="page-head-right">
@@ -799,7 +795,6 @@ p.hint{ font-size:0.8125rem; line-height:1.5; color:var(--sub); margin:0.6rem 0 
         </div>
       </section>
 
-      <!-- REGISTRATIONS -->
       <section class="page hidden" id="page-registrations">
         <div class="page-head"><div><h1>Registrations</h1><p>Everyone who has submitted the registration form.</p></div></div>
         <div class="subtabs">
@@ -856,7 +851,6 @@ p.hint{ font-size:0.8125rem; line-height:1.5; color:var(--sub); margin:0.6rem 0 
         </div>
       </section>
 
-      <!-- CONTACTS -->
       <section class="page hidden" id="page-contacts">
         <div class="page-head"><div><h1>Contacts</h1><p>Everyone eblasts go out to, registrants plus anyone added by hand.</p></div></div>
         <div class="toolbar">
@@ -883,7 +877,6 @@ p.hint{ font-size:0.8125rem; line-height:1.5; color:var(--sub); margin:0.6rem 0 
         </div>
       </section>
 
-      <!-- EBLAST -->
       <section class="page hidden" id="page-eblast">
         <div class="page-head"><div><h1>Eblast</h1><p>Send an email update to everyone who's registered.</p></div>
           <div class="page-head-right"><span class="eb-stat" id="eb-recipient-count">Loading recipients…</span></div>
@@ -937,7 +930,6 @@ p.hint{ font-size:0.8125rem; line-height:1.5; color:var(--sub); margin:0.6rem 0 
         </div>
       </section>
 
-      <!-- SEO & SHARING -->
       <section class="page hidden" id="page-seo">
         <div class="page-head"><div><h1>SEO &amp; Analytics</h1><p id="seo-page-desc">Review your site's health, how it appears in search and social, and who's visiting.</p></div>
           <div class="page-head-right" id="seo-actions">
@@ -1145,7 +1137,6 @@ p.hint{ font-size:0.8125rem; line-height:1.5; color:var(--sub); margin:0.6rem 0 
         </div>
       </section>
 
-      <!-- LOGS -->
       <section class="page hidden" id="page-logs">
         <div class="page-head"><div><h1>Logs</h1><p id="logs-intro">What went wrong on the site, every change made in the dashboard, and what's new in each version of the CMS.</p></div></div>
         <div class="subtabs">
@@ -1181,7 +1172,6 @@ p.hint{ font-size:0.8125rem; line-height:1.5; color:var(--sub); margin:0.6rem 0 
         </div>
       </section>
 
-      <!-- MANAGE -->
       <section class="page hidden" id="page-manage">
         <div class="page-head"><div><h1>Manage</h1><p>Who can sign in to the dashboard, what each role can do, and which features are switched on.</p></div></div>
         <div class="grid-2">
@@ -1209,7 +1199,6 @@ p.hint{ font-size:0.8125rem; line-height:1.5; color:var(--sub); margin:0.6rem 0 
         </div>
       </section>
 
-      <!-- SETTINGS -->
       <section class="page hidden" id="page-settings">
         <div class="page-head"><div><h1>Settings</h1><p id="settings-intro">Your account.</p></div></div>
         <div class="subtabs">
@@ -1287,7 +1276,7 @@ function timeAgo(iso) {
   return d.toLocaleDateString(undefined, { month:'short', day:'numeric', year:'numeric' });
 }
 function escapeHtml(str) { return String(str ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
-function hearAboutLabel(value) { return value || '-'; } // free text on this site
+function hearAboutLabel(value) { return value || '-'; }
 function dateAndTime(iso) {
   if (!iso) return '-';
   const d = new Date(iso.includes('T') ? iso : iso.replace(' ', 'T') + 'Z');
@@ -1296,7 +1285,6 @@ function dateAndTime(iso) {
 }
 async function putField(key, value) { return api(`/api/content/${encodeURIComponent(key)}`, { method:'PUT', headers:{'content-type':'application/json'}, body: JSON.stringify({ value }) }); }
 
-/* ---------- navigation ---------- */
 const PAGE_TITLES = { overview:'Overview', homepage:'Edit', gallery:'Gallery', registrations:'Registrations', contacts:'Contacts', eblast:'Eblast', seo:'SEO & Analytics', logs:'Logs', manage:'Manage', settings:'Settings' };
 function showPage(id) {
   if (!pageAllowed(id)) id = 'overview';
@@ -1338,10 +1326,6 @@ document.addEventListener('click', (e) => {
   }
 });
 
-// Registrations > Import (CSV, e.g. a Keap contact export). SITE-SPECIFIC: REGIMP_FIELDS.
-// Base keys (email, firstName, lastName, phone, createdAt) are fixed; the rest must match
-// importRegistrations in src/lib/api.js. hints = header names to auto-match, in order (lowercase);
-// when a header appears more than once (Keap has several "Broker" columns) the fullest wins.
 const REGIMP_FIELDS = [
   { key: 'email', label: 'Email', hints: ['email', 'email address', 'e-mail'] },
   { key: 'firstName', label: 'First name', hints: ['first name', 'first_name', 'firstname', 'first'] },
@@ -1380,8 +1364,6 @@ function regimpTzOffset(tz, ts) {
     .formatToParts(new Date(ts)).forEach(x => { p[x.type] = x.value; });
   return Date.UTC(+p.year, +p.month - 1, +p.day, +p.hour % 24, +p.minute, +p.second) - ts;
 }
-// Local date/time in the file (Keap: "9/22/2023 4:13 PM", or ISO) -> UTC "YYYY-MM-DD HH:MM:SS".
-// dayFirst: slashed dates are day/month/year instead of month/day/year.
 function regimpDate(str, tz, dayFirst) {
   const t = String(str || '').trim();
   if (!t) return '';
@@ -1414,7 +1396,6 @@ function regimpAutoMap(header, data) {
   return map;
 }
 
-// Guess the date order from the file: a first number over 12 (22/9/2023) means day first.
 function regimpGuessDayFirst(data, i) {
   if (i < 0) return false;
   let dayFirst = false, monthFirst = false;
@@ -1512,8 +1493,6 @@ $('#regimp-go').addEventListener('click', async () => {
   const btn = $('#regimp-go'); const msg = $('#regimp-msg');
   btn.disabled = true; msg.className = 'msg'; msg.textContent = 'Importing…';
   try {
-    // Rows without a valid email or repeated in the file are skipped here, so
-    // batches can't treat a repeat as an update. Big files go up 500 rows at a time.
     const seen = new Set(); let preSkipped = 0; const errors = [];
     const rows = regimpRows().map(({ createdRaw, ...r }) => r).filter(r => {
       const ok = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(r.email) && !seen.has(r.email);
@@ -1552,7 +1531,6 @@ function initSubtabs(container) {
 }
 $$('.subtabs').forEach(initSubtabs);
 
-/* ---------- load everything ---------- */
 async function loadAll() {
   try {
     const [contentRes, inqRes] = await Promise.all([api('/api/content'), api('/api/inquiries').catch(() => ({ inquiries: [] }))]);
@@ -1563,7 +1541,6 @@ async function loadAll() {
 }
 function getAuditHistory() { return safeParse(CONTENT.seo_audit_history, []); }
 
-/* ---------- draft helpers ---------- */
 function draftPending(section) { return CONTENT[DRAFT_PREFIX + section + '__pending'] === '1'; }
 function loadDraftValues(section, keys) {
   const pending = draftPending(section);
@@ -1589,7 +1566,6 @@ async function discardDraft(section) {
   CONTENT[DRAFT_PREFIX + section + '__pending'] = '0';
 }
 
-/* ---------- overview ---------- */
 function renderOverview() {
   $('#stat-pages').textContent = '2';
   $('#stat-total').textContent = INQUIRIES.length;
@@ -1614,9 +1590,8 @@ function renderOverview() {
   }).catch(() => {});
 }
 
-/* ============ HOMEPAGE / HERO ============ */
 const HERO_KEYS = ['hero_headline','hero_tag','hero_sqft','hero_price_label','hero_price','hero_images'];
-let heroDraft = null; // working copy
+let heroDraft = null;
 let heroDirty = false;
 
 function heroDefaults() {
@@ -1729,7 +1704,6 @@ function renderHeroPreview() {
   refreshLivePreview('hero');
 }
 
-/* ---------- Edit tab: Homepage vs Thank You page tabs ---------- */
 function showEditPage(page) {
   $$('#edit-pagetabs button[data-editpage]').forEach(b => b.classList.toggle('active', b.dataset.editpage === page));
   $('#editpage-homepage')?.classList.toggle('hidden', page !== 'homepage');
@@ -1737,16 +1711,12 @@ function showEditPage(page) {
   const actions = $('#edit-homepage-actions');
   if (actions) actions.style.display = page === 'homepage' ? '' : 'none';
   if (page === 'thankyou') { initThankYouEditor(); }
-  // A preview iframe that loaded while its tab was hidden (display:none)
-  // never got a real layout, so its measured content height was 0 or
-  // stale. Re-measure now that the tab is actually visible.
   const subId = page === 'thankyou' ? 'thankyoupreview' : 'editpreview';
   const pf = document.querySelector(`.preview-frame[data-preview="${subId}"]`);
   if (pf) { updatePreviewViewport(pf); fitPreviewHeight(subId); }
 }
 $$('#edit-pagetabs button[data-editpage]').forEach(btn => btn.addEventListener('click', () => showEditPage(btn.dataset.editpage)));
 
-/* ---------- live preview: one shared iframe for the Homepage accordion, plus a dedicated Thank You iframe ---------- */
 const EDIT_ANCHORS = { hero:'#hero', vision:'#vision', homes:'#homes', setting:'#setting', maptab:'#map', community:'#community', registrationtab:'#register' };
 let currentEditSub = 'hero';
 const EDIT_FRAME = { frame: null, ready: false };
@@ -1760,9 +1730,6 @@ function setupEditFrame() {
     refreshLivePreview(currentEditSub);
   });
 }
-// The preview iframe is a real browser-sized window, so the page scrolls
-// inside it. Jump to a section without reloading (scroll-margin-top on the
-// site's sections keeps the fixed header from covering the heading).
 function scrollFrameTo(anchor) {
   if (!anchor || !EDIT_FRAME.frame) return false;
   let doc; try { doc = EDIT_FRAME.frame.contentDocument; } catch (e) { return false; }
@@ -1770,8 +1737,6 @@ function scrollFrameTo(anchor) {
   if (!el) return false;
   if (anchor === '#hero') doc.defaultView.scrollTo(0, 0);
   else el.scrollIntoView({ block: 'start' });
-  // Scroll-triggered reveals: make sure the section is visible even if the
-  // observer hasn't fired yet at this scale.
   doc.querySelectorAll('[data-reveal]').forEach(n => n.classList.add('is-in'));
   return true;
 }
@@ -1787,13 +1752,13 @@ function reloadLiveFrame(subId) {
   if (subId === 'thankyoupreview') {
     const frame = document.getElementById('pf-frame-thankyou');
     if (!frame) return;
-    try { frame.contentWindow.location.reload(); } catch (e) { /* ignore */ }
+    try { frame.contentWindow.location.reload(); } catch (e) {}
     return;
   }
   if (subId !== currentEditSub) return;
   if (!EDIT_FRAME.frame) return;
   EDIT_FRAME.ready = false;
-  try { EDIT_FRAME.frame.contentWindow.location.reload(); } catch (e) { /* ignore */ }
+  try { EDIT_FRAME.frame.contentWindow.location.reload(); } catch (e) {}
 }
 setupEditFrame();
 (function setupThankYouFrame() {
@@ -1802,18 +1767,11 @@ setupEditFrame();
   frame.addEventListener('load', () => fitPreviewHeight('thankyoupreview'));
 })();
 
-// Measures the real rendered height of a preview iframe's document so the
-// scrollable viewport stops right at the page's footer instead of leaving
-// blank space below it (from the fixed device-height guess).
 function fitPreviewHeight(subId) {
-  // Kept for existing callers. The frame is no longer stretched to the full
-  // page height: that inflated the site's 100svh hero and thank-you panel.
-  // It stays at the device's real window size and scrolls inside instead.
   const pf = document.querySelector(`.preview-frame[data-preview="${subId}"]`);
   if (pf && PREVIEW_STATE[subId]) updatePreviewViewport(pf);
 }
 
-/* ---------- Edit tab accordion: one section open at a time, driving the shared preview ---------- */
 function switchEditSection(subId) {
   currentEditSub = subId;
   $$('#page-homepage .accordion-item').forEach(item => item.classList.toggle('open', item.dataset.sub === subId));
@@ -1839,7 +1797,6 @@ $$('#page-homepage .accordion-head').forEach(btn => {
     const item = btn.closest('.accordion-item');
     const subId = item.dataset.sub;
     if (item.classList.contains('open')) {
-      // clicking an already-open section collapses it
       item.classList.remove('open');
       currentEditSub = null;
       const note = $('#edit-preview-note');
@@ -1850,20 +1807,11 @@ $$('#page-homepage .accordion-head').forEach(btn => {
   });
 });
 
-/* ---------- live preview: device toggle + zoom/pan controls ---------- */
 const PREVIEW_ZOOM_STEP = 0.15;
 const PREVIEW_MIN_ZOOM = 0.2;
 const PREVIEW_MAX_ZOOM = 2;
-// h below is a starting viewport height only (used before the real page
-// height is measured), it should look like a real browser window, not a
-// guess at total page length. Setting it too tall breaks any `100vh`
-// section in the site's CSS (it inflates to match), which is exactly what
-// was happening. The true height is measured and applied once the iframe
-// loads (see fitPreviewHeight).
 const PREVIEW_DEVICE_DIMS = { desktop: { w: 1440, h: 900 }, mobile: { w: 390, h: 844 } };
-const PREVIEW_MAX_H = () => Math.max(420, Math.min(window.innerHeight * 0.72, 760)); // tallest the preview box gets on screen
-// "Fit" zoom: desktop fills the panel width; mobile is shown as a phone,
-// never scaled above 100% and never taller than the preview box.
+const PREVIEW_MAX_H = () => Math.max(420, Math.min(window.innerHeight * 0.72, 760));
 function previewFitZoom(pf, device) {
   const viewport = $('.pf-viewport', pf);
   const dims = PREVIEW_DEVICE_DIMS[device];
@@ -1875,7 +1823,7 @@ const PREVIEW_STATE = {};
 function initPreviewControls() {
   $$('.preview-frame[data-preview]').forEach(pf => {
     const subId = pf.dataset.preview;
-    PREVIEW_STATE[subId] = { device: 'desktop', zoom: null }; // zoom null = auto-fit to width ("Fit")
+    PREVIEW_STATE[subId] = { device: 'desktop', zoom: null };
     updatePreviewViewport(pf);
     $$('.pf-device-btn', pf).forEach(btn => btn.addEventListener('click', () => {
       const st = PREVIEW_STATE[subId];
@@ -1883,7 +1831,6 @@ function initPreviewControls() {
       st.zoom = null;
       $$('.pf-device-btn', pf).forEach(b => b.classList.toggle('active', b === btn));
       updatePreviewViewport(pf);
-      // The page reflows at the new width; jump back to the open section.
       if (subId === 'editpreview') setTimeout(() => scrollFrameTo(EDIT_ANCHORS[currentEditSub]), 200);
     }));
     $$('.pf-zoom-btn', pf).forEach(btn => btn.addEventListener('click', () => {
@@ -1961,10 +1908,6 @@ $('#hero-discard').addEventListener('click', async () => {
   try { await discardDraft('hero'); initHeroEditor(); } catch (e) { alert('Could not discard: ' + e.message); }
 });
 
-/* ============ SAVE-INSTANTLY SECTIONS (Vision, Homes, Setting, Map, Community, Registration) ============ */
-// Any element with data-cms="<key>" (text) or data-cms-img="<key>" (image
-// picker) saves to that content field on change. Defaults must match
-// src/lib/render.js and the seed rows.
 const INSTANT_DEFAULTS = {
   vision_heading: 'Designed\nFor The Way\nLife Moves.',
   vision_copy: "Sunstone Towns is where inspired design meets everyday convenience in the heart of Vaughan. Freehold townhomes with the space you live today, and the life you're building tomorrow.",
@@ -2004,12 +1947,10 @@ const DEFAULT_SETTING_ITEMS = [
 function getHomesSpecs() { const v = safeParse(CONTENT.homes_specs, null); return Array.isArray(v) && v.length ? v : DEFAULT_HOMES_SPECS.map(x => ({ ...x })); }
 function getSettingItems() { const v = safeParse(CONTENT.setting_items, null); return Array.isArray(v) && v.length ? v : DEFAULT_SETTING_ITEMS.map(x => ({ ...x })); }
 function imageOptionsHtml(current) { return imageChoices(current); }
-// Trim, and trim each line of a multi-line field, but keep the line breaks.
 function cleanValue(el) {
   if (el.tagName !== 'TEXTAREA') return el.value.trim();
   return el.value.split('\n').map(l => l.trim()).filter(Boolean).join('\n');
 }
-// Copy fields that take simple formatting. Same list as LITE in src/lib/render.js.
 const LITE_KEYS = ['vision_copy', 'homes_copy', 'setting_lede', 'map_lede', 'community_copy', 'register_lede', 'thankyou_lede', 'thankyou_note'];
 const LITE_HINT = 'Formatting: *italic*, [link text](https://example.com), Enter for a new line.';
 function addLiteHints() {
@@ -2044,7 +1985,6 @@ async function saveInstant(el, key, value) {
 $$('#page-homepage [data-cms]').forEach(el => el.addEventListener('change', () => {
   const key = el.dataset.cms;
   let value = cleanValue(el);
-  // An emptied heading or paragraph goes back to its original copy rather than leaving a gap on the page.
   if (!value && INSTANT_DEFAULTS[key] !== undefined) { value = INSTANT_DEFAULTS[key]; el.value = value; }
   saveInstant(el, key, value);
 }));
@@ -2060,8 +2000,7 @@ $$('#page-homepage [data-setting-idx]').forEach(el => el.addEventListener('chang
   saveInstant(el, 'setting_items', JSON.stringify(items));
 }));
 
-/* ============ GALLERY & SITE ASSETS ============ */
-const GALLERY_UPLOAD_MAX_BYTES = 4 * 1024 * 1024; // 4MB
+const GALLERY_UPLOAD_MAX_BYTES = 4 * 1024 * 1024;
 function getGalleryUploads() { return safeParse(CONTENT.gallery_upload_index, []); }
 function galleryUploadKey(name) { return 'gallery_upload__' + name; }
 function getGalleryFolders() { return safeParse(CONTENT.gallery_folders, []); }
@@ -2111,8 +2050,6 @@ async function deleteGalleryFolder(name) {
     await putField('gallery_folders', JSON.stringify(folders2));
     CONTENT.gallery_folders = JSON.stringify(folders2);
 
-    // Clear the folder tag off every upload that was in it, so they fall
-    // back to unsorted (visible under "All") rather than vanishing.
     const tagged = getGalleryUploads().filter(u => getUploadFolder(u) === name);
     for (const uploadName of tagged) {
       await putField(galleryFolderKey(uploadName), '');
@@ -2173,7 +2110,7 @@ function renderMedia() {
     try {
       await putField(galleryFolderKey(name), folder);
       CONTENT[galleryFolderKey(name)] = folder;
-      if (activeGalleryFolder !== 'all') renderMedia(); // moved out of the folder being viewed
+      if (activeGalleryFolder !== 'all') renderMedia();
     } catch (err) { alert('Could not move image: ' + err.message); }
   }));
 }
@@ -2201,7 +2138,7 @@ $('#gallery-upload-input')?.addEventListener('change', async () => {
       CONTENT.gallery_upload_index = JSON.stringify(list);
       if (folder) CONTENT[galleryFolderKey(safeName)] = folder;
       renderMedia();
-      try { renderInstantFields(); if (typeof heroDraft !== 'undefined' && heroDraft) renderHeroSlideList(); } catch (e) { /* ignore */ }
+      try { renderInstantFields(); if (typeof heroDraft !== 'undefined' && heroDraft) renderHeroSlideList(); } catch (e) {}
       show('ok', `Uploaded "${safeName}"${folder ? ` to "${folder}"` : ''}. It's now in the image pickers under "Your uploads".`);
     } catch (err) { show('err', 'Could not upload: ' + err.message); }
     input.value = '';
@@ -2209,17 +2146,11 @@ $('#gallery-upload-input')?.addEventListener('change', async () => {
   reader.readAsDataURL(file);
 });
 
-/* ============ EBLAST ============ */
-let EB_DRAFT = null; // { id, subject, blocks: [{image, alt, link}] }
+let EB_DRAFT = null;
 let EB_READONLY = false;
 let EB_RECIPIENTS = { active: 0, unsubscribed: 0 };
 let EB_CAMPAIGNS = [];
 
-// Every image usable in an eblast needs a real, absolute URL, a recipient's
-// inbox can't resolve a relative path or load a data: URI. Static files
-// already live at /assets/images/<file>; gallery uploads get theirs from the
-// /media/<name> route added alongside this feature. `folder` is null for
-// static site images (they only show up under "All images" in the picker).
 function eblastImageOptions() {
   const staticOpts = MEDIA_FILES.filter(f => /\.(jpe?g|png)$/i.test(f)).map(f => ({ value: `${location.origin}/${IMG_DIR}${f}`, label: f, folder: null }));
   const uploadOpts = getGalleryUploads().map(name => ({ value: `${location.origin}/media/${encodeURIComponent(name)}`, label: name, folder: getUploadFolder(name) || null }));
@@ -2458,7 +2389,6 @@ $('#eb-send-btn').addEventListener('click', async () => {
   });
 });
 
-/* ============ REGISTRATIONS ============ */
 function renderRegistrationsInto(tableSel, filterSel) {
   const tbody = $(tableSel);
   if (!tbody) return;
@@ -2506,11 +2436,6 @@ function replyMailto(r) {
 function renderRegistrations() { renderRegistrationsInto('#reg-table', '#reg-filter'); }
 $('#reg-filter').addEventListener('change', renderRegistrations);
 
-/* ============ CONTACTS ============ */
-// Same inquiries table as Registrations, but this view is about the
-// eblast recipient list specifically: who's on it, who's opted out, and
-// letting a client add someone (a broker, a past client) who never went
-// through the registration form but should still get eblasts.
 let CONTACTS_SELECTED = new Set();
 
 function renderContacts() {
@@ -2524,8 +2449,6 @@ function renderContacts() {
   if (search) rows = rows.filter(r =>
     `${r.first_name} ${r.last_name}`.toLowerCase().includes(search) || (r.email || '').toLowerCase().includes(search));
 
-  // Selections for contacts no longer in view (filtered/searched out, or
-  // deleted) don't count toward the bulk bar or "select all" state.
   const visibleIds = new Set(rows.map(r => String(r.id)));
   for (const id of [...CONTACTS_SELECTED]) if (!visibleIds.has(id)) CONTACTS_SELECTED.delete(id);
 
@@ -2706,11 +2629,10 @@ $('#contact-add-btn').addEventListener('click', () => {
   });
 });
 
-/* ---------- contacts CSV import ---------- */
 $('#contact-import-btn').addEventListener('click', () => $('#contact-import-file').click());
 $('#contact-import-file').addEventListener('change', async (e) => {
   const file = e.target.files[0];
-  e.target.value = ''; // so picking the same file twice still fires "change"
+  e.target.value = '';
   if (!file) return;
 
   let text;
@@ -2738,7 +2660,6 @@ $('#contact-import-file').addEventListener('change', async (e) => {
   }
 });
 
-/* ============ THANK YOU PAGE CONTENT (Edit tab page-level tab) ============ */
 const THANKYOU_KEYS = ['thankyou_headline','thankyou_lede','thankyou_note'];
 function thankyouDefaults() {
   return {
@@ -2793,7 +2714,6 @@ $('#ty-discard')?.addEventListener('click', async () => {
   try { await discardDraft('thankyou'); initThankYouEditor(); } catch (e) { alert('Could not discard: ' + e.message); }
 });
 
-/* ---------- Thank You live preview: its own iframe, patched in place like Hero ---------- */
 const THANKYOU_FRAME = { frame: null, ready: false };
 (function setupThankYouLiveFrame() {
   const frame = document.getElementById('pf-frame-thankyou');
@@ -2811,7 +2731,6 @@ function refreshThankYouPreview() {
   const note = doc.querySelector('.thanks .thanks__note'); if (note) note.textContent = thankyouDraft.thankyou_note;
 }
 
-/* ============ ANALYTICS (SEO tab, from Google Analytics via /api/analytics) ============ */
 let gaRange = 28;
 let gaData = null;
 let gaLoading = false;
@@ -2819,7 +2738,6 @@ const gaFmt = (n) => Number(n || 0).toLocaleString();
 function gaDuration(sec) { sec = Math.round(sec || 0); const m = Math.floor(sec / 60), s = sec % 60; return m ? `${m}m ${String(s).padStart(2, '0')}s` : `${s}s`; }
 function gaDate(yyyymmdd, opts) { const d = new Date(+yyyymmdd.slice(0, 4), +yyyymmdd.slice(4, 6) - 1, +yyyymmdd.slice(6, 8)); return d.toLocaleDateString(undefined, opts || { month: 'short', day: 'numeric' }); }
 const GA_CHANNEL_LABELS = { 'Organic Search': 'Google & other search', 'Direct': 'Direct (typed or bookmarked)', 'Organic Social': 'Social media', 'Paid Social': 'Paid social ads', 'Paid Search': 'Paid search ads', 'Referral': 'Links from other sites', 'Email': 'Email', 'Unassigned': 'Not identified yet' };
-// GA's placeholders for data it couldn't work out (or hasn't processed yet).
 const gaUnknown = (n) => (n === '(not set)' || n === '(none)' || n === '(other)' || n === '') ? 'Not identified yet' : n;
 const gaPlural = (n, one, many) => `${gaFmt(n)} ${Number(n) === 1 ? one : many}`;
 
@@ -2902,8 +2820,6 @@ function gaList(sel, rows, key, label) {
       <div class="bar"><span style="width:${Math.max(2, (r[key] / max) * 100)}%"></span></div></div>`).join('')}</div>`;
 }
 
-// GA only returns days that had visits. Fill the rest of the range with zeros
-// so the chart always spans the whole period (and one day still draws a line).
 function gaFillDays(daily, range) {
   const byDate = new Map((daily || []).map(r => [r.date, r]));
   const out = [];
@@ -2913,7 +2829,6 @@ function gaFillDays(daily, range) {
     const key = `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}`;
     out.push(byDate.get(key) || { date: key, users: 0, sessions: 0, views: 0 });
   }
-  // Keep any GA day outside the local range (time zone edge) rather than drop it.
   (daily || []).forEach(r => { if (!out.some(o => o.date === r.date)) out.push(r); });
   return out.sort((a, b) => a.date.localeCompare(b.date));
 }
@@ -2966,7 +2881,6 @@ $$('#ga-range [data-range]').forEach(btn => btn.addEventListener('click', () => 
 $('#ga-refresh').addEventListener('click', () => loadAnalytics(true));
 window.addEventListener('resize', () => { if (gaData && !$('#sub-analytics').classList.contains('hidden')) renderGaChart(gaData.daily); });
 
-/* ============ SEO & SHARING ============ */
 let lastAuditChecks = null;
 const CHECK_LOCATIONS = {
   title: { label: 'Search appearance', page: 'seo', sub: 'search' },
@@ -3031,7 +2945,7 @@ async function runPerfCheck(strategy) {
       CONTENT[`perf_last_score_${strategy}`] = String(res.score);
       CONTENT.perf_last_checked_at = res.checked_at;
       renderAuditHistory();
-    } catch (e2) { /* non-fatal, the score is still shown above */ }
+    } catch (e2) {}
   } catch (e) {
     $('#perf-score').textContent = 'Not available';
     $('#perf-summary').textContent = "Couldn't get a live score: " + e.message;
@@ -3130,7 +3044,6 @@ function renderSearchPreview() {
   $('#sp-desc').textContent = searchDraft.seo_description;
 }
 
-/* ---------- favicon ---------- */
 function renderFaviconPreview() {
   const href = CONTENT.favicon_href;
   const isCustom = href && href !== 'assets/favicon.svg';
@@ -3194,10 +3107,6 @@ $('#favicon-reset')?.addEventListener('click', async () => {
   } catch (e) { msg.className = 'msg err'; msg.textContent = 'Could not reset: ' + e.message; }
 });
 
-/* ---------- guided fix: plain advice + optional suggested title and description ---------- */
-// SITE-SPECIFIC (optional): a suggested title (30 to 60 characters) and meta
-// description (120 to 160). Each shows with a "Use this" button only while the
-// current one is the wrong length. Write them from the page's real copy.
 const SEO_SUGGESTIONS = { title: 'Sunstone Towns | Freehold Townhomes in Vaughan', description: "Freehold townhomes in Vaughan up to 2,427 sq.ft. from the $900's, by Edenbrook Homes. Register today for priority access to Sunstone Towns." };
 const LEN_RULES = { title: [30, 60], description: [120, 160] };
 function lenOk(kind, v) { const [a, b] = LEN_RULES[kind]; return v.length >= a && v.length <= b; }
@@ -3319,7 +3228,6 @@ function initSeoBottombar() {
 }
 initSeoBottombar();
 
-/* ============ SETTINGS ============ */
 const LOG_PAGE_SIZE = 20;
 let logPage = 0;
 async function renderLog() {
@@ -3348,7 +3256,6 @@ function renderLogPage() {
   }
 }
 
-/* ---------- modal plumbing ---------- */
 let currentSave = null;
 function openModal(title, bodyHtml, onSave) { $('#modal-title').textContent = title; $('#modal-body').innerHTML = bodyHtml; $('#modal-msg').textContent = ''; currentSave = onSave; $('#overlay').classList.remove('hidden'); }
 function closeModal() { $('#overlay').classList.add('hidden'); currentSave = null; }
@@ -3360,7 +3267,6 @@ $('#modal-save').addEventListener('click', async () => {
   catch (e) { $('#modal-msg').className = 'msg err'; $('#modal-msg').textContent = e.message; }
 });
 
-/* ---------- theme (light / dark) ---------- */
 function applyTheme(theme) {
   document.documentElement.setAttribute('data-theme', theme);
   const label = $('#theme-toggle-label');
@@ -3370,24 +3276,22 @@ function applyTheme(theme) {
     ? '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>'
     : '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>';
   const logo = $('#brand-logo');
-  // One mark for both themes; light theme darkens it with CSS (see #brand-logo rule).
 }
 (function initTheme() {
   let saved = null;
-  try { saved = localStorage.getItem('sunstone-towns-admin-theme'); } catch (e) { /* ignore */ }
+  try { saved = localStorage.getItem('sunstone-towns-admin-theme'); } catch (e) {}
   applyTheme(saved === 'light' ? 'light' : 'dark');
 })();
 $('#theme-toggle')?.addEventListener('click', () => {
   const next = document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
   applyTheme(next);
-  try { localStorage.setItem('sunstone-towns-admin-theme', next); } catch (e) { /* ignore */ }
+  try { localStorage.setItem('sunstone-towns-admin-theme', next); } catch (e) {}
 });
 
-/* ---------- avatar menu / logout ---------- */
 $('#whoami')?.addEventListener('click', (e) => { e.stopPropagation(); $('#avatar-menu')?.classList.toggle('hidden'); });
 document.addEventListener('click', () => $('#avatar-menu')?.classList.add('hidden'));
 $('#logout-btn')?.addEventListener('click', async () => {
-  try { await fetch('/api/logout', { method: 'POST' }); } catch (e) { /* ignore */ }
+  try { await fetch('/api/logout', { method: 'POST' }); } catch (e) {}
   location.href = '/login.html';
 });
 
@@ -3518,8 +3422,6 @@ function makePassword() {
   const bytes = crypto.getRandomValues(new Uint8Array(14));
   return Array.from(bytes, b => chars[b % chars.length]).join('');
 }
-// Notice popup. html is trusted markup written in this file; escape anything
-// that came from a user before passing it in.
 function showNotice(title, html) {
   $('#notice-title').textContent = title;
   $('#notice-body').innerHTML = html;
@@ -3681,8 +3583,6 @@ $('#manage-discard-link').addEventListener('click', (e) => {
 });
 window.addEventListener('beforeunload', (e) => { if (manageDirty()) { e.preventDefault(); e.returnValue = ''; } });
 
-// Settings > My account: everyone edits their own profile and password
-// (PATCH /api/me, POST /api/me/password); the owner login only shows where it's set.
 $('#account-btn').addEventListener('click', () => {
   $('#avatar-menu')?.classList.add('hidden');
   showPage('settings');

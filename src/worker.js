@@ -1,17 +1,3 @@
-// Client-site CMS: single Worker entry point (from cms-template v2).
-//
-// This project deploys as a Cloudflare Worker with static assets (not
-// Pages), so there is no functions/ directory-based routing: every route
-// is dispatched here by hand, and anything not matched below falls through
-// to env.ASSETS.fetch(request), which serves the static files as-is.
-// Every path handled here before the auth gate must also be listed in
-// run_worker_first in wrangler.toml.
-//
-// Who is signed in: the owner (ADMIN_USER / ADMIN_PASSWORD in Cloudflare) or a
-// user added in Manage (admin_users table). What each role may call is in
-// permissionFor() (checked against Manage > Roles); paths a Manage feature
-// switch can turn off are in featureFor().
-// Any unhandled error is recorded in Logs (error_log table) before the 500.
 import { getUser, checkLogin, createSessionCookie, clearSessionCookie, unauthorized } from './lib/auth.js';
 import { renderHome, renderThankYou, renderPlainPage, renderRobots, renderSitemap } from './lib/render.js';
 import { handleRegister } from './lib/register.js';
@@ -94,8 +80,6 @@ async function route(request, env, ctx) {
   if (path === '/sitemap.xml' && method === 'GET') return renderSitemap(env);
   if (path === '/' && method === 'GET') return renderHome(request, env);
   if ((path === '/thank-you.html' || path === '/thank-you') && method === 'GET') return renderThankYou(request, env);
-  // Other public pages that need the tags: add each one here (both spellings)
-  // and to run_worker_first in wrangler.toml. SITE-SPECIFIC.
   if ((path === '/privacy-policy.html' || path === '/privacy-policy') && method === 'GET') return renderPlainPage(request, env);
   if (path === '/register' && method === 'POST') return handleRegister(request, env, ctx);
 

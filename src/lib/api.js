@@ -483,12 +483,11 @@ export async function perfCheck(request, env) {
     return json({ ok: false, error: `Could not reach Google PageSpeed Insights: ${e.message}` }, 502);
   }
   if (!res.ok) {
-    // Pass Google's own reason through, with a plain next step for the common cases.
     let reason = '';
-    try { const e = await res.json(); reason = (e && e.error && e.error.message) || ''; } catch { /* not JSON */ }
+    try { const e = await res.json(); reason = (e && e.error && e.error.message) || ''; } catch {}
     let hint;
     if (!env.PAGESPEED_API_KEY) {
-      hint = 'Google needs an API key for this check. Add a PAGESPEED_API_KEY secret in Cloudflare (see YOUR-TURN.md), then try again.';
+      hint = 'Google needs an API key for this check. Add a PAGESPEED_API_KEY secret in Cloudflare, then try again.';
     } else if (/has not been used|is disabled|SERVICE_DISABLED/i.test(reason)) {
       hint = 'The PageSpeed Insights API is not turned on for your API key. In Google Cloud, open APIs & Services > Library, search "PageSpeed Insights API", click Enable, wait a few minutes and try again.';
     } else if (/referer|referrer|API_KEY_HTTP_REFERRER_BLOCKED|IP address|API key not valid|API_KEY_INVALID/i.test(reason)) {
