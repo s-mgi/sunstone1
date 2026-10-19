@@ -300,6 +300,11 @@ tr:hover td{ background:var(--line-soft); }
 .ga-table-toggle{ margin-top:0.75rem; font-size:0.8125rem; color:var(--sub); }
 .ga-table-toggle summary{ cursor:pointer; }
 .ga-table-toggle table{ margin-top:0.5rem; }
+.ar-grid{ display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:1rem; align-items:start; }
+@media (max-width:1100px){ .ar-grid{ grid-template-columns:1fr; } }
+.ar-grid textarea{ min-height:5.5rem; }
+.ar-preview{ position:sticky; top:1rem; }
+.ar-preview iframe{ display:block; width:100%; height:820px; border:1px solid var(--line); border-radius:0.4rem; background:#fff; }
 p.hint{ font-size:0.8125rem; line-height:1.5; color:var(--sub); margin:0.6rem 0 0; }
 .pf-scaler.is-phone .pf-iframe{ border-radius:44px; box-shadow:0 0 0 14px #1d1b22, 0 24px 80px rgba(0,0,0,.5); } 
 .pf-scaler{ transform-origin:top left; }
@@ -800,6 +805,7 @@ p.hint{ font-size:0.8125rem; line-height:1.5; color:var(--sub); margin:0.6rem 0 
         <div class="subtabs">
           <button data-sub="reglist" class="active">All registrations</button>
           <button data-sub="regimport">Import</button>
+          <button data-sub="autoreply">Auto-reply email</button>
         </div>
         <div class="subpage" id="sub-reglist">
         <div class="toolbar">
@@ -846,6 +852,37 @@ p.hint{ font-size:0.8125rem; line-height:1.5; color:var(--sub); margin:0.6rem 0 
                 <button class="btn" id="regimp-reset" type="button">Start over</button>
                 <span class="msg" id="regimp-msg" style="margin:0;"></span>
               </div>
+            </div>
+          </div>
+        </div>
+        <div class="subpage hidden" id="sub-autoreply">
+          <div id="ar-status"></div>
+          <div class="ar-grid">
+            <div class="panel">
+              <div class="panel-head"><h2>Auto-reply email</h2></div>
+              <p class="muted" style="margin:0 0 1rem; font-size:0.875rem;">The thank-you email each new registrant gets right after they register. Changes apply to the next registration once you save. The logo, address and unsubscribe link stay the same.</p>
+              <div class="field"><label>Subject</label><input id="ar-subject" maxlength="150"></div>
+              <div class="field"><label>Preview text</label><input id="ar-preheader" maxlength="200"><p class="hint">The snippet most inboxes show next to the subject. Leave it blank for none.</p></div>
+              <div class="field"><label>Photo</label><select id="ar-photo"></select><p class="hint" id="ar-photo-hint">Use a JPG or PNG. Many email apps don't show WebP or AVIF photos.</p></div>
+              <div class="field"><label>Photo description</label><input id="ar-photo-alt" maxlength="300"><p class="hint">Shown if the email app blocks images.</p></div>
+              <div class="field"><label>Heading</label><input id="ar-heading" maxlength="120"></div>
+              <div class="field"><label>Greeting</label><input id="ar-greeting" maxlength="120"><p class="hint"><code>{first_name}</code> becomes their first name. If they didn't give one, the greeting is left out. Leave it blank for no greeting.</p></div>
+              <div class="field"><label>Message</label><textarea id="ar-message" maxlength="1500"></textarea><p class="hint" id="ar-message-hint"></p></div>
+              <div class="field"><label>Closing note</label><textarea id="ar-note" maxlength="1500"></textarea><p class="hint"><code>{sender}</code> becomes the address the email comes from, as a link. Leave it blank for no note.</p></div>
+              <div class="toolbar" style="margin:0;">
+                <button class="btn btn-gold" id="ar-save" type="button">Save</button>
+                <button class="btn" id="ar-reset" type="button">Reset to the original</button>
+                <span class="msg" id="ar-msg" style="margin:0;"></span>
+              </div>
+              <div class="toolbar" style="margin:1rem 0 0; border-top:1px solid var(--line-soft); padding-top:1rem;">
+                <input id="ar-test-to" type="email" placeholder="you@example.com" style="max-width:16rem;">
+                <button class="btn" id="ar-test" type="button">Send me a test</button>
+                <span class="msg" id="ar-test-msg" style="margin:0;"></span>
+              </div>
+            </div>
+            <div class="panel ar-preview">
+              <div class="panel-head"><h2>Preview</h2><span class="muted" style="font-size:0.75rem;" id="ar-preview-subject"></span></div>
+              <iframe id="ar-frame" title="Auto-reply email preview" sandbox=""></iframe>
             </div>
           </div>
         </div>
@@ -1074,6 +1111,11 @@ p.hint{ font-size:0.8125rem; line-height:1.5; color:var(--sub); margin:0.6rem 0 
               <div class="panel"><div class="panel-head"><h2>Devices</h2><span class="muted" style="font-size:0.75rem;">Visitors</span></div><div id="ga-devices"></div></div>
             </div>
             <p class="hint">Figures come from Google Analytics and refresh every 10 minutes. GA can take up to a day to finish processing recent visits, so today's numbers may still grow.</p>
+          </div>
+          <div class="panel" id="eba-panel">
+            <div class="panel-head"><h2>Eblasts</h2><span class="muted" style="font-size:0.75rem;">Since each blast was sent</span></div>
+            <div id="eba-body"><div class="empty">Loading…</div></div>
+            <p class="hint" style="margin-bottom:0;">Visits are people who clicked a link in the blast, from Google Analytics. Registrations are people who registered on the site after clicking one, from your Registrations list. Blasts that share a tracking name are added together.</p>
           </div>
         </div>
 
@@ -1529,6 +1571,7 @@ function showSubtab(container, subId) {
   $$('.subpage', container.parentElement).forEach(p => p.classList.toggle('hidden', p.id !== 'sub-' + subId));
   if (container.closest('#page-logs') && subId === 'activity') renderLog();
   if (container.closest('#page-settings') && subId === 'notifications') loadLogAlerts();
+  if (container.closest('#page-registrations') && subId === 'autoreply') loadAutoReply();
   if (container.closest('#page-seo')) { updateSeoBottombarVisibility(); if (subId === 'analytics') loadAnalytics(false); if (subId === 'tags') loadTags(); }
 }
 function initSubtabs(container) {
@@ -2769,6 +2812,7 @@ const gaPlural = (n, one, many) => `${gaFmt(n)} ${Number(n) === 1 ? one : many}`
 async function loadAnalytics(fresh) {
   if (gaLoading) return;
   gaLoading = true;
+  loadEblastAnalytics(fresh);
   const msg = $('#ga-message');
   if (!gaData) { msg.hidden = false; msg.innerHTML = '<div class="empty">Loading Google Analytics…</div>'; }
   $('#ga-refresh').disabled = true;
@@ -2792,6 +2836,91 @@ async function loadAnalytics(fresh) {
     msg.hidden = false; msg.innerHTML = `<p class="msg err" style="margin:0;">Couldn't reach the analytics service: ${escapeHtml(e.message)}</p>`;
   } finally {
     gaLoading = false; $('#ga-refresh').disabled = false;
+  }
+}
+
+const AR_FIELDS = { subject: '#ar-subject', preheader: '#ar-preheader', heading: '#ar-heading', greeting: '#ar-greeting', message: '#ar-message', note: '#ar-note', photo_alt: '#ar-photo-alt' };
+let AR = null;
+let arTimer = null;
+const arPhotoChoice = (v) => String(v || '').startsWith(IMG_DIR) ? String(v).slice(IMG_DIR.length) : String(v || '');
+function arRead() {
+  const out = {};
+  for (const [k, sel] of Object.entries(AR_FIELDS)) out[k] = $(sel).value;
+  const ph = $('#ar-photo').value;
+  out.photo = ph ? imgSrc(ph) : '';
+  return out;
+}
+function arFill(s) {
+  for (const [k, sel] of Object.entries(AR_FIELDS)) $(sel).value = s[k] || '';
+  const cur = arPhotoChoice(s.photo);
+  $('#ar-photo').innerHTML = `<option value="" ${cur ? '' : 'selected'}>No photo</option>` + imageChoices(cur || null);
+  if (!cur) $('#ar-photo').value = '';
+  arPhotoHint();
+}
+function arPhotoHint() { $('#ar-photo-hint').classList.toggle('msg', /\.(webp|avif)$/i.test($('#ar-photo').value)); $('#ar-photo-hint').classList.toggle('err', /\.(webp|avif)$/i.test($('#ar-photo').value)); }
+async function arPreview() {
+  try {
+    const data = await api('/api/autoreply/preview', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ settings: arRead() }) });
+    $('#ar-frame').srcdoc = data.html;
+    $('#ar-preview-subject').textContent = data.subject;
+  } catch (e) { $('#ar-preview-subject').textContent = 'Preview failed: ' + e.message; }
+}
+function arQueuePreview() { $('#ar-msg').className = 'msg'; $('#ar-msg').textContent = 'Not saved yet'; clearTimeout(arTimer); arTimer = setTimeout(arPreview, 350); }
+async function loadAutoReply() {
+  try {
+    AR = await api('/api/autoreply');
+    arFill(AR.settings);
+    $('#ar-msg').textContent = '';
+    $('#ar-message-hint').textContent = `Under the message the email always shows "${AR.brand.name}"${AR.brand.byline ? ` and "${AR.brand.byline}"` : ''} in bold. {first_name} works here too.`;
+    if (!$('#ar-test-to').value && ME && ME.user && ME.user.email) $('#ar-test-to').value = ME.user.email;
+    $('#ar-status').innerHTML = AR.enabled ? '' : `<div class="eb-status-banner">The auto-reply is turned off${AR.disabledBy === 'variable' ? ' (AUTOREPLY_ENABLED is false in Cloudflare)' : ' in Manage &gt; Features'}, so registrants don't get it right now. You can still edit it here.</div>`;
+    if (!AR.emailReady) $('#ar-status').innerHTML += '<div class="eb-status-banner">Email isn\'t set up yet (RESEND_API_KEY and FROM_EMAIL in Cloudflare), so nothing can be sent.</div>';
+    arPreview();
+  } catch (e) { $('#ar-status').innerHTML = `<p class="msg err">Couldn't load the auto-reply: ${escapeHtml(e.message)}</p>`; }
+}
+Object.values(AR_FIELDS).forEach(sel => $(sel).addEventListener('input', arQueuePreview));
+$('#ar-photo').addEventListener('change', () => { arPhotoHint(); arQueuePreview(); });
+$('#ar-save').addEventListener('click', async () => {
+  const msg = $('#ar-msg');
+  msg.className = 'msg'; msg.textContent = 'Saving…';
+  try {
+    AR = await api('/api/autoreply', { method: 'PUT', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ settings: arRead() }) });
+    arFill(AR.settings);
+    msg.className = 'msg ok'; msg.textContent = 'Saved. New registrants get this version.';
+    arPreview();
+  } catch (e) { msg.className = 'msg err'; msg.textContent = e.message; }
+});
+$('#ar-reset').addEventListener('click', () => {
+  if (!AR) return;
+  if (!confirm('Put every field back to the original wording? Nothing changes until you save.')) return;
+  arFill(AR.defaults);
+  arQueuePreview();
+});
+$('#ar-test').addEventListener('click', async () => {
+  const msg = $('#ar-test-msg');
+  msg.className = 'msg'; msg.textContent = 'Sending…';
+  try {
+    const r = await api('/api/autoreply/test', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ to: $('#ar-test-to').value.trim(), settings: arRead() }) });
+    msg.className = 'msg ok'; msg.textContent = `Sent to ${r.to}. It shows what's on screen, saved or not.`;
+  } catch (e) { msg.className = 'msg err'; msg.textContent = e.message; }
+});
+
+async function loadEblastAnalytics(fresh) {
+  const body = $('#eba-body');
+  try {
+    const data = await api('/api/analytics/eblasts' + (fresh ? '?fresh=1' : ''));
+    const b = data.blasts || [];
+    const gaNote = !data.ga.configured
+      ? '<p class="muted" style="margin:0 0 0.75rem;">Connect Google Analytics above to see how many people clicked through. Registrations show either way.</p>'
+      : (data.ga.error ? `<p class="msg err" style="margin:0 0 0.75rem;">Couldn't load visits from Google Analytics: ${escapeHtml(data.ga.error)}</p>` : '');
+    if (!b.length) { body.innerHTML = gaNote + '<div class="empty">No eblasts sent yet. Once one goes out, its clicks and registrations show here.</div>'; return; }
+    const cell = (v) => v === null || v === undefined ? '<span class="muted">-</span>' : gaFmt(v);
+    const rate = (r) => (r.visits === null || !r.delivered) ? '<span class="muted">-</span>' : (Math.round((r.visitors / r.delivered) * 1000) / 10) + '%';
+    body.innerHTML = gaNote + `<div style="overflow-x:auto;"><table><thead><tr><th>Blast</th><th>Tracking name</th><th>Sent</th><th>Delivered</th><th>Visits</th><th>Visitors</th><th>Click rate</th><th>Registrations</th></tr></thead><tbody>${
+      b.map(r => `<tr><td>${r.subject ? escapeHtml(r.subject) : '<span class="muted">Not from a blast here</span>'}${r.sends > 1 ? ` <span class="muted">(${r.sends} sends)</span>` : ''}</td><td><code>${escapeHtml(r.name)}</code></td><td>${r.sentAt ? escapeHtml(dateAndTime(r.sentAt)) : '<span class="muted">-</span>'}</td><td>${r.sends ? gaFmt(r.delivered) : '<span class="muted">-</span>'}</td><td>${cell(r.visits)}</td><td>${cell(r.visitors)}</td><td>${rate(r)}</td><td>${gaFmt(r.registrations)}</td></tr>`).join('')
+    }</tbody></table></div>`;
+  } catch (e) {
+    body.innerHTML = `<p class="msg err" style="margin:0;">Couldn't load eblast results: ${escapeHtml(e.message)}</p>`;
   }
 }
 

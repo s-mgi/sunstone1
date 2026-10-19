@@ -2,12 +2,13 @@ import { getUser, checkLogin, createSessionCookie, clearSessionCookie, unauthori
 import { renderHome, renderThankYou, renderPlainPage, renderRobots, renderSitemap } from './lib/render.js';
 import { handleRegister } from './lib/register.js';
 import { listInquiries, createInquiry, importContacts, importRegistrations, patchInquiry, deleteInquiry, listContent, putContent, listEditLog, seoCheck, perfCheck, serveMedia } from './lib/api.js';
-import { analyticsReport } from './lib/analytics.js';
+import { analyticsReport, eblastReport } from './lib/analytics.js';
 import { eblastState, saveDraft, sendCampaign, handleUnsubscribe, getCampaign, deleteCampaign, duplicateCampaign } from './lib/eblast.js';
 import { logError, handleClientError, listErrors, patchError, resolveAllErrors } from './lib/errors.js';
 import { me, updateMe, listUsers, createUser, patchUser, deleteUser, changeOwnPassword, getAdminSettings, putPermissions, putFeatures, putTags, putLogSettings } from './lib/manage.js';
 import { getFeatures, getSettings, userPermissions } from './lib/settings.js';
 import { requestReset, confirmReset } from './lib/reset.js';
+import { getAutoReplySettings, putAutoReplySettings, previewAutoReply, testAutoReply } from './lib/autoreply.js';
 
 const SEO_KEYS = /^(seo_|canonical_url$|og_|favicon_href$|perf_)/;
 
@@ -22,7 +23,8 @@ function permissionFor(path, method) {
   if (path === '/api/inquiries/import-registrations') return ['registrations'];
   if (path === '/api/inquiries/import') return ['contacts'];
   if (/^\/api\/inquiries(\/|$)/.test(path)) return ['registrations', 'contacts'];
-  if (path === '/api/seo-check' || path === '/api/perf-check' || path === '/api/analytics') return ['seo'];
+  if (/^\/api\/autoreply(\/|$)/.test(path)) return ['registrations'];
+  if (path === '/api/seo-check' || path === '/api/perf-check' || path === '/api/analytics' || path === '/api/analytics/eblasts') return ['seo'];
   const content = path.match(/^\/api\/content\/([^/]+)$/);
   if (content && method === 'PUT') {
     const key = decodeURIComponent(content[1]).replace(/^draft__/, '');
@@ -35,7 +37,7 @@ function permissionFor(path, method) {
 
 function featureFor(path, method) {
   if (path.startsWith('/api/eblast/')) return ['eblast'];
-  if (path === '/api/seo-check' || path === '/api/perf-check' || path === '/api/analytics') return ['seo'];
+  if (path === '/api/seo-check' || path === '/api/perf-check' || path === '/api/analytics' || path === '/api/analytics/eblasts') return ['seo'];
   if (path === '/api/inquiries/import-registrations') return ['registrations'];
   if (path === '/api/inquiries/import' || (path === '/api/inquiries' && method === 'POST')) return ['contacts'];
   if (/^\/api\/inquiries\/[^/]+$/.test(path)) return ['registrations', 'contacts'];
@@ -148,6 +150,12 @@ async function api(request, env, ctx, user, path, method) {
   if (path === '/api/seo-check' && method === 'GET') return seoCheck(request, env);
   if (path === '/api/perf-check' && method === 'GET') return perfCheck(request, env);
   if (path === '/api/analytics' && method === 'GET') return analyticsReport(request, env, ctx);
+  if (path === '/api/analytics/eblasts' && method === 'GET') return eblastReport(request, env, ctx);
+
+  if (path === '/api/autoreply' && method === 'GET') return getAutoReplySettings(env);
+  if (path === '/api/autoreply' && method === 'PUT') return putAutoReplySettings(request, env);
+  if (path === '/api/autoreply/preview' && method === 'POST') return previewAutoReply(request, env);
+  if (path === '/api/autoreply/test' && method === 'POST') return testAutoReply(request, env);
 
 
   if (path === '/api/eblast/state' && method === 'GET') return eblastState(env);

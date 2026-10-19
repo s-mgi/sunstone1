@@ -1,6 +1,16 @@
-export const CMS_VERSION = '2.10.0';
+export const CMS_VERSION = '2.11.0';
 
 export const CHANGELOG = [
+  {
+    version: '2.11.0',
+    date: '2026-10-19',
+    title: 'Edit the auto-reply email',
+    changes: [
+      'New: Registrations has an Auto-reply email tab where you can change the subject, photo, heading, greeting, message and closing note of the email new registrants get.',
+      'New: A live preview shows the email as you type, and Send me a test emails it to you before you save.',
+      'New: Reset to the original puts back the standard email.',
+    ],
+  },
   {
     version: '2.10.0',
     date: '2026-10-19',
@@ -8,6 +18,7 @@ export const CHANGELOG = [
     changes: [
       'New: Each eblast has a Tracking name. It fills in from the subject and you can change it.',
       'New: Links in an eblast get tracking tags, so visits show in Google Analytics under that name and registrations from the blast record it as their campaign.',
+      'New: SEO & Analytics > Analytics has an Eblasts section with each blast\'s deliveries, visits, click rate and registrations.',
     ],
   },
   {

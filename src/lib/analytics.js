@@ -1,4 +1,5 @@
 import { logError } from './errors.js';
+import { trackingSlug } from './eblast.js';
 
 const SCOPE = 'https://www.googleapis.com/auth/analytics.readonly';
 const CACHE_SECONDS = 600;
@@ -85,6 +86,70 @@ export async function analyticsReport(request, env, ctx) {
   }
 
   return json({ ok: true, configured: true, realtime: await realtimeP, ...report });
+}
+
+export async function eblastReport(request, env, ctx) {
+  const fresh = new URL(request.url).searchParams.get('fresh') === '1';
+  const { results: campaigns } = await env.DB.prepare(`SELECT * FROM eblast_campaigns WHERE status != 'draft' AND sent_at IS NOT NULL ORDER BY sent_at DESC LIMIT 200`).all();
+  const { results: regRows } = await env.DB.prepare(
+    `SELECT lower(utm_campaign) AS name, COUNT(DISTINCT lower(email)) AS n FROM inquiries WHERE lower(utm_source) = 'eblast' AND utm_campaign IS NOT NULL AND TRIM(utm_campaign) != '' GROUP BY lower(utm_campaign)`
+  ).all();
+
+  const byName = new Map();
+  const entry = (name) => {
+    if (!byName.has(name)) byName.set(name, { name, subject: '', sentAt: null, sends: 0, delivered: 0, visits: null, visitors: null, registrations: 0 });
+    return byName.get(name);
+  };
+  for (const c of campaigns) {
+    const e = entry(trackingSlug(c.tracking_name) || trackingSlug(c.subject) || `blast-${c.id}`);
+    if (!e.sentAt || c.sent_at > e.sentAt) { e.sentAt = c.sent_at; e.subject = c.subject || ''; }
+    e.sends += 1;
+    e.delivered += Number(c.sent_count || 0);
+  }
+  for (const r of regRows) entry(r.name).registrations = Number(r.n || 0);
+
+  let ga = { configured: false, error: null };
+  if (env.GA_PROPERTY_ID && env.GA_SERVICE_ACCOUNT) {
+    ga.configured = true;
+    const propertyId = String(env.GA_PROPERTY_ID).trim().replace(/^properties\//, '');
+    const oldest = campaigns.reduce((m, c) => (!m || c.sent_at < m ? c.sent_at : m), null);
+    const startDate = oldest ? String(oldest).slice(0, 10) : '90daysAgo';
+    try {
+      const cache = typeof caches !== 'undefined' ? caches.default : null;
+      const cacheKey = new Request(`https://ga-cache.internal/${propertyId}/eblasts/${startDate}`);
+      let gaRows = null;
+      if (cache && !fresh) { const hit = await cache.match(cacheKey); if (hit) gaRows = await hit.json(); }
+      if (!gaRows) {
+        const token = await getAccessToken(env);
+        const res = await gaFetch(`https://analyticsdata.googleapis.com/v1beta/properties/${propertyId}:runReport`, token, {
+          dateRanges: [{ startDate, endDate: 'today' }],
+          dimensions: [{ name: 'sessionCampaignName' }],
+          metrics: [{ name: 'sessions' }, { name: 'activeUsers' }],
+          dimensionFilter: { filter: { fieldName: 'sessionSource', stringFilter: { matchType: 'EXACT', value: 'eblast', caseSensitive: false } } },
+          limit: 200,
+        });
+        gaRows = rows(res, ['sessions', 'users']);
+        if (cache) {
+          const put = cache.put(cacheKey, new Response(JSON.stringify(gaRows), { headers: { 'Content-Type': 'application/json', 'Cache-Control': `max-age=${CACHE_SECONDS}` } }));
+          if (ctx && ctx.waitUntil) ctx.waitUntil(put); else await put;
+        }
+      }
+      for (const e of byName.values()) { e.visits = 0; e.visitors = 0; }
+      for (const r of gaRows) {
+        const name = trackingSlug(r.name);
+        if (!name || name === 'not-set') continue;
+        const e = entry(name);
+        e.visits = (e.visits || 0) + r.sessions;
+        e.visitors = (e.visitors || 0) + r.users;
+      }
+    } catch (e) {
+      ga.error = e.message;
+      await logError(env, { area: 'analytics', message: 'Eblast visits could not be loaded from Google Analytics', detail: e.message });
+    }
+  }
+
+  const blasts = [...byName.values()].sort((a, b) => String(b.sentAt || '').localeCompare(String(a.sentAt || '')));
+  return json({ ok: true, ga, blasts, fetchedAt: new Date().toISOString() });
 }
 
 function rows(res, names) {
