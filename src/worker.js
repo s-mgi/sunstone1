@@ -3,7 +3,7 @@ import { renderHome, renderThankYou, renderPlainPage, renderRobots, renderSitema
 import { handleRegister } from './lib/register.js';
 import { listInquiries, createInquiry, importContacts, importRegistrations, patchInquiry, deleteInquiry, listContent, putContent, listEditLog, seoCheck, perfCheck, serveMedia } from './lib/api.js';
 import { analyticsReport, eblastReport } from './lib/analytics.js';
-import { eblastState, saveDraft, sendCampaign, handleUnsubscribe, getCampaign, deleteCampaign, duplicateCampaign } from './lib/eblast.js';
+import { eblastState, saveDraft, sendCampaign, handleUnsubscribe, getCampaign, deleteCampaign, duplicateCampaign, previewEblast, exportEblast, testEblast, uploadEblastImage, serveEblastImage } from './lib/eblast.js';
 import { logError, handleClientError, listErrors, patchError, resolveAllErrors } from './lib/errors.js';
 import { me, updateMe, listUsers, createUser, patchUser, deleteUser, changeOwnPassword, getAdminSettings, putPermissions, putFeatures, putTags, putLogSettings } from './lib/manage.js';
 import { getFeatures, getSettings, userPermissions } from './lib/settings.js';
@@ -87,6 +87,8 @@ async function route(request, env, ctx) {
 
   const mediaMatch = path.match(/^\/media\/([^/]+)$/);
   if (mediaMatch && method === 'GET') return serveMedia(env, decodeURIComponent(mediaMatch[1]));
+  const eblastImageMatch = path.match(/^\/i\/(e\/\d+\/[a-f0-9]+\.(?:jpg|png|gif))$/);
+  if (eblastImageMatch && method === 'GET') return serveEblastImage(request, env, ctx, eblastImageMatch[1]);
 
   if (path === '/admin' || path === '/admin.html' || path.startsWith('/api/')) {
     if (!env.ADMIN_USER || !env.ADMIN_PASSWORD) return unauthorized('Admin auth is not configured (ADMIN_USER / ADMIN_PASSWORD missing).');
@@ -161,6 +163,10 @@ async function api(request, env, ctx, user, path, method) {
   if (path === '/api/eblast/state' && method === 'GET') return eblastState(env);
   if (path === '/api/eblast/draft' && method === 'POST') return saveDraft(request, env);
   if (path === '/api/eblast/send' && method === 'POST') return sendCampaign(request, env);
+  if (path === '/api/eblast/preview' && method === 'POST') return previewEblast(request, env);
+  if (path === '/api/eblast/export' && method === 'POST') return exportEblast(request, env);
+  if (path === '/api/eblast/test' && method === 'POST') return testEblast(request, env);
+  if (path === '/api/eblast/images' && method === 'PUT') return uploadEblastImage(request, env);
   const eblastCampaignMatch = path.match(/^\/api\/eblast\/campaigns\/([^/]+)$/);
   if (eblastCampaignMatch && method === 'GET') return getCampaign(env, eblastCampaignMatch[1]);
   if (eblastCampaignMatch && method === 'DELETE') return deleteCampaign(env, eblastCampaignMatch[1]);

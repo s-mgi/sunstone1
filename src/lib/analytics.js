@@ -90,21 +90,28 @@ export async function analyticsReport(request, env, ctx) {
 
 export async function eblastReport(request, env, ctx) {
   const fresh = new URL(request.url).searchParams.get('fresh') === '1';
-  const { results: campaigns } = await env.DB.prepare(`SELECT * FROM eblast_campaigns WHERE status != 'draft' AND sent_at IS NOT NULL ORDER BY sent_at DESC LIMIT 200`).all();
+  let campaigns;
+  try {
+    ({ results: campaigns } = await env.DB.prepare(`SELECT * FROM eblast_campaigns WHERE (status != 'draft' AND sent_at IS NOT NULL) OR exported_at IS NOT NULL ORDER BY COALESCE(sent_at, exported_at) DESC LIMIT 200`).all());
+  } catch {
+    ({ results: campaigns } = await env.DB.prepare(`SELECT * FROM eblast_campaigns WHERE status != 'draft' AND sent_at IS NOT NULL ORDER BY sent_at DESC LIMIT 200`).all());
+  }
   const { results: regRows } = await env.DB.prepare(
     `SELECT lower(utm_campaign) AS name, COUNT(DISTINCT lower(email)) AS n FROM inquiries WHERE lower(utm_source) = 'eblast' AND utm_campaign IS NOT NULL AND TRIM(utm_campaign) != '' GROUP BY lower(utm_campaign)`
   ).all();
 
   const byName = new Map();
   const entry = (name) => {
-    if (!byName.has(name)) byName.set(name, { name, subject: '', sentAt: null, sends: 0, delivered: 0, visits: null, visitors: null, registrations: 0 });
+    if (!byName.has(name)) byName.set(name, { name, subject: '', sentAt: null, sends: 0, delivered: 0, exported: false, visits: null, visitors: null, registrations: 0 });
     return byName.get(name);
   };
   for (const c of campaigns) {
     const e = entry(trackingSlug(c.tracking_name) || trackingSlug(c.subject) || `blast-${c.id}`);
-    if (!e.sentAt || c.sent_at > e.sentAt) { e.sentAt = c.sent_at; e.subject = c.subject || ''; }
-    e.sends += 1;
-    e.delivered += Number(c.sent_count || 0);
+    const sent = c.status !== 'draft' && c.sent_at;
+    const when = sent ? c.sent_at : c.exported_at;
+    if (!e.sentAt || when > e.sentAt) { e.sentAt = when; e.subject = c.subject || ''; }
+    if (sent) { e.sends += 1; e.delivered += Number(c.sent_count || 0); }
+    else e.exported = true;
   }
   for (const r of regRows) entry(r.name).registrations = Number(r.n || 0);
 
@@ -112,7 +119,7 @@ export async function eblastReport(request, env, ctx) {
   if (env.GA_PROPERTY_ID && env.GA_SERVICE_ACCOUNT) {
     ga.configured = true;
     const propertyId = String(env.GA_PROPERTY_ID).trim().replace(/^properties\//, '');
-    const oldest = campaigns.reduce((m, c) => (!m || c.sent_at < m ? c.sent_at : m), null);
+    const oldest = campaigns.reduce((m, c) => { const t = c.sent_at || c.exported_at; return !m || (t && t < m) ? t : m; }, null);
     const startDate = oldest ? String(oldest).slice(0, 10) : '90daysAgo';
     try {
       const cache = typeof caches !== 'undefined' ? caches.default : null;

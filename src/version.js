@@ -1,6 +1,20 @@
-export const CMS_VERSION = '2.11.0';
+export const CMS_VERSION = '2.12.0';
 
 export const CHANGELOG = [
+  {
+    version: '2.12.0',
+    date: '2026-10-20',
+    title: 'Eblast builder, powered by Novaquil',
+    changes: [
+      'New: Eblasts are built from blocks: images, text, buttons and spacers, with colours, width and a footer note for each blast.',
+      'New: Import from PDF cuts a PDF (or JPG or PNG) flyer into strips you can link one by one.',
+      'New: Upload images straight into a blast. They are stored on this site and stay online for every email that uses them.',
+      'New: Export HTML copies or downloads the finished email, set up for Keap, Mailchimp, Gmail and other platforms, with a checklist before you send it.',
+      'New: Send preview emails the blast to you (or up to 10 people) before you send or export it.',
+      'Changed: In dark mode the main working area is a shade lighter than the header and sidebar.',
+      'Changed: Exported blasts show in SEO & Analytics > Analytics > Eblasts with their visits and registrations.',
+    ],
+  },
   {
     version: '2.11.0',
     date: '2026-10-19',

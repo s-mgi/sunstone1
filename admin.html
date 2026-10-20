@@ -78,6 +78,10 @@ code{ font-family:ui-monospace,SFMono-Regular,Menlo,monospace; }
 .edit-subpage.hidden{ display:none; }
 
 .content{ flex:1; padding:2rem; max-width:96rem; width:100%; margin:0 auto; }
+/* Dark mode: the working area is a step lighter than the header and sidebar */
+:root:not([data-theme="light"]) .main{ background:#29262f; }
+:root:not([data-theme="light"]) .topbar{ background:var(--sidebar); }
+:root:not([data-theme="light"]) .content{ --bg:#211e27; --card:#322e39; --sidebar-hover:#3a3642; --sidebar-active:#3f3a48; }
 .page{ display:block; } .page.hidden{ display:none; }
 
 .page-head{ display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:1rem; flex-wrap:wrap; gap:1rem; }
@@ -444,6 +448,93 @@ p.hint{ font-size:0.8125rem; line-height:1.5; color:var(--sub); margin:0.6rem 0 
 .suggest-box p{ margin:0.35rem 0 0.55rem; }
 
 :root[data-theme="light"] #brand-logo{ filter: brightness(0.3) sepia(0.4); }
+
+/* Eblast builder (powered by Novaquil) */
+.nq-credit{ display:inline-block; margin-left:0.35rem; font-size:0.6875rem; letter-spacing:0.04em; color:var(--sub); border:1px solid var(--line); border-radius:999px; padding:0.1rem 0.55rem; vertical-align:middle; }
+.nq-credit b, .nq-foot b{ color:var(--ink); font-weight:600; }
+.nq-foot{ text-align:center; font-size:0.6875rem; color:var(--sub); margin-top:0.75rem; }
+.eb-head{ display:flex; align-items:center; justify-content:space-between; gap:0.75rem; flex-wrap:wrap; margin-bottom:0.75rem; }
+.eb-head .eb-back{ margin:0; }
+.eb-head-actions{ display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap; }
+.eb-head-actions .msg{ margin:0; }
+.eb-editor{ display:grid; grid-template-columns:22rem minmax(0,1fr); gap:1rem; align-items:start; }
+@media (max-width:1100px){ .eb-editor{ grid-template-columns:1fr; } }
+.eb-side{ position:sticky; top:1rem; max-height:calc(100vh - 2rem); overflow:auto; }
+.eb-side .field{ margin-bottom:0.8rem; }
+.eb-side textarea{ min-height:4.5rem; }
+.eb-h{ font-size:0.75rem; text-transform:uppercase; letter-spacing:0.06em; color:var(--sub); margin:1.25rem 0 0.6rem; }
+.eb-tabs{ display:flex; gap:0.25rem; border-bottom:1px solid var(--line); margin:-0.25rem 0 1rem; }
+.eb-tabs button{ background:none; border:0; border-bottom:2px solid transparent; color:var(--sub); padding:0.5rem 0.75rem; cursor:pointer; font-size:0.8125rem; font-weight:600; }
+.eb-tabs button.active{ color:var(--gold); border-bottom-color:var(--gold); }
+.eb-colour{ display:flex; gap:0.4rem; align-items:center; }
+.eb-colour input[type=color]{ width:2.4rem; height:2.2rem; padding:0.15rem; flex:none; border:1px solid var(--line); border-radius:0.3rem; background:transparent; cursor:pointer; }
+.eb-colour input:not([type=color]){ flex:1; min-width:0; }
+.eb-check{ display:flex !important; align-items:center; gap:0.45rem; text-transform:none !important; letter-spacing:0 !important; font-size:0.8125rem !important; color:var(--ink) !important; }
+.eb-check input{ width:auto; }
+.eb-tools{ display:flex; align-items:center; gap:0.35rem; margin-bottom:0.9rem; }
+.eb-icon{ background:none; border:1px solid var(--line); color:var(--ink); border-radius:0.3rem; width:1.9rem; height:1.9rem; cursor:pointer; }
+.eb-icon:hover{ background:var(--line-soft); }
+.eb-side-img{ width:100%; border:1px solid var(--line); border-radius:0.3rem; margin-bottom:0.8rem; display:block; }
+.eb-stage-bar{ display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap; margin-bottom:0.75rem; }
+.eb-stage-bar .muted{ font-size:0.75rem; }
+.eb-seg{ display:inline-flex; background:var(--line-soft); border:1px solid var(--line); border-radius:0.35rem; padding:0.15rem; gap:0.1rem; }
+.eb-seg button{ background:none; border:0; padding:0.35rem 0.75rem; cursor:pointer; color:var(--sub); font-size:0.75rem; font-weight:600; border-radius:0.25rem; }
+.eb-seg button.active{ background:var(--card); color:var(--ink); box-shadow:0 1px 3px rgba(0,0,0,.15); }
+.eb-stage{ background:var(--line-soft); border:1px solid var(--line); border-radius:0.4rem; padding:1.25rem; overflow-x:auto; min-height:20rem; }
+.eb-mail{ margin:0 auto; max-width:100%; box-shadow:0 4px 24px rgba(0,0,0,.18); }
+.eb-blk{ position:relative; cursor:pointer; outline:2px solid transparent; outline-offset:-2px; }
+.eb-blk:hover{ outline-color:rgba(231,177,98,.55); }
+.eb-blk.sel{ outline-color:var(--gold); }
+.eb-blk img{ display:block; width:100%; height:auto; }
+.eb-badge{ position:absolute; top:0.3rem; left:0.3rem; background:rgba(0,0,0,.65); color:#fff; font-size:0.625rem; padding:0.1rem 0.4rem; border-radius:0.2rem; opacity:0; transition:opacity .15s; }
+.eb-blk:hover .eb-badge, .eb-blk.sel .eb-badge{ opacity:1; }
+.eb-warn{ position:absolute; top:0.3rem; right:0.3rem; background:var(--bad); color:#fff; font-size:0.625rem; padding:0.1rem 0.4rem; border-radius:0.2rem; }
+.eb-linkdot{ position:absolute; bottom:0.3rem; right:0.3rem; max-width:60%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; background:rgba(0,0,0,.65); color:#fff; font-size:0.625rem; padding:0.1rem 0.4rem; border-radius:0.2rem; }
+.eb-insert{ height:0.5rem; position:relative; display:flex; justify-content:center; align-items:center; gap:0.2rem; z-index:2; }
+.eb-insert button{ display:none; background:var(--gold-btn); color:#17110a; border:0; border-radius:0.2rem; font-size:0.625rem; font-weight:700; padding:0.2rem 0.45rem; cursor:pointer; white-space:nowrap; }
+.eb-insert:hover{ height:1.9rem; }
+.eb-insert:hover button{ display:inline-block; }
+.eb-drop{ border:2px dashed var(--line); border-radius:0.5rem; padding:3rem 1.5rem; text-align:center; color:var(--sub); cursor:pointer; background:var(--card); max-width:40rem; margin:0 auto; }
+.eb-drop b{ display:block; color:var(--ink); font-size:1.05rem; margin-bottom:0.4rem; }
+.eb-drop.over{ border-color:var(--gold); }
+.eb-device{ display:flex; flex-direction:column; align-items:center; gap:0.4rem; }
+.eb-device .muted{ font-size:0.6875rem; }
+.eb-device iframe{ border:1px solid var(--line); border-radius:0.3rem; background:#fff; min-height:24rem; max-width:100%; }
+.eb-code{ background:var(--card); border:1px solid var(--line); border-radius:0.3rem; padding:0.9rem; font-size:0.6875rem; line-height:1.5; white-space:pre-wrap; word-break:break-all; max-height:70vh; overflow:auto; margin:0; }
+.eb-callout{ display:flex; align-items:center; justify-content:space-between; gap:0.6rem; flex-wrap:wrap; background:var(--tag-gold-bg); border-radius:0.35rem; padding:0.7rem 0.85rem; font-size:0.8125rem; }
+.eb-steps{ padding-left:1.2rem; margin:0; font-size:0.8125rem; line-height:1.55; }
+.eb-steps li{ margin-bottom:0.35rem; }
+.eb-checks{ list-style:none; padding:0; margin:0; font-size:0.8125rem; }
+.eb-checks li{ padding:0.3rem 0 0.3rem 1.4rem; position:relative; }
+.eb-checks li::before{ position:absolute; left:0; font-weight:700; }
+.eb-checks li.ok::before{ content:'✓'; color:var(--ok); }
+.eb-checks li.wn::before{ content:'!'; color:var(--warn); left:0.25rem; }
+.eb-checks li.no::before{ content:'✕'; color:var(--bad); }
+.eb-toast{ position:fixed; bottom:1.5rem; left:50%; transform:translateX(-50%); background:var(--card); color:var(--ink); border:1px solid var(--line); border-radius:0.4rem; padding:0.7rem 1.1rem; font-size:0.8125rem; box-shadow:0 12px 30px rgba(0,0,0,.3); z-index:120; max-width:90vw; }
+/* flyer slicer */
+.nq-slicer{ position:fixed; inset:0; background:var(--bg); z-index:110; display:flex; flex-direction:column; }
+.nq-slicer .bar{ display:flex; align-items:center; gap:0.6rem; padding:0.7rem 1.25rem; border-bottom:1px solid var(--line); background:var(--card); flex-wrap:wrap; }
+.nq-slicer .bar .hint{ font-size:0.75rem; color:var(--sub); }
+.nq-slicer .body{ flex:1; display:grid; grid-template-columns:minmax(0,1fr) 300px; min-height:0; }
+.nq-slicer .slice-view{ overflow:auto; background:var(--line-soft); padding:1.5rem 3.5rem; position:relative; }
+.nq-slicer .slice-wrap{ position:relative; margin:0 auto; user-select:none; cursor:crosshair; box-shadow:0 4px 30px rgba(0,0,0,.25); touch-action:none; }
+.nq-slicer .slice-wrap canvas{ display:block; width:100%; height:auto; }
+.nq-slicer .shade{ position:absolute; background:rgba(20,20,24,.55); pointer-events:none; }
+.nq-slicer .cut{ position:absolute; left:0; right:0; height:0; border-top:2px solid #ff5a36; cursor:ns-resize; }
+.nq-slicer .cut::before{ content:''; position:absolute; left:0; right:0; top:-8px; height:16px; }
+.nq-slicer .cut .lab{ position:absolute; left:-0.1rem; top:-0.78rem; transform:translateX(-100%); background:#ff5a36; color:#fff; font-size:0.66rem; padding:0.1rem 0.38rem; border-radius:4px 0 0 4px; white-space:nowrap; }
+.nq-slicer .cut .x{ position:absolute; right:-0.1rem; top:-0.78rem; transform:translateX(100%); background:#ff5a36; color:#fff; border:0; font-size:0.74rem; line-height:1; padding:0.2rem 0.42rem; border-radius:0 4px 4px 0; cursor:pointer; }
+.nq-slicer .edge{ position:absolute; background:transparent; }
+.nq-slicer .edge.h{ left:0; right:0; height:0; border-top:2px dashed #1f9bff; cursor:ns-resize; }
+.nq-slicer .edge.v{ top:0; bottom:0; width:0; border-left:2px dashed #1f9bff; cursor:ew-resize; }
+.nq-slicer .edge.h::before{ content:''; position:absolute; left:0; right:0; top:-8px; height:16px; }
+.nq-slicer .edge.v::before{ content:''; position:absolute; top:0; bottom:0; left:-8px; width:16px; }
+.nq-slicer .slice-side{ border-left:1px solid var(--line); padding:1.1rem 1.2rem; overflow:auto; background:var(--card); font-size:0.8125rem; }
+.nq-slicer .grow{ flex:1; }
+.nq-slicer input[type=range]{ padding:0; border:0; background:none; }
+.nq-slicer .slice-list{ list-style:none; padding:0; margin:0; }
+.nq-slicer .slice-list li{ display:flex; justify-content:space-between; padding:0.35rem 0; border-bottom:1px solid var(--line); }
+@media (max-width:900px){ .nq-slicer .body{ grid-template-columns:1fr; grid-template-rows:minmax(0,1fr) auto; } .nq-slicer .slice-side{ border-left:0; border-top:1px solid var(--line); max-height:34vh; } .nq-slicer .bar .hint{ display:none; } .nq-slicer .slice-view{ padding:12px 36px; } }
 </style>
 </head>
 <body>
@@ -915,7 +1006,7 @@ p.hint{ font-size:0.8125rem; line-height:1.5; color:var(--sub); margin:0.6rem 0 
       </section>
 
       <section class="page hidden" id="page-eblast">
-        <div class="page-head"><div><h1>Eblast</h1><p>Send an email update to everyone who's registered.</p></div>
+        <div class="page-head"><div><h1>Eblast</h1><p>Build an email, then send it to everyone who's registered or export it as HTML for another platform. <span class="nq-credit">Powered by <b>Novaquil</b></span></p></div>
           <div class="page-head-right"><span class="eb-stat" id="eb-recipient-count">Loading recipients…</span></div>
         </div>
         <div class="subtabs">
@@ -924,6 +1015,7 @@ p.hint{ font-size:0.8125rem; line-height:1.5; color:var(--sub); margin:0.6rem 0 
         </div>
 
         <div class="subpage" id="sub-blasts">
+          <div id="eb-migrate-note"></div>
           <div class="toolbar">
             <button class="btn btn-gold" id="eb-new-btn" type="button">+ New blast</button>
           </div>
@@ -934,41 +1026,33 @@ p.hint{ font-size:0.8125rem; line-height:1.5; color:var(--sub); margin:0.6rem 0 
         </div>
 
         <div class="subpage hidden" id="sub-edit">
-          <button type="button" class="eb-back" id="eb-back-btn">&larr; Back to blasts</button>
+          <div class="eb-head">
+            <button type="button" class="eb-back" id="eb-back-btn">&larr; Back to blasts</button>
+            <div class="eb-head-actions">
+              <span class="msg" id="eb-save-msg"></span>
+              <button class="btn" id="eb-flyer-btn" type="button">+ Import from PDF</button>
+              <button class="btn" id="eb-test-btn" type="button">✉ Send preview</button>
+              <button class="btn" id="eb-export-btn" type="button">Export HTML</button>
+              <button class="btn btn-gold" id="eb-send-btn" type="button">Send to registrants</button>
+            </div>
+          </div>
           <div id="eb-status-banner"></div>
-          <div class="panel">
-            <div class="panel-head"><h2>Subject</h2></div>
-            <div class="field"><input id="eb-subject" placeholder="e.g. New floorplans just released"></div>
-            <div class="field" style="margin-top:0.75rem;">
-              <label>Preview text</label>
-              <input id="eb-preview-text" placeholder="e.g. Take a first look at the new layouts" maxlength="150">
-              <p class="muted" style="margin:0.35rem 0 0;">The snippet of text most inboxes show next to the subject line. Leave it blank and it'll just show the unsubscribe footer instead, so it's worth filling in.</p>
-            </div>
-            <div class="field" style="margin-top:0.75rem;">
-              <label>Tracking name</label>
-              <input id="eb-tracking-name" placeholder="e.g. floorplans-release" maxlength="80">
-              <p class="muted" style="margin:0.35rem 0 0;">The name this blast shows up under in Google Analytics (as the campaign) and on registrations it brings in. It fills in from the subject, change it to anything you like. Lowercase letters, numbers and dashes.</p>
-            </div>
+          <div class="eb-editor">
+            <aside class="panel eb-side" id="eb-panel"></aside>
+            <section class="eb-main">
+              <div class="eb-stage-bar">
+                <div class="eb-seg" id="eb-mode"><button type="button" data-v="edit">Edit</button><button type="button" data-v="preview">Preview</button><button type="button" data-v="code">Code</button></div>
+                <div class="eb-seg" id="eb-device"><button type="button" data-v="desktop">Desktop</button><button type="button" data-v="mobile">Mobile</button></div>
+                <span style="flex:1"></span>
+                <span class="muted" id="eb-stage-info"></span>
+              </div>
+              <div class="eb-stage" id="eb-stage"></div>
+              <div class="nq-foot">Eblast builder powered by <b>Novaquil</b></div>
+            </section>
           </div>
-
-          <div class="panel">
-            <div class="panel-head"><h2>Email content</h2></div>
-            <p class="muted" style="margin-top:0;">Add photos in the order they should appear in the email. Each one needs a short description, it's what shows if a recipient's inbox blocks the image, and it keeps the email out of spam filters too.</p>
-            <div id="eb-rows"></div>
-            <button class="btn" id="eb-add-row" type="button">+ Add image</button>
-          </div>
-
-          <div class="panel">
-            <div class="panel-head"><h2>Preview</h2></div>
-            <div id="eb-preview" class="eb-preview"><div class="eb-preview-empty">Add an image above to see a preview.</div></div>
-          </div>
-
-          <div class="toolbar" style="justify-content:flex-end;">
-            <span class="msg" id="eb-save-msg"></span>
-            <button class="btn" id="eb-delete-btn" type="button" style="margin-right:auto; color:var(--bad);">Delete draft</button>
-            <button class="btn" id="eb-save-btn" type="button">Save draft</button>
-            <button class="btn btn-gold" id="eb-send-btn" type="button">Send eblast</button>
-          </div>
+          <div class="toolbar"><button class="btn" id="eb-delete-btn" type="button" style="color:var(--bad);">Delete draft</button></div>
+          <input type="file" id="eb-file-flyer" accept="application/pdf,image/png,image/jpeg" hidden>
+          <input type="file" id="eb-file-image" accept="image/png,image/jpeg,image/gif" hidden>
         </div>
       </section>
 
@@ -2194,14 +2278,33 @@ $('#gallery-upload-input')?.addEventListener('change', async () => {
   reader.readAsDataURL(file);
 });
 
+// Eblast builder, powered by Novaquil: blocks, flyer slicing, site-hosted images, preview, export, preview sends.
 let EB_DRAFT = null;
 let EB_READONLY = false;
 let EB_RECIPIENTS = { active: 0, unsubscribed: 0 };
 let EB_CAMPAIGNS = [];
+let EB_PLATFORMS = [];
+let EB_DEFAULTS = {};
+let EB_MAIL_OK = true;
+let EB_NEEDS_MIGRATION = false;
+let EB_SEL = -1;
+let EB_TAB = 'email';
+let EB_MODE = 'edit';
+let EB_DEVICE = 'desktop';
+let EB_INSERT_AT = null;
+let EB_DIRTY = false;
+let EB_SAVING = false;
+let EB_SAVE_TIMER = null;
+let EB_PREVIEW_TIMER = null;
+let EB_PREVIEW = { html: '', checks: [] };
+let EB_EXPORT = null;
+const ebStore = { get(k, d) { try { return localStorage.getItem(k) ?? d; } catch { return d; } }, set(k, v) { try { localStorage.setItem(k, v); } catch {} } };
+let EB_PLATFORM = ebStore.get('eb-platform', 'keap');
+let EB_CUSTOM_UNSUB = ebStore.get('eb-custom-unsub', '');
 
 function eblastImageOptions() {
-  const staticOpts = MEDIA_FILES.filter(f => /\.(jpe?g|png)$/i.test(f)).map(f => ({ value: `${location.origin}/${IMG_DIR}${f}`, label: f, folder: null }));
-  const uploadOpts = getGalleryUploads().map(name => ({ value: `${location.origin}/media/${encodeURIComponent(name)}`, label: name, folder: getUploadFolder(name) || null }));
+  const staticOpts = MEDIA_FILES.filter(f => /\.(jpe?g|png)$/i.test(f)).map(f => ({ value: `/${IMG_DIR}${f}`, label: f, folder: null }));
+  const uploadOpts = getGalleryUploads().filter(n => /\.(jpe?g|png|gif)$/i.test(n)).map(name => ({ value: `/media/${encodeURIComponent(name)}`, label: name, folder: getUploadFolder(name) || null }));
   return staticOpts.concat(uploadOpts);
 }
 
@@ -2210,6 +2313,11 @@ async function loadEblast() {
     const data = await api('/api/eblast/state');
     EB_RECIPIENTS = data.recipients;
     EB_CAMPAIGNS = data.campaigns || [];
+    EB_PLATFORMS = data.platforms || [];
+    EB_DEFAULTS = data.defaults || {};
+    EB_MAIL_OK = !!data.mailConfigured;
+    EB_NEEDS_MIGRATION = !!data.needsMigration;
+    if (!EB_PLATFORMS.some(p => p.id === EB_PLATFORM) && EB_PLATFORMS.length) EB_PLATFORM = EB_PLATFORMS[0].id;
     renderEblastRecipientCount();
     renderEblastList();
   } catch (e) {
@@ -2219,18 +2327,19 @@ async function loadEblast() {
 
 function renderEblastRecipientCount() {
   const { active, unsubscribed } = EB_RECIPIENTS;
-  $('#eb-recipient-count').innerHTML = `<b>${active}</b> active registrant${active === 1 ? '' : 's'} will receive this` + (unsubscribed ? ` &middot; ${unsubscribed} unsubscribed` : '');
+  $('#eb-recipient-count').innerHTML = `<b>${active}</b> active registrant${active === 1 ? '' : 's'}` + (unsubscribed ? ` &middot; ${unsubscribed} unsubscribed` : '');
 }
 
 function renderEblastList() {
   const tbody = $('#eb-list-table');
+  $('#eb-migrate-note').innerHTML = EB_NEEDS_MIGRATION ? '<div class="eb-status-banner">To upload images and save each blast\'s colours, run <code>migrations/0005_eblast_builder.sql</code> in the D1 console (see YOUR-TURN.md). Everything else works already.</div>' : '';
   if (!EB_CAMPAIGNS.length) { tbody.innerHTML = '<tr><td colspan="7" class="empty">No blasts yet, click "New blast" to start one.</td></tr>'; return; }
   const badgeClass = { draft: 'medium', sending: 'medium', sent: 'closed', failed: 'high' };
   tbody.innerHTML = EB_CAMPAIGNS.map(c => `
     <tr>
       <td>${escapeHtml(c.subject || '(no subject)')}</td>
-      <td><span class="tag ${badgeClass[c.status] || ''}">${escapeHtml(c.status)}</span></td>
-      <td>${c.sent_at ? dateAndTime(c.sent_at) : dateAndTime(c.created_at)}</td>
+      <td><span class="tag ${badgeClass[c.status] || ''}">${escapeHtml(c.status)}</span>${c.status === 'draft' && c.exported_at ? ' <span class="tag">exported</span>' : ''}</td>
+      <td>${c.sent_at ? dateAndTime(c.sent_at) : (c.exported_at ? dateAndTime(c.exported_at) : dateAndTime(c.created_at))}</td>
       <td>${c.recipient_count ?? '-'}</td>
       <td>${c.sent_count ?? '-'}</td>
       <td>${c.failed_count ? c.failed_count : '-'}</td>
@@ -2269,83 +2378,252 @@ $('#eb-new-btn').addEventListener('click', async () => {
   } catch (e) { alert('Could not create a new blast: ' + e.message); }
 });
 
+function ebFromCampaign(c) {
+  return { id: c.id, subject: c.subject || '', previewText: c.preview_text || '', trackingName: c.tracking_name || '', blocks: c.blocks || [], settings: { ...EB_DEFAULTS, ...(c.settings || {}) } };
+}
+
 async function openEblastEditor(id) {
   try {
+    if (!EB_PLATFORMS.length) await loadEblast();
     const data = await api('/api/eblast/campaigns/' + id);
     const c = data.campaign;
-    EB_DRAFT = { id: c.id, subject: c.subject || '', previewText: c.preview_text || '', trackingName: c.tracking_name || '', blocks: c.blocks || [] };
+    EB_DRAFT = ebFromCampaign(c);
     EB_READONLY = c.status !== 'draft';
-    $('#eb-status-banner').innerHTML = EB_READONLY
-      ? `<div class="eb-status-banner">This blast was already ${c.status === 'sending' ? 'sent (still finishing up)' : c.status} on ${dateAndTime(c.sent_at)}, it can't be edited or sent again.</div>` : '';
-    $('#eb-subject').value = EB_DRAFT.subject;
-    $('#eb-subject').disabled = EB_READONLY;
-    $('#eb-preview-text').value = EB_DRAFT.previewText;
-    $('#eb-preview-text').disabled = EB_READONLY;
-    $('#eb-tracking-name').value = EB_DRAFT.trackingName || trackingSlug(EB_DRAFT.subject);
-    $('#eb-tracking-name').disabled = EB_READONLY;
+    EB_SEL = -1; EB_TAB = 'email'; EB_MODE = EB_READONLY ? 'preview' : 'edit'; EB_DIRTY = false; EB_EXPORT = null;
     EB_TRACKING_EDITED = !!EB_DRAFT.trackingName && EB_DRAFT.trackingName !== trackingSlug(EB_DRAFT.subject);
-    $('#eb-add-row').style.display = EB_READONLY ? 'none' : '';
-    $('#eb-save-btn').style.display = EB_READONLY ? 'none' : '';
-    $('#eb-send-btn').style.display = EB_READONLY ? 'none' : '';
-    $('#eb-delete-btn').style.display = EB_READONLY ? 'none' : '';
+    $('#eb-status-banner').innerHTML = EB_READONLY
+      ? `<div class="eb-status-banner">This blast was already ${c.status === 'sending' ? 'sent (still finishing up)' : c.status} on ${dateAndTime(c.sent_at)}, it can't be edited or sent again. You can still export it as HTML, or use "Edit &amp; resend" in the list to start a copy.</div>` : '';
+    ['#eb-flyer-btn', '#eb-send-btn', '#eb-delete-btn', '#eb-test-btn'].forEach(sel => { $(sel).style.display = EB_READONLY ? 'none' : ''; });
     $('#eb-save-msg').textContent = '';
-    renderEblastRows();
-    renderEblastPreview();
+    ebRenderPanel();
+    ebRenderStage();
+    ebQueuePreview(0);
     showSubtab($('#page-eblast .subtabs'), 'edit');
   } catch (e) { alert('Could not open that blast: ' + e.message); }
 }
 
-$('#eb-back-btn').addEventListener('click', () => { showSubtab($('#page-eblast .subtabs'), 'blasts'); loadEblast(); });
+$('#eb-back-btn').addEventListener('click', async () => { if (EB_DIRTY) await saveEblastDraft(); showSubtab($('#page-eblast .subtabs'), 'blasts'); loadEblast(); });
 
-function renderEblastRows() {
-  const wrap = $('#eb-rows');
-  if (!EB_DRAFT.blocks.length) {
-    wrap.innerHTML = '<div class="eb-empty">No images yet, add one below.</div>';
-    return;
-  }
-  wrap.innerHTML = EB_DRAFT.blocks.map((b, i) => `
-    <div class="eb-row" data-row="${i}">
-      <div class="eb-thumb">${b.image ? `<img src="${escapeHtml(b.image)}" alt="">` : ''}</div>
-      <div class="eb-fields">
-        <div class="field"><label>Image</label><button type="button" class="btn eb-pick-btn" data-eb-pick="1" ${EB_READONLY ? 'disabled' : ''}>Choose image…</button></div>
-        <div class="field"><label>Description (alt text, required)</label><input data-eb-field="alt" value="${escapeHtml(b.alt || '')}" placeholder="e.g. New floorplan renderings" ${EB_READONLY ? 'disabled' : ''}></div>
-        <div class="field"><label>Link (optional)</label><input data-eb-field="link" value="${escapeHtml(b.link || '')}" placeholder="https://…" ${EB_READONLY ? 'disabled' : ''}></div>
-      </div>
-      ${EB_READONLY ? '' : `
-      <div class="eb-handle">
-        <button type="button" data-eb-move="up" title="Move up" ${i === 0 ? 'disabled' : ''}>&uarr;</button>
-        <button type="button" data-eb-move="down" title="Move down" ${i === EB_DRAFT.blocks.length - 1 ? 'disabled' : ''}>&darr;</button>
-      </div>
-      <button type="button" class="eb-remove" data-eb-remove="1">Remove</button>`}
-    </div>`).join('');
-
+// ---- saving ----
+function ebMarkDirty(redrawStage = true) {
   if (EB_READONLY) return;
-  $$('.eb-row', wrap).forEach(row => {
-    const i = Number(row.dataset.row);
-    $$('[data-eb-field]', row).forEach(el => el.addEventListener('change', () => {
-      EB_DRAFT.blocks[i][el.dataset.ebField] = el.value;
-      renderEblastRows();
-      renderEblastPreview();
-    }));
-    $('[data-eb-pick]', row).addEventListener('click', () => openEblastImagePicker(i));
-    $('[data-eb-remove]', row).addEventListener('click', () => {
-      EB_DRAFT.blocks.splice(i, 1);
-      renderEblastRows();
-      renderEblastPreview();
-    });
-    $$('[data-eb-move]', row).forEach(btn => btn.addEventListener('click', () => {
-      const dir = btn.dataset.ebMove === 'up' ? -1 : 1;
-      const j = i + dir;
-      if (j < 0 || j >= EB_DRAFT.blocks.length) return;
-      [EB_DRAFT.blocks[i], EB_DRAFT.blocks[j]] = [EB_DRAFT.blocks[j], EB_DRAFT.blocks[i]];
-      renderEblastRows();
-      renderEblastPreview();
-    }));
-  });
+  EB_DIRTY = true; EB_EXPORT = null;
+  const msg = $('#eb-save-msg'); msg.className = 'msg'; msg.textContent = 'Unsaved changes';
+  clearTimeout(EB_SAVE_TIMER);
+  EB_SAVE_TIMER = setTimeout(saveEblastDraft, 900);
+  if (redrawStage && EB_MODE === 'edit') ebRenderStage();
+  ebQueuePreview();
 }
 
-function openEblastImagePicker(rowIndex) {
+async function saveEblastDraft() {
+  clearTimeout(EB_SAVE_TIMER);
+  if (!EB_DRAFT || EB_READONLY) return true;
+  if (EB_SAVING) { EB_SAVE_TIMER = setTimeout(saveEblastDraft, 500); return false; }
+  const msg = $('#eb-save-msg');
+  EB_DRAFT.trackingName = trackingSlug(EB_DRAFT.trackingName) || trackingSlug(EB_DRAFT.subject);
+  EB_SAVING = true; EB_DIRTY = false;
+  msg.className = 'msg'; msg.textContent = 'Saving…';
+  try {
+    const sent = JSON.stringify(EB_DRAFT);
+    const data = await api('/api/eblast/draft', { method: 'POST', headers: { 'content-type': 'application/json' }, body: sent });
+    if (!EB_DIRTY) { EB_DRAFT.trackingName = data.campaign.tracking_name || EB_DRAFT.trackingName; }
+    msg.className = 'msg ok'; msg.textContent = EB_DIRTY ? 'Unsaved changes' : 'Saved';
+    return true;
+  } catch (e) {
+    EB_DIRTY = true;
+    msg.className = 'msg err'; msg.textContent = 'Not saved: ' + e.message;
+    return false;
+  } finally { EB_SAVING = false; }
+}
+addEventListener('beforeunload', (e) => { if (EB_DIRTY) { saveEblastDraft(); e.preventDefault(); } });
+
+// ---- preview (rendered by the server, same HTML that gets sent) ----
+function ebQueuePreview(delay = 400) {
+  clearTimeout(EB_PREVIEW_TIMER);
+  EB_PREVIEW_TIMER = setTimeout(ebLoadPreview, delay);
+}
+async function ebLoadPreview() {
+  if (!EB_DRAFT) return;
+  try {
+    const data = await api('/api/eblast/preview', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(EB_DRAFT) });
+    EB_PREVIEW = { html: data.html, checks: data.checks || [] };
+    if (EB_MODE === 'preview') ebRenderStage();
+    if (EB_TAB === 'export' && !EB_EXPORT) ebRenderChecks(EB_PREVIEW.checks);
+  } catch (e) { $('#eb-stage-info').textContent = 'Preview failed: ' + e.message; }
+}
+
+// ---- stage ----
+$$('#eb-mode button').forEach(b => b.addEventListener('click', () => { EB_MODE = b.dataset.v; ebRenderStage(); }));
+$$('#eb-device button').forEach(b => b.addEventListener('click', () => { EB_DEVICE = b.dataset.v; ebRenderStage(); }));
+
+function ebBlockPreview(b, s) {
+  const font = 'Arial, Helvetica, sans-serif';
+  if (b.type === 'image') return `<img src="${escapeHtml(b.url)}" alt="${escapeHtml(b.alt)}" style="background:${escapeHtml(b.bg || '')}">`;
+  if (b.type === 'text') return `<div style="padding:16px 32px;text-align:${b.align};font-family:${font};font-size:${b.size}px;line-height:1.5;color:${b.color || '#333'};background:${b.bg || 'transparent'};font-weight:${b.bold ? 700 : 400};white-space:pre-wrap">${escapeHtml(b.text) || '<span style="opacity:.4">Empty text, click to write</span>'}</div>`;
+  if (b.type === 'button') return `<div style="padding:16px 32px;text-align:center;background:${b.bg || 'transparent'}"><span style="display:inline-block;background:${b.color || '#B4712F'};color:${b.textColor || '#fff'};font:bold 15px/46px ${font};padding:0 28px;border-radius:3px">${escapeHtml(b.text || 'Learn more')}</span></div>`;
+  if (b.type === 'spacer') return `<div style="height:${b.height}px;background:${b.bg || 'transparent'}"></div>`;
+  return '';
+}
+
+function ebRenderStage() {
+  if (!EB_DRAFT) return;
+  $$('#eb-mode button').forEach(b => b.classList.toggle('active', b.dataset.v === EB_MODE));
+  $$('#eb-device button').forEach(b => b.classList.toggle('active', b.dataset.v === EB_DEVICE));
+  $('#eb-mode [data-v="edit"]').style.display = EB_READONLY ? 'none' : '';
+  const stage = $('#eb-stage');
+  const s = EB_DRAFT.settings;
+  const imgs = EB_DRAFT.blocks.filter(b => b.type === 'image');
+  const kb = Math.round(imgs.reduce((a, b) => a + (b.bytes || 0), 0) / 1024);
+  $('#eb-stage-info').textContent = `${EB_DRAFT.blocks.length} block${EB_DRAFT.blocks.length === 1 ? '' : 's'}${kb ? ` · ${kb} KB of images` : ''}`;
+
+  if (!EB_DRAFT.blocks.length && EB_MODE === 'edit') {
+    stage.innerHTML = `<div class="eb-drop" id="eb-drop"><b>Drop a PDF here</b>Or a JPG or PNG. It's cut into strips in your browser and the images are stored on this site.<br><br>
+      <span class="muted">Or start from scratch:</span> <button class="btn" data-ins="0:text">Text</button> <button class="btn" data-ins="0:image">Upload image</button> <button class="btn" data-ins="0:gallery">From gallery</button> <button class="btn" data-ins="0:button">Button</button></div>`;
+    const dz = $('#eb-drop');
+    dz.addEventListener('click', (e) => { if (!e.target.dataset.ins) $('#eb-file-flyer').click(); });
+    dz.addEventListener('dragover', (e) => { e.preventDefault(); dz.classList.add('over'); });
+    dz.addEventListener('dragleave', () => dz.classList.remove('over'));
+    dz.addEventListener('drop', (e) => { e.preventDefault(); dz.classList.remove('over'); const f = e.dataTransfer.files[0]; if (f) ebHandleFlyer(f); });
+    ebBindInserts(stage);
+    return;
+  }
+
+  if (EB_MODE === 'preview') {
+    const w = EB_DEVICE === 'mobile' ? 375 : s.width + 40;
+    stage.innerHTML = `<div class="eb-device"><span class="muted">${EB_DEVICE === 'mobile' ? 'Mobile · 375px' : `Desktop · ${s.width}px`}</span><iframe id="eb-frame" title="Eblast preview" sandbox="allow-same-origin" style="width:${w}px"></iframe></div>`;
+    const f = $('#eb-frame');
+    f.addEventListener('load', () => { try { f.style.height = (f.contentDocument.documentElement.scrollHeight + 4) + 'px'; } catch {} });
+    f.srcdoc = EB_PREVIEW.html || '<p style="font-family:Arial;padding:1rem;color:#888">Loading preview…</p>';
+    return;
+  }
+
+  if (EB_MODE === 'code') {
+    stage.innerHTML = '<p class="muted">Getting the HTML…</p>';
+    ebGetExport(false).then((d) => {
+      if (EB_MODE !== 'code') return;
+      const pl = ebPlatform();
+      stage.innerHTML = `<div class="toolbar" style="margin-bottom:0.6rem;"><button class="btn btn-gold" data-eb-copy>Copy HTML</button><button class="btn" data-eb-dl>Download .html</button><span class="muted">${Math.round(d.html.length / 1024)} KB, set up for ${escapeHtml(pl.name)} (change it in the Export tab)</span></div><pre class="eb-code">${escapeHtml(d.html)}</pre>`;
+      $('[data-eb-copy]', stage).addEventListener('click', ebCopyHtml);
+      $('[data-eb-dl]', stage).addEventListener('click', ebDownloadHtml);
+    }).catch((e) => { stage.innerHTML = `<p class="msg err">${escapeHtml(e.message)}</p>`; });
+    return;
+  }
+
+  const W = EB_DEVICE === 'mobile' ? 375 : s.width;
+  const ins = (i) => `<div class="eb-insert"><button data-ins="${i}:flyer">+ From PDF</button><button data-ins="${i}:image">+ Upload image</button><button data-ins="${i}:gallery">+ From gallery</button><button data-ins="${i}:text">+ Text</button><button data-ins="${i}:button">+ Button</button><button data-ins="${i}:spacer">+ Spacer</button></div>`;
+  stage.innerHTML = `<div class="eb-mail" style="width:${W}px;background:${escapeHtml(s.innerBg)}">
+    ${ins(0)}
+    ${EB_DRAFT.blocks.map((b, i) => `<div class="eb-blk ${i === EB_SEL ? 'sel' : ''}" data-i="${i}">${ebBlockPreview(b, s)}<span class="eb-badge">${i + 1} · ${b.type}</span>
+      ${(b.type === 'image' && !b.alt) ? '<span class="eb-warn">needs alt text</span>' : ''}
+      ${b.link ? `<span class="eb-linkdot">↗ ${escapeHtml(b.link)}</span>` : ''}</div>${ins(i + 1)}`).join('')}
+  </div>`;
+  $$('.eb-blk', stage).forEach(el => el.addEventListener('click', () => { EB_SEL = Number(el.dataset.i); EB_TAB = 'block'; ebRenderPanel(); $$('.eb-blk', stage).forEach(x => x.classList.toggle('sel', x === el)); }));
+  ebBindInserts(stage);
+}
+
+function ebBindInserts(root) {
+  $$('[data-ins]', root).forEach(btn => btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const [at, type] = btn.dataset.ins.split(':');
+    EB_INSERT_AT = Number(at);
+    if (type === 'flyer') return $('#eb-file-flyer').click();
+    if (type === 'image') return $('#eb-file-image').click();
+    if (type === 'gallery') return openEblastImagePicker((url) => ebInsertBlocks([{ type: 'image', url, width: 0, height: 0, bytes: 0, alt: '', link: '', bg: '' }]));
+    const nb = type === 'text' ? { type: 'text', text: '', align: 'center', size: 16, color: '#333333', bg: '', bold: false }
+      : type === 'button' ? { type: 'button', text: 'Register today', link: location.origin + '/#register', color: '#B4712F', textColor: '#ffffff', bg: '' }
+      : { type: 'spacer', height: 24, bg: '' };
+    ebInsertBlocks([nb]);
+  }));
+}
+
+function ebInsertBlocks(blocks) {
+  const at = EB_INSERT_AT ?? EB_DRAFT.blocks.length;
+  EB_INSERT_AT = null;
+  EB_DRAFT.blocks.splice(at, 0, ...blocks);
+  EB_SEL = at; EB_TAB = 'block'; EB_MODE = 'edit';
+  ebRenderPanel(); ebMarkDirty();
+}
+
+// ---- images: flyer slices and single uploads, stored on this site at /i/ ----
+$('#eb-flyer-btn').addEventListener('click', () => { EB_INSERT_AT = null; $('#eb-file-flyer').click(); });
+$('#eb-file-flyer').addEventListener('change', (e) => { const f = e.target.files[0]; e.target.value = ''; if (f) ebHandleFlyer(f); });
+$('#eb-file-image').addEventListener('change', (e) => { const f = e.target.files[0]; e.target.value = ''; if (f) ebHandleImage(f); });
+
+async function ebHandleFlyer(file) {
+  if (!EB_DRAFT || EB_READONLY) return;
+  if (EB_NEEDS_MIGRATION) { alert('Run migrations/0005_eblast_builder.sql in the D1 console first (see YOUR-TURN.md), then try again.'); return; }
+  const t = ebLoading('Reading PDF…');
+  let slicer, canvas;
+  try {
+    slicer = await import('/js/novaquil-slicer.js');
+    canvas = await slicer.fileToCanvas(file);
+  } catch (err) { t.done(); alert('Could not read that file: ' + err.message); return; }
+  t.done();
+  let slices;
+  try { slices = await slicer.openSlicer(canvas, { width: EB_DRAFT.settings.width }); }
+  catch (err) { $('.nq-slicer')?.remove(); alert('Slicing failed: ' + err.message); EB_INSERT_AT = null; return; }
+  if (!slices || !slices.length) { EB_INSERT_AT = null; return; }
+  const blocks = await ebUploadAll(slices);
+  if (!blocks) return;
+  ebInsertBlocks(blocks);
+  showNotice('PDF imported', `${blocks.length} strip${blocks.length === 1 ? '' : 's'} uploaded to this site. Click each one to add its alt text and link.`);
+}
+
+async function ebHandleImage(file) {
+  if (EB_NEEDS_MIGRATION) { alert('Run migrations/0005_eblast_builder.sql in the D1 console first (see YOUR-TURN.md), then try again.'); return; }
+  let blob, w, h;
+  try {
+    const bmp = await createImageBitmap(file);
+    const maxW = EB_DRAFT.settings.width * 2;
+    const k = Math.min(1, maxW / bmp.width);
+    w = Math.round(bmp.width * k); h = Math.round(bmp.height * k);
+    if (file.type === 'image/gif' && k === 1) blob = file;
+    else {
+      const c = document.createElement('canvas');
+      c.width = w; c.height = h;
+      const ctx = c.getContext('2d');
+      const type = file.type === 'image/png' ? 'image/png' : 'image/jpeg';
+      if (type === 'image/jpeg') { ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, w, h); }
+      ctx.drawImage(bmp, 0, 0, w, h);
+      blob = await new Promise(r => c.toBlob(r, type, 0.85));
+    }
+  } catch (err) { alert('Could not read that image: ' + err.message); return; }
+  const blocks = await ebUploadAll([{ blob, width: w, height: h, bg: '' }]);
+  if (!blocks) return;
+  const cur = EB_DRAFT.blocks[EB_SEL];
+  if (cur && cur._replace) {
+    Object.assign(cur, { url: blocks[0].url, key: blocks[0].key, width: blocks[0].width, height: blocks[0].height, bytes: blocks[0].bytes });
+    delete cur._replace;
+    ebRenderPanel(); ebMarkDirty();
+  } else ebInsertBlocks(blocks);
+}
+
+async function ebUploadAll(items) {
+  const t = ebLoading(`Uploading 0 of ${items.length}…`);
+  const out = [];
+  try {
+    for (let i = 0; i < items.length; i++) {
+      const it = items[i];
+      const d = await api(`/api/eblast/images?campaign=${EB_DRAFT.id}&w=${it.width}&h=${it.height}`, { method: 'PUT', headers: { 'content-type': it.blob.type }, body: it.blob });
+      out.push({ type: 'image', key: d.key, url: d.url, width: it.width, height: it.height, bytes: d.bytes, alt: '', link: '', bg: it.bg || '' });
+      t.update(`Uploading ${i + 1} of ${items.length}…`);
+    }
+  } catch (err) { t.done(); alert('Upload failed: ' + err.message); return null; }
+  t.done();
+  return out;
+}
+
+function ebLoading(text) {
+  const el = document.createElement('div');
+  el.className = 'eb-toast';
+  el.textContent = text;
+  document.body.appendChild(el);
+  return { update(m) { el.textContent = m; }, done() { el.remove(); } };
+}
+
+function openEblastImagePicker(onPick) {
   const items = eblastImageOptions();
+  if (!items.length) { alert('Upload at least one image in the Gallery tab first, or use Upload image.'); return; }
   const folders = getGalleryFolders();
   const folderSelectHtml = folders.length ? `<div class="field"><label>Folder</label><select id="eb-pick-folder">
       <option value="all">All images</option>
@@ -2361,72 +2639,254 @@ function openEblastImagePicker(rowIndex) {
         <span>${escapeHtml(it.label)}</span>
       </button>`).join('') : '<div class="eb-empty">No images in this folder.</div>';
     $$('.eb-pick-thumb', $('#eb-pick-grid')).forEach(btn => btn.addEventListener('click', () => {
-      EB_DRAFT.blocks[rowIndex].image = btn.dataset.value;
-      closeModal();
-      renderEblastRows();
-      renderEblastPreview();
+      const url = btn.dataset.value;
+      const img = new Image();
+      img.onload = img.onerror = () => { closeModal(); onPick(url, img.naturalWidth, img.naturalHeight); };
+      img.src = url;
     }));
   };
   renderGrid('all');
   $('#eb-pick-folder')?.addEventListener('change', (e) => renderGrid(e.target.value));
 }
 
-$('#eb-add-row').addEventListener('click', () => {
-  const opts = eblastImageOptions();
-  if (!opts.length) { alert('Upload at least one image in the Gallery tab first.'); return; }
-  EB_DRAFT.blocks.push({ image: '', alt: '', link: '' });
-  renderEblastRows();
-  renderEblastPreview();
-});
-
-function renderEblastPreview() {
-  const el = $('#eb-preview');
-  if (!EB_DRAFT.blocks.length) { el.innerHTML = '<div class="eb-preview-empty">Add an image above to see a preview.</div>'; return; }
-  el.innerHTML = EB_DRAFT.blocks.map(b => `
-    <div class="eb-preview-row">
-      ${b.image ? `<img src="${escapeHtml(b.image)}" alt="${escapeHtml(b.alt || '')}">` : '<div class="eb-preview-empty">No image chosen yet</div>'}
-      <div class="eb-preview-caption">${escapeHtml(b.alt || '(no description yet)')}${b.link ? ` &rarr; ${escapeHtml(b.link)}` : ''}</div>
-    </div>`).join('');
+// ---- side panel ----
+function ebRenderPanel() {
+  const p = $('#eb-panel');
+  const tabs = ['email', 'block', 'export'];
+  p.innerHTML = `<div class="eb-tabs">${tabs.map(t => `<button type="button" data-tab="${t}" class="${EB_TAB === t ? 'active' : ''}">${{ email: 'Email', block: 'Block', export: 'Export' }[t]}</button>`).join('')}</div>`
+    + (EB_TAB === 'email' ? ebEmailPanel() : EB_TAB === 'block' ? ebBlockPanel() : ebExportPanel());
+  $$('[data-tab]', p).forEach(b => b.addEventListener('click', () => {
+    EB_TAB = b.dataset.tab;
+    if (EB_TAB === 'export' && EB_MODE === 'edit') { EB_MODE = 'preview'; ebRenderStage(); }
+    ebRenderPanel();
+  }));
+  ebBindPanel(p);
+  if (EB_TAB === 'export') ebRenderChecks((EB_EXPORT && EB_EXPORT.checks) || EB_PREVIEW.checks);
 }
 
-function trackingSlug(text) {
-  return String(text || '').toLowerCase().normalize('NFKD').replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 80).replace(/-+$/, '');
+function ebDis() { return EB_READONLY ? 'disabled' : ''; }
+function ebColour(attr, key, val, label, ph) {
+  return `<div class="field"><label>${label}</label><div class="eb-colour"><input type="color" ${attr}="${key}" value="${escapeHtml(val || ph || '#ffffff')}" ${ebDis()}><input ${attr}="${key}" value="${escapeHtml(val || '')}" placeholder="${escapeHtml(ph || 'none')}" ${ebDis()}></div></div>`;
 }
-let EB_TRACKING_EDITED = false;
-$('#eb-subject').addEventListener('input', () => {
-  if (!EB_TRACKING_EDITED) $('#eb-tracking-name').value = trackingSlug($('#eb-subject').value);
-});
-$('#eb-tracking-name').addEventListener('input', () => { EB_TRACKING_EDITED = true; });
-$('#eb-tracking-name').addEventListener('change', () => {
-  const el = $('#eb-tracking-name');
-  el.value = trackingSlug(el.value) || trackingSlug($('#eb-subject').value);
-  EB_TRACKING_EDITED = el.value !== trackingSlug($('#eb-subject').value);
-});
 
-async function saveEblastDraft() {
-  const msg = $('#eb-save-msg');
-  EB_DRAFT.subject = $('#eb-subject').value.trim();
-  EB_DRAFT.previewText = $('#eb-preview-text').value.trim();
-  EB_DRAFT.trackingName = trackingSlug($('#eb-tracking-name').value) || trackingSlug(EB_DRAFT.subject);
-  msg.className = 'msg'; msg.textContent = 'Saving…';
+function ebEmailPanel() {
+  const d = EB_DRAFT, s = d.settings;
+  return `
+    <div class="field"><label>Subject</label><input data-e="subject" value="${escapeHtml(d.subject)}" placeholder="e.g. New floorplans just released" ${ebDis()}></div>
+    <div class="field"><label>Preview text</label><input data-e="previewText" maxlength="150" value="${escapeHtml(d.previewText)}" placeholder="e.g. Take a first look at the new layouts" ${ebDis()}>
+      <p class="hint">The snippet most inboxes show next to the subject line.</p></div>
+    <div class="field"><label>Tracking name</label><input data-e="trackingName" id="eb-tracking-name" maxlength="80" value="${escapeHtml(d.trackingName || trackingSlug(d.subject))}" placeholder="e.g. floorplans-release" ${ebDis()}>
+      <p class="hint">The name this blast shows up under in Google Analytics and on registrations it brings in, whether you send it from here or export it. It fills in from the subject. Lowercase letters, numbers and dashes.</p></div>
+    <h3 class="eb-h">Look</h3>
+    ${ebColour('data-s', 'outerBg', s.outerBg, 'Page background')}
+    ${ebColour('data-s', 'innerBg', s.innerBg, 'Email background')}
+    ${ebColour('data-s', 'footerColor', s.footerColor, 'Footer text')}
+    <div class="field"><label>Width</label><select data-s="width" ${ebDis()}>${[600, 640, 700].map(w => `<option value="${w}" ${Number(s.width) === w ? 'selected' : ''}>${w}px</option>`).join('')}</select></div>
+    <h3 class="eb-h">Footer</h3>
+    <div class="field"><label class="eb-check"><input type="checkbox" data-s="showFooter" ${s.showFooter ? 'checked' : ''} ${ebDis()}> Show footer</label></div>
+    <div class="field"><label>Footer note</label><textarea data-s="footerText" rows="3" ${ebDis()}>${escapeHtml(s.footerText)}</textarea>
+      <p class="hint">Your company name, mailing address and the unsubscribe link are added under it automatically.</p></div>`;
+}
+
+function ebBlockPanel() {
+  const b = EB_DRAFT.blocks[EB_SEL];
+  if (!b) return `<p class="muted">Click a block in the email to edit it. Hover between blocks to add PDF strips, images, text, buttons or space.</p>`;
+  const tools = EB_READONLY ? `<div class="eb-tools"><span class="tag">Block ${EB_SEL + 1} · ${b.type}</span></div>` : `<div class="eb-tools">
+      <span class="tag">Block ${EB_SEL + 1} · ${b.type}</span><span style="flex:1"></span>
+      <button type="button" class="eb-icon" data-mv="-1" title="Move up">↑</button><button type="button" class="eb-icon" data-mv="1" title="Move down">↓</button>
+      <button type="button" class="eb-icon" data-dupb title="Duplicate">⧉</button><button type="button" class="eb-icon" data-delb title="Delete" style="color:var(--bad)">✕</button></div>`;
+  if (b.type === 'image') return tools + `
+    <img src="${escapeHtml(b.url)}" alt="" class="eb-side-img">
+    <div class="field"><label>Alt text (required)</label><textarea data-b="alt" rows="3" placeholder="What the image says, e.g. From the $900's · Up to 2,427 sq. ft." ${ebDis()}>${escapeHtml(b.alt)}</textarea>
+      <p class="hint">Shown when an inbox blocks images, and it helps keep the email out of spam.</p></div>
+    <div class="field"><label>Link</label><input data-b="link" value="${escapeHtml(b.link)}" placeholder="https://" ${ebDis()}></div>
+    ${ebColour('data-b', 'bg', b.bg, 'Background behind image')}
+    ${EB_READONLY ? '' : `<div class="toolbar" style="margin:0 0 0.75rem;"><button type="button" class="btn" data-replace>Replace image</button><button type="button" class="btn" data-replace-gallery>From gallery</button></div>`}
+    <div class="field"><label>Hosted at</label><div class="eb-colour"><input readonly value="${escapeHtml(new URL(b.url, location.origin).href)}"><button type="button" class="btn" data-copyurl>Copy</button></div>
+      <p class="hint">${b.width ? `${b.width} × ${b.height}px · ` : ''}${b.bytes ? Math.round(b.bytes / 1024) + ' KB · ' : ''}on your own site, so it keeps loading in every email.</p></div>`;
+  if (b.type === 'text') return tools + `
+    <div class="field"><label>Text</label><textarea data-b="text" rows="6" ${ebDis()}>${escapeHtml(b.text)}</textarea></div>
+    <div class="field"><label>Align</label><select data-b="align" ${ebDis()}>${['left', 'center', 'right'].map(a => `<option ${a === b.align ? 'selected' : ''}>${a}</option>`).join('')}</select></div>
+    <div class="field"><label>Size (px)</label><input type="number" min="10" max="40" data-b="size" value="${b.size}" ${ebDis()}></div>
+    <div class="field"><label class="eb-check"><input type="checkbox" data-b="bold" ${b.bold ? 'checked' : ''} ${ebDis()}> Bold</label></div>
+    ${ebColour('data-b', 'color', b.color, 'Text colour', '#333333')}${ebColour('data-b', 'bg', b.bg, 'Background')}`;
+  if (b.type === 'button') return tools + `
+    <div class="field"><label>Label</label><input data-b="text" value="${escapeHtml(b.text)}" ${ebDis()}></div>
+    <div class="field"><label>Link</label><input data-b="link" value="${escapeHtml(b.link)}" placeholder="https://" ${ebDis()}></div>
+    ${ebColour('data-b', 'color', b.color, 'Button colour', '#B4712F')}${ebColour('data-b', 'textColor', b.textColor, 'Label colour', '#ffffff')}${ebColour('data-b', 'bg', b.bg, 'Background')}
+    <p class="hint">A real HTML button: it shows even when images are blocked, and Outlook draws it too.</p>`;
+  if (b.type === 'spacer') return tools + `
+    <div class="field"><label>Height (px)</label><input type="number" min="4" max="200" data-b="height" value="${b.height}" ${ebDis()}></div>${ebColour('data-b', 'bg', b.bg, 'Background')}`;
+  return tools;
+}
+
+function ebPlatform() { return EB_PLATFORMS.find(p => p.id === EB_PLATFORM) || EB_PLATFORMS[0] || { id: 'keap', name: 'Keap', steps: [] }; }
+
+function ebExportPanel() {
+  const pl = ebPlatform();
+  const buttons = pl.manual
+    ? `<button type="button" class="btn btn-gold" data-copyrich>Copy for email</button><button type="button" class="btn" data-opentab>Open in new tab</button><button type="button" class="btn" data-copysubj>Copy subject</button>`
+    : `<button type="button" class="btn btn-gold" data-copyhtml>Copy HTML</button><button type="button" class="btn" data-dlhtml>Download .html</button><button type="button" class="btn" data-copysubj>Copy subject</button>`;
+  return `
+    <p class="muted" style="margin-top:0;font-size:0.8125rem;line-height:1.5;">Send this blast from another email platform instead of from here. The export uses the images hosted on this site and adds your Tracking name to every link.</p>
+    <div class="field"><label>Sending with</label><select id="eb-platform">${EB_PLATFORMS.map(p => `<option value="${p.id}" ${p.id === pl.id ? 'selected' : ''}>${escapeHtml(p.name)}</option>`).join('')}</select>
+      <p class="hint">${escapeHtml(pl.note || '')}</p></div>
+    ${pl.custom ? `<div class="field"><label>Unsubscribe merge tag</label><input id="eb-custom-unsub" value="${escapeHtml(EB_CUSTOM_UNSUB)}" placeholder="e.g. {{unsubscribe_url}}"></div>` : ''}
+    <div class="toolbar" style="flex-wrap:wrap; margin:0.25rem 0 1rem;">${buttons}</div>
+    <div class="eb-callout"><span><b>Check it in a real inbox first.</b> Email a preview to yourself.</span>${EB_READONLY ? '' : '<button type="button" class="btn" data-preview-send>✉ Send preview</button>'}</div>
+    <h3 class="eb-h">How to send with ${escapeHtml(pl.name)}</h3>
+    <ol class="eb-steps">${(pl.steps || []).map(x => `<li>${x}</li>`).join('')}</ol>
+    <h3 class="eb-h">Checklist</h3>
+    <ul class="eb-checks" id="eb-checks"><li class="muted">Checking…</li></ul>`;
+}
+
+function ebRenderChecks(checks) {
+  const el = $('#eb-checks');
+  if (!el) return;
+  el.innerHTML = (checks || []).map(([k, t]) => `<li class="${k}">${escapeHtml(t)}</li>`).join('') || '<li class="muted">Checking…</li>';
+}
+
+function ebBindPanel(p) {
+  $$('[data-e]', p).forEach(el => el.addEventListener('input', () => {
+    EB_DRAFT[el.dataset.e] = el.value;
+    if (el.dataset.e === 'subject' && !EB_TRACKING_EDITED) { EB_DRAFT.trackingName = trackingSlug(el.value); $('#eb-tracking-name').value = EB_DRAFT.trackingName; }
+    if (el.dataset.e === 'trackingName') EB_TRACKING_EDITED = true;
+    ebMarkDirty(false);
+  }));
+  $('#eb-tracking-name', p)?.addEventListener('change', (e) => {
+    const el = e.target;
+    el.value = trackingSlug(el.value) || trackingSlug(EB_DRAFT.subject);
+    EB_DRAFT.trackingName = el.value;
+    EB_TRACKING_EDITED = el.value !== trackingSlug(EB_DRAFT.subject);
+    ebMarkDirty(false);
+  });
+  const bindValues = (attr, target) => $$(`[${attr}]`, p).forEach(el => el.addEventListener(el.type === 'checkbox' || el.tagName === 'SELECT' ? 'change' : 'input', () => {
+    const obj = target(), k = el.getAttribute(attr);
+    obj[k] = el.type === 'checkbox' ? el.checked : (el.type === 'number' || k === 'width') ? Number(el.value) : el.value;
+    if (el.type === 'color') { const t = $(`input:not([type=color])[${attr}="${k}"]`, p); if (t) t.value = el.value; }
+    else if (el.tagName === 'INPUT' && el.type !== 'checkbox') { const c = $(`input[type=color][${attr}="${k}"]`, p); if (c && /^#[0-9a-f]{6}$/i.test(el.value)) c.value = el.value; }
+    ebMarkDirty();
+  }));
+  bindValues('data-s', () => EB_DRAFT.settings);
+  bindValues('data-b', () => EB_DRAFT.blocks[EB_SEL]);
+  $$('[data-mv]', p).forEach(el => el.addEventListener('click', () => {
+    const to = EB_SEL + Number(el.dataset.mv);
+    if (to < 0 || to >= EB_DRAFT.blocks.length) return;
+    [EB_DRAFT.blocks[EB_SEL], EB_DRAFT.blocks[to]] = [EB_DRAFT.blocks[to], EB_DRAFT.blocks[EB_SEL]];
+    EB_SEL = to; ebRenderPanel(); ebMarkDirty();
+  }));
+  const on = (sel, fn) => { const el = $(sel, p); el && el.addEventListener('click', fn); };
+  on('[data-dupb]', () => { EB_DRAFT.blocks.splice(EB_SEL + 1, 0, JSON.parse(JSON.stringify(EB_DRAFT.blocks[EB_SEL]))); EB_SEL++; ebRenderPanel(); ebMarkDirty(); });
+  on('[data-delb]', () => { EB_DRAFT.blocks.splice(EB_SEL, 1); EB_SEL = Math.min(EB_SEL, EB_DRAFT.blocks.length - 1); ebRenderPanel(); ebMarkDirty(); });
+  on('[data-replace]', () => { EB_DRAFT.blocks[EB_SEL]._replace = true; $('#eb-file-image').click(); });
+  on('[data-replace-gallery]', () => openEblastImagePicker((url, w, h) => { Object.assign(EB_DRAFT.blocks[EB_SEL], { url, key: '', width: w || 0, height: h || 0, bytes: 0 }); ebRenderPanel(); ebMarkDirty(); }));
+  on('[data-copyurl]', () => navigator.clipboard.writeText(new URL(EB_DRAFT.blocks[EB_SEL].url, location.origin).href).then(() => ebFlash('Image address copied')));
+  on('[data-copyhtml]', ebCopyHtml);
+  on('[data-dlhtml]', ebDownloadHtml);
+  on('[data-copyrich]', ebCopyRich);
+  on('[data-opentab]', ebOpenInTab);
+  on('[data-preview-send]', ebSendPreview);
+  on('[data-copysubj]', () => {
+    if (!EB_DRAFT.subject) return alert('Add a subject line in the Email tab first.');
+    navigator.clipboard.writeText(EB_DRAFT.subject).then(() => ebFlash('Subject copied'));
+  });
+  $('#eb-platform', p)?.addEventListener('change', (e) => { EB_PLATFORM = e.target.value; ebStore.set('eb-platform', EB_PLATFORM); EB_EXPORT = null; ebRenderPanel(); if (EB_MODE === 'code') ebRenderStage(); });
+  $('#eb-custom-unsub', p)?.addEventListener('change', (e) => { EB_CUSTOM_UNSUB = e.target.value.trim(); ebStore.set('eb-custom-unsub', EB_CUSTOM_UNSUB); EB_EXPORT = null; ebRenderChecks(EB_PREVIEW.checks); });
+}
+
+function ebFlash(text) { const t = ebLoading(text); setTimeout(t.done, 1800); }
+
+// ---- export ----
+async function ebGetExport(record) {
+  if (EB_DIRTY || EB_SAVING) { const ok = await saveEblastDraft(); if (!ok) throw new Error('Save failed, so the export would be out of date. ' + $('#eb-save-msg').textContent); }
+  const d = await api('/api/eblast/export', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ id: EB_DRAFT.id, platform: EB_PLATFORM, customUnsub: EB_CUSTOM_UNSUB, record }) });
+  EB_EXPORT = d;
+  if (EB_TAB === 'export') ebRenderChecks(d.checks);
+  return d;
+}
+function ebExportWarning(d) {
+  const bad = (d.checks || []).filter(([k]) => k === 'no').length;
+  return bad ? ` ${bad} thing${bad > 1 ? 's' : ''} in the checklist still need${bad > 1 ? '' : 's'} fixing.` : '';
+}
+async function ebCopyHtml() {
   try {
-    const data = await api('/api/eblast/draft', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(EB_DRAFT) });
-    EB_DRAFT = { id: data.campaign.id, subject: data.campaign.subject || '', previewText: data.campaign.preview_text || '', trackingName: data.campaign.tracking_name || EB_DRAFT.trackingName, blocks: data.campaign.blocks || [] };
-    $('#eb-tracking-name').value = EB_DRAFT.trackingName;
-    msg.className = 'msg ok'; msg.textContent = 'Draft saved.';
-    return true;
-  } catch (e) {
-    msg.className = 'msg err'; msg.textContent = e.message;
-    return false;
-  }
+    const d = await ebGetExport(true);
+    await navigator.clipboard.writeText(d.html);
+    ebFlash('HTML copied.' + ebExportWarning(d));
+  } catch (e) { alert('Could not copy the HTML: ' + e.message); }
 }
-$('#eb-save-btn').addEventListener('click', saveEblastDraft);
+async function ebDownloadHtml() {
+  try {
+    const d = await ebGetExport(true);
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([d.html], { type: 'text/html' }));
+    a.download = d.filename;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+    if (ebExportWarning(d)) ebFlash('Downloaded.' + ebExportWarning(d));
+  } catch (e) { alert('Could not download the HTML: ' + e.message); }
+}
+async function ebCopyRich() {
+  try {
+    const d = await ebGetExport(true);
+    const html = d.pasteHtml || d.html;
+    try {
+      if (!window.ClipboardItem) throw new Error('no ClipboardItem');
+      await navigator.clipboard.write([new ClipboardItem({ 'text/html': new Blob([html], { type: 'text/html' }), 'text/plain': new Blob([d.text], { type: 'text/plain' }) })]);
+    } catch {
+      const box = document.createElement('div');
+      box.contentEditable = 'true';
+      box.style.cssText = 'position:fixed;left:-10000px;top:0;width:700px';
+      box.innerHTML = html;
+      document.body.appendChild(box);
+      const range = document.createRange(); range.selectNodeContents(box);
+      const sel = getSelection(); sel.removeAllRanges(); sel.addRange(range);
+      const ok = document.execCommand('copy');
+      sel.removeAllRanges(); box.remove();
+      if (!ok) throw new Error('Your browser blocked copying. Use "Open in new tab" instead.');
+    }
+    ebFlash('Copied. Click into a new message and paste.' + ebExportWarning(d));
+  } catch (e) { alert(e.message); }
+}
+async function ebOpenInTab() {
+  try {
+    const d = await ebGetExport(true);
+    const url = URL.createObjectURL(new Blob([d.html], { type: 'text/html' }));
+    window.open(url, '_blank');
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
+    ebFlash('In the new tab press Ctrl+A then Ctrl+C, and paste into your email.');
+  } catch (e) { alert(e.message); }
+}
+$('#eb-export-btn').addEventListener('click', () => { EB_TAB = 'export'; EB_MODE = 'preview'; ebRenderPanel(); ebRenderStage(); });
 
+// ---- preview send ----
+$('#eb-test-btn').addEventListener('click', ebSendPreview);
+async function ebSendPreview() {
+  if (!EB_DRAFT || EB_READONLY) return;
+  if (!EB_DRAFT.blocks.length) return alert('Add something to the email first.');
+  const last = ebStore.get('eb-preview-to', '') || (ME && ME.user && ME.user.email) || '';
+  const missingAlt = EB_DRAFT.blocks.filter(b => b.type === 'image' && !b.alt).length;
+  openModal('Send a preview', `
+    ${EB_MAIL_OK ? '' : '<p class="msg err">Email isn\'t set up yet. Add RESEND_API_KEY and FROM_EMAIL in Cloudflare first.</p>'}
+    <div class="field"><label>Send to</label><input id="eb-test-to" value="${escapeHtml(last)}" placeholder="you@example.com">
+      <p class="hint">Your own address, or a few separated by commas (up to 10).</p></div>
+    <p class="muted" style="margin:0;">Subject: <b>[Preview] ${escapeHtml(EB_DRAFT.subject || 'Eblast')}</b>. Only these addresses get it, and it doesn't count in Analytics.${missingAlt ? `<br><span style="color:var(--warn)">${missingAlt} image${missingAlt > 1 ? 's' : ''} still need${missingAlt > 1 ? '' : 's'} alt text.</span>` : ''}</p>`,
+  async () => {
+    const to = $('#eb-test-to').value.trim();
+    if (!to) throw new Error('Enter an email address.');
+    if (EB_DIRTY || EB_SAVING) { if (!(await saveEblastDraft())) throw new Error('The blast could not be saved, so the preview would be out of date.'); }
+    const d = await api('/api/eblast/test', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ id: EB_DRAFT.id, to }) });
+    ebStore.set('eb-preview-to', to);
+    setTimeout(() => showNotice('Preview sent', `Sent to ${escapeHtml(d.to.join(', '))}. It can take a minute to arrive, so check spam too.`), 50);
+  }, 'Send preview');
+}
+
+// ---- delete / send to registrants ----
 $('#eb-delete-btn').addEventListener('click', async () => {
   if (!EB_DRAFT?.id) return;
   if (!confirm('Delete this draft blast? This can\'t be undone.')) return;
   try {
+    clearTimeout(EB_SAVE_TIMER); EB_DIRTY = false;
     await api('/api/eblast/campaigns/' + EB_DRAFT.id, { method: 'DELETE' });
     showSubtab($('#page-eblast .subtabs'), 'blasts');
     await loadEblast();
@@ -2434,28 +2894,31 @@ $('#eb-delete-btn').addEventListener('click', async () => {
 });
 
 $('#eb-send-btn').addEventListener('click', async () => {
-  EB_DRAFT.subject = $('#eb-subject').value.trim();
-  EB_DRAFT.previewText = $('#eb-preview-text').value.trim();
-  if (!EB_DRAFT.subject) return alert('Add a subject line first.');
-  if (!EB_DRAFT.blocks.length) return alert('Add at least one image first.');
-  const missingImage = EB_DRAFT.blocks.find(b => !b.image);
-  if (missingImage) return alert('Every row needs an image chosen before this can send.');
-  const missing = EB_DRAFT.blocks.find(b => !b.alt || !b.alt.trim());
-  if (missing) return alert('Every image needs a description before this can send.');
+  if (!EB_DRAFT.subject.trim()) return alert('Add a subject line first.');
+  if (!EB_DRAFT.blocks.length) return alert('Add something to the email first.');
+  const missing = EB_DRAFT.blocks.find(b => b.type === 'image' && !String(b.alt || '').trim());
+  if (missing) return alert('Every image needs alt text before this can send.');
 
   const saved = await saveEblastDraft();
   if (!saved) return;
 
   const { active } = EB_RECIPIENTS;
-  openModal('Send eblast', `
+  openModal('Send to registrants', `
     <p>This will email <b>${active}</b> active registrant${active === 1 ? '' : 's'} with the subject "<b>${escapeHtml(EB_DRAFT.subject)}</b>". This can't be undone.</p>
+    <p class="muted">Sending from another platform instead? Close this and use <b>Export HTML</b>.</p>
   `, async () => {
     const result = await api('/api/eblast/send', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ id: EB_DRAFT.id }) });
     showNotice('Eblast sent', `Delivered to ${result.sent} of ${result.total} recipient${result.total === 1 ? '' : 's'}${result.failed ? ` (${result.failed} failed)` : ''}.`);
     showSubtab($('#page-eblast .subtabs'), 'blasts');
     await loadEblast();
-  });
+  }, 'Send now');
 });
+
+function trackingSlug(text) {
+  return String(text || '').toLowerCase().normalize('NFKD').replace(/[̀-ͯ]/g, '')
+    .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 80).replace(/-+$/, '');
+}
+let EB_TRACKING_EDITED = false;
 
 function renderRegistrationsInto(tableSel, filterSel) {
   const tbody = $(tableSel);
@@ -2917,7 +3380,7 @@ async function loadEblastAnalytics(fresh) {
     const cell = (v) => v === null || v === undefined ? '<span class="muted">-</span>' : gaFmt(v);
     const rate = (r) => (r.visits === null || !r.delivered) ? '<span class="muted">-</span>' : (Math.round((r.visitors / r.delivered) * 1000) / 10) + '%';
     body.innerHTML = gaNote + `<div style="overflow-x:auto;"><table><thead><tr><th>Blast</th><th>Tracking name</th><th>Sent</th><th>Delivered</th><th>Visits</th><th>Visitors</th><th>Click rate</th><th>Registrations</th></tr></thead><tbody>${
-      b.map(r => `<tr><td>${r.subject ? escapeHtml(r.subject) : '<span class="muted">Not from a blast here</span>'}${r.sends > 1 ? ` <span class="muted">(${r.sends} sends)</span>` : ''}</td><td><code>${escapeHtml(r.name)}</code></td><td>${r.sentAt ? escapeHtml(dateAndTime(r.sentAt)) : '<span class="muted">-</span>'}</td><td>${r.sends ? gaFmt(r.delivered) : '<span class="muted">-</span>'}</td><td>${cell(r.visits)}</td><td>${cell(r.visitors)}</td><td>${rate(r)}</td><td>${gaFmt(r.registrations)}</td></tr>`).join('')
+      b.map(r => `<tr><td>${r.subject ? escapeHtml(r.subject) : '<span class="muted">Not from a blast here</span>'}${r.sends > 1 ? ` <span class="muted">(${r.sends} sends)</span>` : ''}</td><td><code>${escapeHtml(r.name)}</code></td><td>${r.sentAt ? escapeHtml(dateAndTime(r.sentAt)) : '<span class="muted">-</span>'}</td><td>${r.sends ? gaFmt(r.delivered) : (r.exported ? '<span class="muted" title="Exported as HTML and sent from another platform">Exported</span>' : '<span class="muted">-</span>')}</td><td>${cell(r.visits)}</td><td>${cell(r.visitors)}</td><td>${rate(r)}</td><td>${gaFmt(r.registrations)}</td></tr>`).join('')
     }</tbody></table></div>`;
   } catch (e) {
     body.innerHTML = `<p class="msg err" style="margin:0;">Couldn't load eblast results: ${escapeHtml(e.message)}</p>`;
@@ -3411,7 +3874,7 @@ function renderLogPage() {
 }
 
 let currentSave = null;
-function openModal(title, bodyHtml, onSave) { $('#modal-title').textContent = title; $('#modal-body').innerHTML = bodyHtml; $('#modal-msg').textContent = ''; currentSave = onSave; $('#overlay').classList.remove('hidden'); }
+function openModal(title, bodyHtml, onSave, saveLabel) { $('#modal-title').textContent = title; $('#modal-body').innerHTML = bodyHtml; $('#modal-msg').textContent = ''; $('#modal-save').textContent = saveLabel || 'Save'; currentSave = onSave; $('#overlay').classList.remove('hidden'); }
 function closeModal() { $('#overlay').classList.add('hidden'); currentSave = null; }
 $('#modal-cancel').addEventListener('click', closeModal);
 $('#overlay').addEventListener('click', (e) => { if (e.target.id === 'overlay') closeModal(); });
