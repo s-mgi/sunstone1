@@ -1,11 +1,9 @@
-// Eblast builder (powered by Novaquil): blocks, look, preview, HTML export,
-// preview sends, images hosted on this site at /i/, and sending to registrants.
 import { logError } from './errors.js';
 import { SITE } from '../site.config.js';
 
 const RESEND_BATCH_MAX = 100;
 const CHUNK_DELAY_MS = 250;
-const MAX_IMAGE_BYTES = 1.9 * 1024 * 1024; // D1 rows top out at 2 MB
+const MAX_IMAGE_BYTES = 1.9 * 1024 * 1024;
 const IMAGE_TYPES = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/gif': 'gif' };
 const MAX_PREVIEW_TO = 10;
 
@@ -19,8 +17,6 @@ export const DEFAULT_SETTINGS = {
 };
 const FONT = 'Arial, Helvetica, sans-serif';
 
-// Where the exported HTML is going. unsub/view: URL merge tags. unsubTag/viewTag: whole-link tags.
-// autoFooter: the platform adds its own unsubscribe footer. manual: pasted into a normal inbox.
 const STEP_PASTE = (where) => [
   'Click <b>Copy HTML</b> (or <b>Download .html</b>).',
   where,
@@ -86,7 +82,6 @@ export async function getCampaign(env, id) {
 export async function deleteCampaign(env, id) {
   const current = await env.DB.prepare('SELECT status FROM eblast_campaigns WHERE id = ?').bind(id).first();
   if (!current) return json({ ok: false, error: 'Blast not found.' }, 404);
-  // Images stay online so emails already sent or exported keep loading.
   await env.DB.batch([
     env.DB.prepare('DELETE FROM eblast_sends WHERE campaign_id = ?').bind(id),
     env.DB.prepare('DELETE FROM eblast_campaigns WHERE id = ?').bind(id),
@@ -141,7 +136,6 @@ export async function saveDraft(request, env) {
   return json({ ok: true, campaign: shape(created) });
 }
 
-// Live preview of unsaved work (no tracking, no real unsubscribe link).
 export async function previewEblast(request, env) {
   let body;
   try { body = await request.json(); } catch { return json({ ok: false, error: 'Invalid JSON body.' }, 400); }
@@ -156,7 +150,6 @@ export async function previewEblast(request, env) {
   return json({ ok: true, html, checks: checkEblast(draft, origin, html) });
 }
 
-// HTML to paste into another email platform instead of sending from here.
 export async function exportEblast(request, env) {
   let body;
   try { body = await request.json(); } catch { return json({ ok: false, error: 'Invalid JSON body.' }, 400); }
@@ -184,7 +177,6 @@ export async function exportEblast(request, env) {
   });
 }
 
-// Preview email to yourself (or up to 10 people) before sending or exporting.
 export async function testEblast(request, env) {
   let body;
   try { body = await request.json(); } catch { return json({ ok: false, error: 'Invalid JSON body.' }, 400); }
@@ -313,15 +305,13 @@ export async function sendCampaign(request, env) {
   return json({ ok: true, sent: sentCount, failed: failedCount, total: recipients.length });
 }
 
-// PUT /api/eblast/images?campaign=ID&w=&h= with the image bytes as the body.
-// Images are never deleted, emails already sent or exported still point at them.
 export async function uploadEblastImage(request, env) {
   const type = (request.headers.get('Content-Type') || '').split(';')[0].trim().toLowerCase();
   if (!IMAGE_TYPES[type]) return json({ ok: false, error: 'Images must be JPG, PNG or GIF (email apps can\'t show WebP or SVG).' }, 400);
   const data = await request.arrayBuffer();
   if (!data.byteLength) return json({ ok: false, error: 'That file is empty.' }, 400);
   if (data.byteLength > MAX_IMAGE_BYTES) return json({ ok: false, error: 'That image is over 1.9 MB. Save it as a JPG or at a smaller size and try again.' }, 400);
-  if (!(await hasImagesTable(env))) return json({ ok: false, error: 'Run migrations/0005_eblast_builder.sql in the D1 console first (see YOUR-TURN.md), then upload again.' }, 400);
+  if (!(await hasImagesTable(env))) return json({ ok: false, error: 'Run migrations/0005_eblast_builder.sql in the D1 console first, then upload again.' }, 400);
 
   const url = new URL(request.url);
   const campaignId = Number(url.searchParams.get('campaign')) || 0;
@@ -333,7 +323,6 @@ export async function uploadEblastImage(request, env) {
   return json({ ok: true, key, url: `/i/${key}`, bytes: data.byteLength });
 }
 
-// GET /i/<key>, public and cached at the edge for a year.
 export async function serveEblastImage(request, env, ctx, key) {
   const cache = typeof caches !== 'undefined' ? caches.default : null;
   if (cache) { const hit = await cache.match(request); if (hit) return hit; }
@@ -373,7 +362,6 @@ export async function handleUnsubscribe(request, env) {
   return htmlPage('Unsubscribed', `${escapeHtml(email)} has been unsubscribed and won't receive future emails from us.`);
 }
 
-// mode: 'send' (real unsubscribe link), 'test' (preview, dummy link), 'export' (platform merge tags)
 export function buildEmailHtml(draft, { origin, mode = 'test', unsubUrl = '', platform = null, customUnsub = '' } = {}) {
   const s = draft.settings || DEFAULT_SETTINGS;
   const W = s.width;
@@ -472,7 +460,6 @@ function blockRow(b, W, origin) {
   return '';
 }
 
-// Body-only markup for pasting into a Gmail or Outlook message.
 function pasteHtml(full) {
   const m = full.match(/<body[^>]*>([\s\S]*)<\/body>/i);
   const bg = (full.match(/<body[^>]*background-color:([^;"]+)/i) || [])[1] || '#ffffff';
@@ -524,7 +511,6 @@ function absoluteUrl(url, origin) {
   if (!origin) return url;
   if (url.startsWith('/')) return origin + url;
   if (!/^https?:/i.test(url)) return origin + '/' + url;
-  // Our own images saved from another address of this site (e.g. workers.dev) use the current one.
   try {
     const u = new URL(url);
     if (/^\/(i|media|assets)\//.test(u.pathname) && (u.hostname.endsWith('.workers.dev') || u.hostname === new URL(origin).hostname || /^(localhost|127\.0\.0\.1)$/.test(u.hostname))) {
@@ -549,7 +535,7 @@ async function campaignColumns(env) {
   let names = [];
   try { names = (await env.DB.prepare('PRAGMA table_info(eblast_campaigns)').all()).results.map((r) => r.name); } catch {}
   const set = new Set(names);
-  if (set.has('settings') && set.has('exported_at') && set.has('tracking_name')) COLS = set; // only cache once fully migrated
+  if (set.has('settings') && set.has('exported_at') && set.has('tracking_name')) COLS = set;
   return set;
 }
 

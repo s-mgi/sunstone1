@@ -78,7 +78,6 @@ code{ font-family:ui-monospace,SFMono-Regular,Menlo,monospace; }
 .edit-subpage.hidden{ display:none; }
 
 .content{ flex:1; padding:2rem; max-width:96rem; width:100%; margin:0 auto; }
-/* Dark mode: the working area is a step lighter than the header and sidebar */
 :root:not([data-theme="light"]) .main{ background:#29262f; }
 :root:not([data-theme="light"]) .topbar{ background:var(--sidebar); }
 :root:not([data-theme="light"]) .content{ --bg:#211e27; --card:#322e39; --sidebar-hover:#3a3642; --sidebar-active:#3f3a48; }
@@ -449,7 +448,6 @@ p.hint{ font-size:0.8125rem; line-height:1.5; color:var(--sub); margin:0.6rem 0 
 
 :root[data-theme="light"] #brand-logo{ filter: brightness(0.3) sepia(0.4); }
 
-/* Eblast builder (powered by Novaquil) */
 .nq-credit{ display:inline-block; margin-left:0.35rem; font-size:0.6875rem; letter-spacing:0.04em; color:var(--sub); border:1px solid var(--line); border-radius:999px; padding:0.1rem 0.55rem; vertical-align:middle; }
 .nq-credit b, .nq-foot b{ color:var(--ink); font-weight:600; }
 .nq-foot{ text-align:center; font-size:0.6875rem; color:var(--sub); margin-top:0.75rem; }
@@ -511,7 +509,6 @@ p.hint{ font-size:0.8125rem; line-height:1.5; color:var(--sub); margin:0.6rem 0 
 .eb-checks li.wn::before{ content:'!'; color:var(--warn); left:0.25rem; }
 .eb-checks li.no::before{ content:'✕'; color:var(--bad); }
 .eb-toast{ position:fixed; bottom:1.5rem; left:50%; transform:translateX(-50%); background:var(--card); color:var(--ink); border:1px solid var(--line); border-radius:0.4rem; padding:0.7rem 1.1rem; font-size:0.8125rem; box-shadow:0 12px 30px rgba(0,0,0,.3); z-index:120; max-width:90vw; }
-/* flyer slicer */
 .nq-slicer{ position:fixed; inset:0; background:var(--bg); z-index:110; display:flex; flex-direction:column; }
 .nq-slicer .bar{ display:flex; align-items:center; gap:0.6rem; padding:0.7rem 1.25rem; border-bottom:1px solid var(--line); background:var(--card); flex-wrap:wrap; }
 .nq-slicer .bar .hint{ font-size:0.75rem; color:var(--sub); }
@@ -2278,7 +2275,6 @@ $('#gallery-upload-input')?.addEventListener('change', async () => {
   reader.readAsDataURL(file);
 });
 
-// Eblast builder, powered by Novaquil: blocks, flyer slicing, site-hosted images, preview, export, preview sends.
 let EB_DRAFT = null;
 let EB_READONLY = false;
 let EB_RECIPIENTS = { active: 0, unsubscribed: 0 };
@@ -2332,7 +2328,7 @@ function renderEblastRecipientCount() {
 
 function renderEblastList() {
   const tbody = $('#eb-list-table');
-  $('#eb-migrate-note').innerHTML = EB_NEEDS_MIGRATION ? '<div class="eb-status-banner">To upload images and save each blast\'s colours, run <code>migrations/0005_eblast_builder.sql</code> in the D1 console (see YOUR-TURN.md). Everything else works already.</div>' : '';
+  $('#eb-migrate-note').innerHTML = EB_NEEDS_MIGRATION ? '<div class="eb-status-banner">To upload images and save each blast\'s colours, run <code>migrations/0005_eblast_builder.sql</code> in the D1 console. Everything else works already.</div>' : '';
   if (!EB_CAMPAIGNS.length) { tbody.innerHTML = '<tr><td colspan="7" class="empty">No blasts yet, click "New blast" to start one.</td></tr>'; return; }
   const badgeClass = { draft: 'medium', sending: 'medium', sent: 'closed', failed: 'high' };
   tbody.innerHTML = EB_CAMPAIGNS.map(c => `
@@ -2404,7 +2400,6 @@ async function openEblastEditor(id) {
 
 $('#eb-back-btn').addEventListener('click', async () => { if (EB_DIRTY) await saveEblastDraft(); showSubtab($('#page-eblast .subtabs'), 'blasts'); loadEblast(); });
 
-// ---- saving ----
 function ebMarkDirty(redrawStage = true) {
   if (EB_READONLY) return;
   EB_DIRTY = true; EB_EXPORT = null;
@@ -2437,7 +2432,6 @@ async function saveEblastDraft() {
 }
 addEventListener('beforeunload', (e) => { if (EB_DIRTY) { saveEblastDraft(); e.preventDefault(); } });
 
-// ---- preview (rendered by the server, same HTML that gets sent) ----
 function ebQueuePreview(delay = 400) {
   clearTimeout(EB_PREVIEW_TIMER);
   EB_PREVIEW_TIMER = setTimeout(ebLoadPreview, delay);
@@ -2452,7 +2446,6 @@ async function ebLoadPreview() {
   } catch (e) { $('#eb-stage-info').textContent = 'Preview failed: ' + e.message; }
 }
 
-// ---- stage ----
 $$('#eb-mode button').forEach(b => b.addEventListener('click', () => { EB_MODE = b.dataset.v; ebRenderStage(); }));
 $$('#eb-device button').forEach(b => b.addEventListener('click', () => { EB_DEVICE = b.dataset.v; ebRenderStage(); }));
 
@@ -2544,14 +2537,13 @@ function ebInsertBlocks(blocks) {
   ebRenderPanel(); ebMarkDirty();
 }
 
-// ---- images: flyer slices and single uploads, stored on this site at /i/ ----
 $('#eb-flyer-btn').addEventListener('click', () => { EB_INSERT_AT = null; $('#eb-file-flyer').click(); });
 $('#eb-file-flyer').addEventListener('change', (e) => { const f = e.target.files[0]; e.target.value = ''; if (f) ebHandleFlyer(f); });
 $('#eb-file-image').addEventListener('change', (e) => { const f = e.target.files[0]; e.target.value = ''; if (f) ebHandleImage(f); });
 
 async function ebHandleFlyer(file) {
   if (!EB_DRAFT || EB_READONLY) return;
-  if (EB_NEEDS_MIGRATION) { alert('Run migrations/0005_eblast_builder.sql in the D1 console first (see YOUR-TURN.md), then try again.'); return; }
+  if (EB_NEEDS_MIGRATION) { alert('Run migrations/0005_eblast_builder.sql in the D1 console first , then try again.'); return; }
   const t = ebLoading('Reading PDF…');
   let slicer, canvas;
   try {
@@ -2570,7 +2562,7 @@ async function ebHandleFlyer(file) {
 }
 
 async function ebHandleImage(file) {
-  if (EB_NEEDS_MIGRATION) { alert('Run migrations/0005_eblast_builder.sql in the D1 console first (see YOUR-TURN.md), then try again.'); return; }
+  if (EB_NEEDS_MIGRATION) { alert('Run migrations/0005_eblast_builder.sql in the D1 console first , then try again.'); return; }
   let blob, w, h;
   try {
     const bmp = await createImageBitmap(file);
@@ -2649,7 +2641,6 @@ function openEblastImagePicker(onPick) {
   $('#eb-pick-folder')?.addEventListener('change', (e) => renderGrid(e.target.value));
 }
 
-// ---- side panel ----
 function ebRenderPanel() {
   const p = $('#eb-panel');
   const tabs = ['email', 'block', 'export'];
@@ -2796,7 +2787,6 @@ function ebBindPanel(p) {
 
 function ebFlash(text) { const t = ebLoading(text); setTimeout(t.done, 1800); }
 
-// ---- export ----
 async function ebGetExport(record) {
   if (EB_DIRTY || EB_SAVING) { const ok = await saveEblastDraft(); if (!ok) throw new Error('Save failed, so the export would be out of date. ' + $('#eb-save-msg').textContent); }
   const d = await api('/api/eblast/export', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ id: EB_DRAFT.id, platform: EB_PLATFORM, customUnsub: EB_CUSTOM_UNSUB, record }) });
@@ -2859,7 +2849,6 @@ async function ebOpenInTab() {
 }
 $('#eb-export-btn').addEventListener('click', () => { EB_TAB = 'export'; EB_MODE = 'preview'; ebRenderPanel(); ebRenderStage(); });
 
-// ---- preview send ----
 $('#eb-test-btn').addEventListener('click', ebSendPreview);
 async function ebSendPreview() {
   if (!EB_DRAFT || EB_READONLY) return;
@@ -2881,7 +2870,6 @@ async function ebSendPreview() {
   }, 'Send preview');
 }
 
-// ---- delete / send to registrants ----
 $('#eb-delete-btn').addEventListener('click', async () => {
   if (!EB_DRAFT?.id) return;
   if (!confirm('Delete this draft blast? This can\'t be undone.')) return;

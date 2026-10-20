@@ -1,11 +1,9 @@
-// Flyer slicer from Novaquil: render (pdf.js / image), detect trim + section breaks, cut.
-// Loaded by the Eblast builder in /admin.
 
 const PDFJS = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.min.mjs';
 const PDFJS_WORKER = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.worker.min.mjs';
-const RENDER_WIDTH = 2400;      // source resolution we slice from
-const MAX_PIXELS = 30e6;        // keeps very long flyers within canvas limits
-const MIN_SLICE = 30;           // px at email width; smaller gaps get merged
+const RENDER_WIDTH = 2400;
+const MAX_PIXELS = 30e6;
+const MIN_SLICE = 30;
 
 export async function fileToCanvas(file) {
   const isPdf = file.type === 'application/pdf' || /\.pdf$/i.test(file.name);
@@ -63,7 +61,6 @@ function analysisData(src) {
 
 const inked = (d, i) => Math.min(d[i], d[i + 1], d[i + 2]) < 238;
 
-// trim box = rows/cols that are >50% non-white (ignores crop marks)
 export function detectCrop(src) {
   const { data, w, h, k } = analysisData(src);
   const colFill = new Float32Array(w), rowFill = new Float32Array(h);
@@ -74,11 +71,10 @@ export function detectCrop(src) {
   const last = (arr, n, t) => { for (let i = arr.length - 1; i >= 0; i--) if (arr[i] / n > t) return i + 1; return arr.length; };
   let x0 = first(colFill, h, 0.5), x1 = last(colFill, h, 0.5);
   let y0 = first(rowFill, w, 0.5), y1 = last(rowFill, w, 0.5);
-  if (x1 - x0 < w * 0.3 || y1 - y0 < h * 0.2) { x0 = 0; x1 = w; y0 = 0; y1 = h; } // nothing sensible found
+  if (x1 - x0 < w * 0.3 || y1 - y0 < h * 0.2) { x0 = 0; x1 = w; y0 = 0; y1 = h; }
   return { x: Math.round(x0 * k), y: Math.round(y0 * k), w: Math.round((x1 - x0) * k), h: Math.round((y1 - y0) * k) };
 }
 
-// section breaks: jump in per-row median colour next to a flat band
 export function detectCuts(src, crop) {
   const { data, w, k } = analysisData(src);
   const x0 = Math.round(crop.x / k), x1 = Math.round((crop.x + crop.w) / k);
@@ -99,10 +95,10 @@ export function detectCuts(src, crop) {
     flat.push(Math.sqrt(Math.max(0, l2 / n - lm * lm)) < 14);
   }
   const dist = (a, b) => Math.abs(a[0] - b[0]) + Math.abs(a[1] - b[1]) + Math.abs(a[2] - b[2]);
-  const scale600 = 600 / (x1 - x0);           // analysis px → email px
+  const scale600 = 600 / (x1 - x0);
   const minGap = MIN_SLICE / scale600;
-  const P = 5;   // rows of plain background needed on one side
-  const EDGE = 2;   // rows allowed for an anti-aliased edge
+  const P = 5;
+  const EDGE = 2;
   const band = (from) => {
     if (from < 0 || from + P > med.length) return null;
     const c = med[from];
@@ -117,7 +113,7 @@ export function detectCuts(src, crop) {
   };
   const cand = [];
   for (let i = EDGE + P; i <= med.length - EDGE - P; i++) {
-    if (dist(med[i], med[i - 1]) < 12) continue;          // nothing changes here
+    if (dist(med[i], med[i - 1]) < 12) continue;
     const above = band(i - EDGE - P), below = band(i + EDGE);
     const d = Math.max(above ? differs(i + EDGE, above) : 0, below ? differs(i - EDGE - P, below) : 0);
     if (!d) continue;
@@ -154,7 +150,6 @@ export async function cutSlices(src, crop, cuts, { width = 600, retina = true, q
   return slices;
 }
 
-// edge colour -> cell background fallback
 function edgeColour(ctx, w, h) {
   const d = ctx.getImageData(0, 0, 1, h).data;
   let r = 0, g = 0, b = 0, n = 0;
@@ -203,7 +198,7 @@ export function openSlicer(src, { width = 600 } = {}) {
     wrap.appendChild(disp);
     const fit = () => { const cs = getComputedStyle(view); const avail = view.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight); wrap.style.width = Math.max(240, Math.min(avail, 980)) + 'px'; draw(); };
 
-    const S = () => wrap.clientWidth / src.width;   // source px → screen px
+    const S = () => wrap.clientWidth / src.width;
     function draw() {
       wrap.querySelectorAll('.cut,.edge,.shade').forEach((n) => n.remove());
       const s = S();
