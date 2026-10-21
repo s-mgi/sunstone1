@@ -1,6 +1,14 @@
-export const CMS_VERSION = '2.12.0';
+export const CMS_VERSION = '2.12.1';
 
 export const CHANGELOG = [
+  {
+    version: '2.12.1',
+    date: '2026-10-21',
+    title: 'Registrations go to iTrac',
+    changes: [
+      'New: Each registration is also sent to iTrac when the ITRAC_POST_URL variable is set in Cloudflare. If iTrac refuses one, it shows in the error log and the registration is still saved in the CMS.',
+    ],
+  },
   {
     version: '2.12.0',
     date: '2026-10-20',

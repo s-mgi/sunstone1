@@ -1,6 +1,7 @@
 import { sendAutoReply } from './autoreply.js';
 import { SITE } from '../site.config.js';
 import { logError } from './errors.js';
+import { sendToItrac } from './itrac.js';
 
 export const FORM_VERSION = '2026-10-05';
 
@@ -102,6 +103,8 @@ export async function handleRegister(request, env, ctx) {
       console.error('No DB binding, inquiry was not stored, only emailed (if configured).');
       await logError(env, { area: 'form', message: 'A registration could not be saved: the Worker has no database connected', detail: `${leadName} <${email}>\nCheck the D1 binding "DB" in wrangler.toml.` });
     }
+
+    bg(sendToItrac(env, { firstName, lastName, email, phone, broker, hearAbout, comments, consent, sourcePath, utmSource, utmMedium, utmCampaign }));
 
     if (emailOk) {
       const reply = sendAutoReply(env, new URL(request.url).origin, { firstName, email });
