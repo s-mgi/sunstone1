@@ -56,7 +56,7 @@ const platformById = (id) => PLATFORMS.find((p) => p.id === id) || PLATFORMS[0];
 
 export async function eblastState(env) {
   const [{ results: activeRows }, { results: unsubRows }, { results: campaigns }] = await Promise.all([
-    env.DB.prepare(`SELECT COUNT(DISTINCT email) AS n FROM inquiries WHERE unsubscribed = 0 AND email IS NOT NULL AND TRIM(email) != ''`).all(),
+    env.DB.prepare(`SELECT COUNT(DISTINCT lower(TRIM(email))) AS n FROM inquiries WHERE unsubscribed = 0 AND email IS NOT NULL AND TRIM(email) != ''`).all(),
     env.DB.prepare(`SELECT COUNT(DISTINCT email) AS n FROM inquiries WHERE unsubscribed = 1`).all(),
     env.DB.prepare(`SELECT * FROM eblast_campaigns ORDER BY created_at DESC LIMIT 100`).all(),
   ]);
@@ -71,6 +71,15 @@ export async function eblastState(env) {
     needsMigration: !cols.has('settings') || !(await hasImagesTable(env)),
     mailConfigured: !!(env.RESEND_API_KEY && env.FROM_EMAIL),
   });
+}
+
+export async function listRecipients(env) {
+  const { results } = await env.DB.prepare(
+    `SELECT MIN(email) AS email, MAX(first_name) AS first_name, MAX(last_name) AS last_name, MAX(created_at) AS created_at
+       FROM inquiries WHERE unsubscribed = 0 AND email IS NOT NULL AND TRIM(email) != ''
+      GROUP BY lower(TRIM(email)) ORDER BY MAX(created_at) DESC`
+  ).all();
+  return json({ ok: true, recipients: results.map((r) => ({ email: r.email, name: [r.first_name, r.last_name].filter(Boolean).join(' '), created_at: r.created_at })) });
 }
 
 export async function getCampaign(env, id) {
@@ -243,10 +252,17 @@ export async function sendCampaign(request, env) {
   const missingAlt = blocks.find((b) => b.type === 'image' && !b.alt.trim());
   if (missingAlt) return json({ ok: false, error: 'Every image needs alt text before this can send, one is missing it.' }, 400);
 
-  const { results: recipients } = await env.DB.prepare(
+  let { results: recipients } = await env.DB.prepare(
     `SELECT DISTINCT email FROM inquiries WHERE unsubscribed = 0 AND email IS NOT NULL AND TRIM(email) != ''`
   ).all();
   if (!recipients.length) return json({ ok: false, error: 'There are no active (non-unsubscribed) registrants to send to.' }, 400);
+  if (Array.isArray(body.emails)) {
+    const chosen = new Set(body.emails.map((e) => String(e).trim().toLowerCase()));
+    recipients = recipients.filter((r) => chosen.has(String(r.email).trim().toLowerCase()));
+    if (!recipients.length) return json({ ok: false, error: 'Tick at least one person to send to.' }, 400);
+  }
+  const seen = new Set();
+  recipients = recipients.filter((r) => { const k = String(r.email).trim().toLowerCase(); if (seen.has(k)) return false; seen.add(k); return true; });
 
   await env.DB.prepare(`UPDATE eblast_campaigns SET status = 'sending', recipient_count = ? WHERE id = ?`).bind(recipients.length, id).run();
 

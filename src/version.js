@@ -11,6 +11,7 @@ export const CHANGELOG = [
       'New: Upload images straight into a blast. They are stored on this site and stay online for every email that uses them.',
       'New: Export HTML copies or downloads the finished email, set up for Keap, Mailchimp, Gmail and other platforms, with a checklist before you send it.',
       'New: Send preview emails the blast to you (or up to 10 people) before you send or export it.',
+      'Changed: Send to registrants lists everyone it will go to, with a tick beside each person, so you can leave people out.',
       'Changed: In dark mode the main working area is a shade lighter than the header and sidebar.',
       'Changed: Exported blasts show in SEO & Analytics > Analytics > Eblasts with their visits and registrations.',
     ],

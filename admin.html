@@ -450,6 +450,17 @@ p.hint{ font-size:0.8125rem; line-height:1.5; color:var(--sub); margin:0.6rem 0 
 
 .nq-credit{ display:inline-block; margin-left:0.35rem; font-size:0.6875rem; letter-spacing:0.04em; color:var(--sub); border:1px solid var(--line); border-radius:999px; padding:0.1rem 0.55rem; vertical-align:middle; }
 .nq-credit b, .nq-foot b{ color:var(--ink); font-weight:600; }
+.nq-credit:hover, .nq-foot a:hover b{ color:var(--gold); border-color:var(--gold); }
+.nq-foot a:hover b{ text-decoration:underline; }
+.eb-rcpt-bar{ display:flex; gap:0.4rem; margin-bottom:0.5rem; }
+.eb-rcpt-bar input{ flex:1; min-width:0; font:inherit; font-size:0.875rem; padding:0.5rem 0.65rem; border:1px solid var(--line); border-radius:0.3rem; background:var(--bg); color:var(--ink); }
+.eb-rcpt-list{ max-height:20rem; overflow:auto; border:1px solid var(--line); border-radius:0.3rem; }
+.eb-rcpt{ display:flex; align-items:center; gap:0.6rem; padding:0.5rem 0.7rem; border-bottom:1px solid var(--line-soft); cursor:pointer; font-size:0.8125rem; }
+.eb-rcpt:last-child{ border-bottom:0; }
+.eb-rcpt:hover{ background:var(--line-soft); }
+.eb-rcpt[hidden]{ display:none; }
+.eb-rcpt span{ display:flex; flex-direction:column; min-width:0; }
+.eb-rcpt .muted{ font-size:0.75rem; overflow:hidden; text-overflow:ellipsis; }
 .nq-foot{ text-align:center; font-size:0.6875rem; color:var(--sub); margin-top:0.75rem; }
 .eb-head{ display:flex; align-items:center; justify-content:space-between; gap:0.75rem; flex-wrap:wrap; margin-bottom:0.75rem; }
 .eb-head .eb-back{ margin:0; }
@@ -1003,7 +1014,7 @@ p.hint{ font-size:0.8125rem; line-height:1.5; color:var(--sub); margin:0.6rem 0 
       </section>
 
       <section class="page hidden" id="page-eblast">
-        <div class="page-head"><div><h1>Eblast</h1><p>Build an email, then send it to everyone who's registered or export it as HTML for another platform. <span class="nq-credit">Powered by <b>Novaquil</b></span></p></div>
+        <div class="page-head"><div><h1>Eblast</h1><p>Build an email, then send it to everyone who's registered or export it as HTML for another platform. <a class="nq-credit" href="https://novaquil.com" target="_blank" rel="noopener">Powered by <b>Novaquil</b></a></p></div>
           <div class="page-head-right"><span class="eb-stat" id="eb-recipient-count">Loading recipients…</span></div>
         </div>
         <div class="subtabs">
@@ -1044,7 +1055,7 @@ p.hint{ font-size:0.8125rem; line-height:1.5; color:var(--sub); margin:0.6rem 0 
                 <span class="muted" id="eb-stage-info"></span>
               </div>
               <div class="eb-stage" id="eb-stage"></div>
-              <div class="nq-foot">Eblast builder powered by <b>Novaquil</b></div>
+              <div class="nq-foot">Eblast builder powered by <a href="https://novaquil.com" target="_blank" rel="noopener"><b>Novaquil</b></a></div>
             </section>
           </div>
           <div class="toolbar"><button class="btn" id="eb-delete-btn" type="button" style="color:var(--bad);">Delete draft</button></div>
@@ -2890,16 +2901,39 @@ $('#eb-send-btn').addEventListener('click', async () => {
   const saved = await saveEblastDraft();
   if (!saved) return;
 
-  const { active } = EB_RECIPIENTS;
+  let list = [];
+  try { list = (await api('/api/eblast/recipients')).recipients || []; }
+  catch (e) { return alert('Could not load the registrants: ' + e.message); }
+  if (!list.length) return alert('There are no active (non-unsubscribed) registrants to send to.');
+  const chosen = new Set(list.map(r => r.email));
+  const row = (r) => `<label class="eb-rcpt"><input type="checkbox" data-rcpt="${escapeHtml(r.email)}" checked><span><b>${escapeHtml(r.name || r.email)}</b>${r.name ? `<span class="muted">${escapeHtml(r.email)}</span>` : ''}</span></label>`;
   openModal('Send to registrants', `
-    <p>This will email <b>${active}</b> active registrant${active === 1 ? '' : 's'} with the subject "<b>${escapeHtml(EB_DRAFT.subject)}</b>". This can't be undone.</p>
-    <p class="muted">Sending from another platform instead? Close this and use <b>Export HTML</b>.</p>
+    <p style="margin-top:0;">"<b>${escapeHtml(EB_DRAFT.subject)}</b>" goes to everyone ticked below. Untick anyone who shouldn't get it. This can't be undone.</p>
+    <div class="eb-rcpt-bar"><input id="eb-rcpt-search" placeholder="Search names or emails"><button type="button" class="btn" id="eb-rcpt-all">All</button><button type="button" class="btn" id="eb-rcpt-none">None</button></div>
+    <div class="eb-rcpt-list" id="eb-rcpt-list">${list.map(row).join('')}</div>
+    <p class="muted" id="eb-rcpt-count" style="margin:0.6rem 0 0;"></p>
+    <p class="muted" style="margin:0.4rem 0 0;">Sending from another platform instead? Close this and use <b>Export HTML</b>.</p>
   `, async () => {
-    const result = await api('/api/eblast/send', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ id: EB_DRAFT.id }) });
+    if (!chosen.size) throw new Error('Tick at least one person to send to.');
+    const result = await api('/api/eblast/send', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ id: EB_DRAFT.id, emails: [...chosen] }) });
     showNotice('Eblast sent', `Delivered to ${result.sent} of ${result.total} recipient${result.total === 1 ? '' : 's'}${result.failed ? ` (${result.failed} failed)` : ''}.`);
     showSubtab($('#page-eblast .subtabs'), 'blasts');
     await loadEblast();
   }, 'Send now');
+  const boxes = $$('[data-rcpt]', $('#eb-rcpt-list'));
+  const count = () => {
+    $('#eb-rcpt-count').textContent = `Sending to ${chosen.size} of ${list.length} registrant${list.length === 1 ? '' : 's'}.`;
+    $('#modal-save').textContent = chosen.size ? `Send to ${chosen.size}` : 'Send now';
+  };
+  boxes.forEach(b => b.addEventListener('change', () => { b.checked ? chosen.add(b.dataset.rcpt) : chosen.delete(b.dataset.rcpt); count(); }));
+  const visible = () => boxes.filter(b => !b.closest('.eb-rcpt').hidden);
+  $('#eb-rcpt-all').addEventListener('click', () => { visible().forEach(b => { b.checked = true; chosen.add(b.dataset.rcpt); }); count(); });
+  $('#eb-rcpt-none').addEventListener('click', () => { visible().forEach(b => { b.checked = false; chosen.delete(b.dataset.rcpt); }); count(); });
+  $('#eb-rcpt-search').addEventListener('input', (e) => {
+    const q = e.target.value.trim().toLowerCase();
+    boxes.forEach(b => { const l = b.closest('.eb-rcpt'); l.hidden = !!q && !l.textContent.toLowerCase().includes(q); });
+  });
+  count();
 });
 
 function trackingSlug(text) {

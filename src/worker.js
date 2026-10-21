@@ -3,7 +3,7 @@ import { renderHome, renderThankYou, renderPlainPage, renderRobots, renderSitema
 import { handleRegister } from './lib/register.js';
 import { listInquiries, createInquiry, importContacts, importRegistrations, patchInquiry, deleteInquiry, listContent, putContent, listEditLog, seoCheck, perfCheck, serveMedia } from './lib/api.js';
 import { analyticsReport, eblastReport } from './lib/analytics.js';
-import { eblastState, saveDraft, sendCampaign, handleUnsubscribe, getCampaign, deleteCampaign, duplicateCampaign, previewEblast, exportEblast, testEblast, uploadEblastImage, serveEblastImage } from './lib/eblast.js';
+import { eblastState, saveDraft, sendCampaign, handleUnsubscribe, getCampaign, deleteCampaign, duplicateCampaign, previewEblast, exportEblast, testEblast, uploadEblastImage, serveEblastImage, listRecipients } from './lib/eblast.js';
 import { logError, handleClientError, listErrors, patchError, resolveAllErrors } from './lib/errors.js';
 import { me, updateMe, listUsers, createUser, patchUser, deleteUser, changeOwnPassword, getAdminSettings, putPermissions, putFeatures, putTags, putLogSettings } from './lib/manage.js';
 import { getFeatures, getSettings, userPermissions } from './lib/settings.js';
@@ -163,6 +163,7 @@ async function api(request, env, ctx, user, path, method) {
   if (path === '/api/eblast/state' && method === 'GET') return eblastState(env);
   if (path === '/api/eblast/draft' && method === 'POST') return saveDraft(request, env);
   if (path === '/api/eblast/send' && method === 'POST') return sendCampaign(request, env);
+  if (path === '/api/eblast/recipients' && method === 'GET') return listRecipients(env);
   if (path === '/api/eblast/preview' && method === 'POST') return previewEblast(request, env);
   if (path === '/api/eblast/export' && method === 'POST') return exportEblast(request, env);
   if (path === '/api/eblast/test' && method === 'POST') return testEblast(request, env);
