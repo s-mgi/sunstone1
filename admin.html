@@ -429,6 +429,9 @@ p.hint{ font-size:0.8125rem; line-height:1.5; color:var(--sub); margin:0.6rem 0 
 .regimp-edit input[data-k=email]{ min-width:12rem; }
 .regimp-edit .regimp-del{ background:none; border:none; color:var(--sub); cursor:pointer; font-size:0.9rem; padding:0.2rem 0.4rem; }
 .regimp-edit .regimp-del:hover{ color:var(--bad); }
+.regimp-bulk{ display:flex; flex-wrap:wrap; align-items:center; gap:0.5rem; margin:0 0 0.75rem; font-size:0.8125rem; color:var(--sub); }
+.regimp-bulk select, .regimp-bulk input{ width:auto; min-width:10rem; }
+.regimp-edit input[type=checkbox], #regimp-head input[type=checkbox]{ width:1rem; min-width:0; height:1rem; accent-color:var(--gold, #b08d57); }
 .regimp-tag.skip{ background:var(--line-soft); color:var(--sub); }
 .overlay{ position:fixed; inset:0; background:rgba(4,3,2,.6); display:flex; align-items:center; justify-content:center; z-index:50; padding:1rem; }
 .overlay.hidden{ display:none; }
@@ -954,6 +957,13 @@ p.hint{ font-size:0.8125rem; line-height:1.5; color:var(--sub); margin:0.6rem 0 
               <h2 style="margin:0 0 0.4rem; font-size:1rem;">Preview</h2>
               <p class="muted" id="regimp-summary" style="margin:0 0 0.4rem; font-size:0.875rem;"></p>
               <p class="muted" style="margin:0 0 0.75rem; font-size:0.8125rem;">Click any cell to fix it before importing. Changes are only saved when you press Import. Use ✕ to leave a row out.</p>
+              <div class="regimp-bulk">
+                <span>Change many at once:</span>
+                <select id="regimp-bulk-field"></select>
+                <input id="regimp-bulk-value" placeholder="New value (leave empty to clear)">
+                <button class="btn" id="regimp-bulk-ticked" type="button" disabled>Apply to ticked rows</button>
+                <button class="btn" id="regimp-bulk-all" type="button">Apply to all rows</button>
+              </div>
               <div style="overflow-x:auto;"><table><thead><tr id="regimp-head"></tr></thead><tbody id="regimp-preview"></tbody></table></div>
               <div class="pager" id="regimp-pager"></div>
               <div class="toolbar" style="margin:1rem 0 0;">
@@ -1581,7 +1591,12 @@ function regimpRender() {
     if (sel.dataset.regimpField === 'createdAt') $('#regimp-datefmt').value = regimpGuessDayFirst(REGIMP.data, REGIMP.map.createdAt) ? 'dmy' : 'mdy';
     regimpPreview();
   }));
-  $('#regimp-head').innerHTML = REGIMP_FIELDS.map(f => `<th>${escapeHtml(f.label)}</th>`).join('') + '<th></th><th></th>';
+  $('#regimp-head').innerHTML = '<th><input type="checkbox" id="regimp-tick-all" title="Tick every row"></th>' + REGIMP_FIELDS.map(f => `<th>${escapeHtml(f.label)}</th>`).join('') + '<th></th><th></th>';
+  $('#regimp-tick-all').addEventListener('change', (e) => {
+    REGIMP.ticked = new Set(e.target.checked ? regimpRows().map(r => r.idx) : []);
+    regimpPreview();
+  });
+  $('#regimp-bulk-field').innerHTML = REGIMP_FIELDS.map(f => `<option value="${f.key}">${escapeHtml(f.label)}</option>`).join('');
   regimpPreview();
 }
 
@@ -1598,9 +1613,10 @@ function regimpPreview() {
   const pageRows = rows.slice(REGIMP.page * REGIMP_PAGE, (REGIMP.page + 1) * REGIMP_PAGE);
   const val = (r, k) => k === 'createdAt' ? r.createdRaw : r[k];
   $('#regimp-preview').innerHTML = pageRows.map(r => `<tr class="regimp-edit" data-row="${r.idx}">
+    <td><input type="checkbox" class="regimp-tick" ${REGIMP.ticked.has(r.idx) ? 'checked' : ''}></td>
     ${REGIMP_FIELDS.map(f => `<td><input data-k="${f.key}" value="${escapeHtml(val(r, f.key) || '')}" title="${escapeHtml(f.label)}" class="${REGIMP.edits[r.idx] && f.key in REGIMP.edits[r.idx] ? 'edited' : ''}"${f.key === 'createdAt' ? ' placeholder="9/22/2023 2:30 PM"' : ''}></td>`).join('')}
     <td><span class="regimp-tag"></span></td><td><button type="button" class="regimp-del" title="Leave this row out">✕</button></td></tr>`).join('')
-    || `<tr><td colspan="${REGIMP_FIELDS.length + 2}" class="empty">No rows left to import.</td></tr>`;
+    || `<tr><td colspan="${REGIMP_FIELDS.length + 3}" class="empty">No rows left to import.</td></tr>`;
   $('#regimp-pager').innerHTML = pages > 1 ? `<button type="button" data-pg="-1" ${REGIMP.page ? '' : 'disabled'}>‹ Previous</button><span>Rows ${REGIMP.page * REGIMP_PAGE + 1}–${Math.min(rows.length, (REGIMP.page + 1) * REGIMP_PAGE)} of ${rows.length}</span><button type="button" data-pg="1" ${REGIMP.page < pages - 1 ? '' : 'disabled'}>Next ›</button>` : '';
   $$('#regimp-pager [data-pg]').forEach(b => b.addEventListener('click', () => { REGIMP.page += Number(b.dataset.pg); regimpPreview(); }));
   $$('#regimp-preview tr[data-row]').forEach(tr => {
@@ -1610,9 +1626,11 @@ function regimpPreview() {
       inp.classList.add('edited');
       regimpStatus();
     }));
-    $('.regimp-del', tr).addEventListener('click', () => { REGIMP.removed.add(n); regimpPreview(); });
+    $('.regimp-del', tr).addEventListener('click', () => { REGIMP.removed.add(n); REGIMP.ticked.delete(n); regimpPreview(); });
+    $('.regimp-tick', tr).addEventListener('change', (e) => { if (e.target.checked) REGIMP.ticked.add(n); else REGIMP.ticked.delete(n); regimpTicks(); });
   });
   regimpStatus();
+  regimpTicks();
 }
 
 function regimpStatus() {
@@ -1638,6 +1656,26 @@ function regimpStatus() {
   $('#regimp-go').textContent = `Import ${nNew} new${nUpd && ex !== 'skip' ? ` + update ${nUpd}` : ''}`;
 }
 
+function regimpTicks() {
+  const live = regimpRows().map(r => r.idx);
+  const n = live.filter(i => REGIMP.ticked.has(i)).length;
+  const all = $('#regimp-tick-all');
+  if (all) { all.checked = n > 0 && n === live.length; all.indeterminate = n > 0 && n < live.length; }
+  $('#regimp-bulk-ticked').disabled = !n;
+  $('#regimp-bulk-ticked').textContent = n ? `Apply to ${n} ticked row${n === 1 ? '' : 's'}` : 'Apply to ticked rows';
+}
+
+function regimpBulk(onlyTicked) {
+  if (!REGIMP) return;
+  const k = $('#regimp-bulk-field').value, v = $('#regimp-bulk-value').value;
+  const rows = regimpRows().filter(r => !onlyTicked || REGIMP.ticked.has(r.idx));
+  if (!rows.length) return;
+  rows.forEach(r => { (REGIMP.edits[r.idx] = REGIMP.edits[r.idx] || {})[k] = v; });
+  regimpPreview();
+  const msg = $('#regimp-msg'); msg.className = 'msg ok';
+  msg.textContent = `${REGIMP_FIELDS.find(f => f.key === k).label} set on ${rows.length} row${rows.length === 1 ? '' : 's'}.`;
+}
+
 function regimpReset() {
   REGIMP = null;
   $('#regimp-step2').classList.add('hidden');
@@ -1657,7 +1695,7 @@ $('#regimp-file').addEventListener('change', async (e) => {
   if (rows.length < 2) { $('#regimp-filename').textContent = 'That file has no rows under the header.'; return; }
   const header = rows[0].map(h => String(h).trim());
   const data = rows.slice(1);
-  REGIMP = { header, data, map: regimpAutoMap(header, data), edits: {}, removed: new Set(), page: 0 };
+  REGIMP = { header, data, map: regimpAutoMap(header, data), edits: {}, removed: new Set(), ticked: new Set(), page: 0 };
   $('#regimp-datefmt').value = regimpGuessDayFirst(data, REGIMP.map.createdAt) ? 'dmy' : 'mdy';
   $('#regimp-filename').textContent = `${file.name} · ${data.length} row${data.length === 1 ? '' : 's'}`;
   $('#regimp-step2').classList.remove('hidden');
@@ -1666,6 +1704,8 @@ $('#regimp-file').addEventListener('change', async (e) => {
 ['#regimp-tz', '#regimp-datefmt'].forEach(s => $(s).addEventListener('change', () => REGIMP && regimpPreview()));
 $('#regimp-existing').addEventListener('change', () => REGIMP && regimpStatus());
 $('#regimp-reset').addEventListener('click', regimpReset);
+$('#regimp-bulk-ticked').addEventListener('click', () => regimpBulk(true));
+$('#regimp-bulk-all').addEventListener('click', () => regimpBulk(false));
 $('#regimp-go').addEventListener('click', async () => {
   if (!REGIMP) return;
   const btn = $('#regimp-go'); const msg = $('#regimp-msg');
