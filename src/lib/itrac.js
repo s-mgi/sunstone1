@@ -1,7 +1,5 @@
 import { logError } from './errors.js';
 
-// Sends each registration to the client's iTrac webform. The post URL comes
-// from the ITRAC_POST_URL variable in Cloudflare, so nothing is sent until it is set.
 export function itracFields(lead) {
   return {
     FirstName: lead.firstName,

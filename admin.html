@@ -421,6 +421,14 @@ p.hint{ font-size:0.8125rem; line-height:1.5; color:var(--sub); margin:0.6rem 0 
 .regimp-tag{ font-size:0.6875rem; font-weight:700; padding:0.15rem 0.5rem; border-radius:1rem; white-space:nowrap; }
 .regimp-tag.new{ background:var(--tag-gold-bg); color:var(--tag-gold-tx); }
 .regimp-tag.upd{ background:var(--tag-blue-bg); color:var(--tag-blue-tx); }
+.regimp-edit td{ padding:0.2rem 0.25rem; }
+.regimp-edit input{ width:100%; min-width:7rem; padding:0.3rem 0.4rem; font-size:0.8125rem; border:1px solid transparent; background:transparent; color:inherit; border-radius:0.25rem; }
+.regimp-edit input:hover{ border-color:var(--line); }
+.regimp-edit input:focus{ border-color:var(--gold); background:var(--bg, transparent); outline:none; }
+.regimp-edit input.edited{ border-color:var(--gold); }
+.regimp-edit input[data-k=email]{ min-width:12rem; }
+.regimp-edit .regimp-del{ background:none; border:none; color:var(--sub); cursor:pointer; font-size:0.9rem; padding:0.2rem 0.4rem; }
+.regimp-edit .regimp-del:hover{ color:var(--bad); }
 .regimp-tag.skip{ background:var(--line-soft); color:var(--sub); }
 .overlay{ position:fixed; inset:0; background:rgba(4,3,2,.6); display:flex; align-items:center; justify-content:center; z-index:50; padding:1rem; }
 .overlay.hidden{ display:none; }
@@ -944,8 +952,10 @@ p.hint{ font-size:0.8125rem; line-height:1.5; color:var(--sub); margin:0.6rem 0 
             </div>
             <div class="panel">
               <h2 style="margin:0 0 0.4rem; font-size:1rem;">Preview</h2>
-              <p class="muted" id="regimp-summary" style="margin:0 0 0.75rem; font-size:0.875rem;"></p>
+              <p class="muted" id="regimp-summary" style="margin:0 0 0.4rem; font-size:0.875rem;"></p>
+              <p class="muted" style="margin:0 0 0.75rem; font-size:0.8125rem;">Click any cell to fix it before importing. Changes are only saved when you press Import. Use ✕ to leave a row out.</p>
               <div style="overflow-x:auto;"><table><thead><tr id="regimp-head"></tr></thead><tbody id="regimp-preview"></tbody></table></div>
+              <div class="pager" id="regimp-pager"></div>
               <div class="toolbar" style="margin:1rem 0 0;">
                 <button class="btn btn-gold" id="regimp-go" type="button">Import</button>
                 <button class="btn" id="regimp-reset" type="button">Start over</button>
@@ -1545,15 +1555,19 @@ function regimpRows() {
   const tz = $('#regimp-tz').value;
   const dayFirst = $('#regimp-datefmt').value === 'dmy';
   const get = (r, k) => { const i = REGIMP.map[k]; return i >= 0 ? String(r[i] || '').trim() : ''; };
-  return REGIMP.data.map((r, n) => {
-    const row = { line: n + 2 };
-    REGIMP_FIELDS.forEach(f => { row[f.key] = get(r, f.key); });
+  const rows = [];
+  REGIMP.data.forEach((r, n) => {
+    if (REGIMP.removed.has(n)) return;
+    const row = { line: n + 2, idx: n };
+    const ed = REGIMP.edits[n] || {};
+    REGIMP_FIELDS.forEach(f => { row[f.key] = f.key in ed ? String(ed[f.key]).trim() : get(r, f.key); });
     row.email = row.email.toLowerCase();
     if (row.comments !== undefined) row.comments = row.comments.replace(/^null\s*$/i, '');
     row.createdRaw = row.createdAt;
     row.createdAt = regimpDate(row.createdAt, tz, dayFirst);
-    return row;
+    rows.push(row);
   });
+  return rows;
 }
 
 function regimpRender() {
@@ -1567,36 +1581,60 @@ function regimpRender() {
     if (sel.dataset.regimpField === 'createdAt') $('#regimp-datefmt').value = regimpGuessDayFirst(REGIMP.data, REGIMP.map.createdAt) ? 'dmy' : 'mdy';
     regimpPreview();
   }));
-  const customs = REGIMP_FIELDS.filter(f => f.custom);
-  $('#regimp-head').innerHTML = `<th>Name</th><th>Email</th><th>Phone</th>${customs.map(f => `<th>${escapeHtml(f.label)}</th>`).join('')}<th>Registered</th><th></th>`;
+  $('#regimp-head').innerHTML = REGIMP_FIELDS.map(f => `<th>${escapeHtml(f.label)}</th>`).join('') + '<th></th><th></th>';
   regimpPreview();
+}
+
+const REGIMP_PAGE = 50;
+function regimpTag(r, known, seen) {
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(r.email) || seen.has(r.email)) return 'skip';
+  return known.has(r.email) ? 'upd' : 'new';
 }
 
 function regimpPreview() {
   const rows = regimpRows();
-  const customs = REGIMP_FIELDS.filter(f => f.custom);
+  const pages = Math.max(1, Math.ceil(rows.length / REGIMP_PAGE));
+  REGIMP.page = Math.min(REGIMP.page, pages - 1);
+  const pageRows = rows.slice(REGIMP.page * REGIMP_PAGE, (REGIMP.page + 1) * REGIMP_PAGE);
+  const val = (r, k) => k === 'createdAt' ? r.createdRaw : r[k];
+  $('#regimp-preview').innerHTML = pageRows.map(r => `<tr class="regimp-edit" data-row="${r.idx}">
+    ${REGIMP_FIELDS.map(f => `<td><input data-k="${f.key}" value="${escapeHtml(val(r, f.key) || '')}" title="${escapeHtml(f.label)}" class="${REGIMP.edits[r.idx] && f.key in REGIMP.edits[r.idx] ? 'edited' : ''}"${f.key === 'createdAt' ? ' placeholder="9/22/2023 2:30 PM"' : ''}></td>`).join('')}
+    <td><span class="regimp-tag"></span></td><td><button type="button" class="regimp-del" title="Leave this row out">✕</button></td></tr>`).join('')
+    || `<tr><td colspan="${REGIMP_FIELDS.length + 2}" class="empty">No rows left to import.</td></tr>`;
+  $('#regimp-pager').innerHTML = pages > 1 ? `<button type="button" data-pg="-1" ${REGIMP.page ? '' : 'disabled'}>‹ Previous</button><span>Rows ${REGIMP.page * REGIMP_PAGE + 1}–${Math.min(rows.length, (REGIMP.page + 1) * REGIMP_PAGE)} of ${rows.length}</span><button type="button" data-pg="1" ${REGIMP.page < pages - 1 ? '' : 'disabled'}>Next ›</button>` : '';
+  $$('#regimp-pager [data-pg]').forEach(b => b.addEventListener('click', () => { REGIMP.page += Number(b.dataset.pg); regimpPreview(); }));
+  $$('#regimp-preview tr[data-row]').forEach(tr => {
+    const n = Number(tr.dataset.row);
+    $$('input[data-k]', tr).forEach(inp => inp.addEventListener('input', () => {
+      (REGIMP.edits[n] = REGIMP.edits[n] || {})[inp.dataset.k] = inp.value;
+      inp.classList.add('edited');
+      regimpStatus();
+    }));
+    $('.regimp-del', tr).addEventListener('click', () => { REGIMP.removed.add(n); regimpPreview(); });
+  });
+  regimpStatus();
+}
+
+function regimpStatus() {
+  const rows = regimpRows();
   const known = new Set(INQUIRIES.map(i => String(i.email || '').toLowerCase()));
   const seen = new Set();
+  const tags = {};
   let nNew = 0, nUpd = 0, nBad = 0;
-  const tagged = rows.map(r => {
-    let tag;
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(r.email) || seen.has(r.email)) { tag = 'skip'; nBad++; }
-    else if (known.has(r.email)) { tag = 'upd'; nUpd++; }
-    else { tag = 'new'; nNew++; }
-    seen.add(r.email);
-    return { r, tag };
+  rows.forEach(r => {
+    const tag = regimpTag(r, known, seen);
+    if (tag === 'skip') nBad++; else if (tag === 'upd') nUpd++; else nNew++;
+    seen.add(r.email); tags[r.idx] = tag;
   });
   const ex = $('#regimp-existing').value;
-  $('#regimp-summary').textContent = `${rows.length} row${rows.length === 1 ? '' : 's'} in the file: ${nNew} new, ${nUpd} already in the CMS (${ex === 'skip' ? 'left as is' : ex === 'fill' ? 'blank fields filled in' : 'updated from the file'}), ${nBad} skipped (no valid email or a repeat).` + (REGIMP.map.email < 0 ? ' Pick the Email column first.' : '');
+  const removed = REGIMP.removed.size;
+  $('#regimp-summary').textContent = `${rows.length} row${rows.length === 1 ? '' : 's'} to import: ${nNew} new, ${nUpd} already in the CMS (${ex === 'skip' ? 'left as is' : ex === 'fill' ? 'blank fields filled in' : 'updated from the file'}), ${nBad} skipped (no valid email or a repeat).` + (removed ? ` ${removed} removed by you.` : '') + (REGIMP.map.email < 0 && !Object.keys(REGIMP.edits).length ? ' Pick the Email column first.' : '');
   const label = { new: 'New', upd: 'Already in CMS', skip: 'Skipped' };
-  const cell = (v) => { const t = String(v || ''); return `<td title="${escapeHtml(t)}">${escapeHtml(t ? (t.length > 40 ? t.slice(0, 40) + '…' : t) : '-')}</td>`; };
-  const cols = 5 + customs.length;
-  $('#regimp-preview').innerHTML = tagged.slice(0, 50).map(({ r, tag }) => `<tr>
-    <td>${escapeHtml((r.firstName + ' ' + r.lastName).trim() || '-')}</td><td>${escapeHtml(r.email || '-')}</td><td>${escapeHtml(r.phone || '-')}</td>
-    ${customs.map(f => cell(r[f.key])).join('')}
-    <td>${r.createdAt ? escapeHtml(new Date(r.createdAt.replace(' ', 'T') + 'Z').toLocaleDateString()) : escapeHtml(r.createdRaw || '-')}</td>
-    <td><span class="regimp-tag ${tag}">${label[tag]}</span></td></tr>`).join('') + (rows.length > 50 ? `<tr><td colspan="${cols}" class="empty">…and ${rows.length - 50} more</td></tr>` : '');
-  $('#regimp-go').disabled = REGIMP.map.email < 0 || !nNew && (!nUpd || ex === 'skip');
+  $$('#regimp-preview tr[data-row]').forEach(tr => {
+    const tag = tags[tr.dataset.row]; const el = $('.regimp-tag', tr);
+    if (el && tag) { el.className = 'regimp-tag ' + tag; el.textContent = label[tag]; }
+  });
+  $('#regimp-go').disabled = !nNew && (!nUpd || ex === 'skip');
   $('#regimp-go').textContent = `Import ${nNew} new${nUpd && ex !== 'skip' ? ` + update ${nUpd}` : ''}`;
 }
 
@@ -1619,13 +1657,14 @@ $('#regimp-file').addEventListener('change', async (e) => {
   if (rows.length < 2) { $('#regimp-filename').textContent = 'That file has no rows under the header.'; return; }
   const header = rows[0].map(h => String(h).trim());
   const data = rows.slice(1);
-  REGIMP = { header, data, map: regimpAutoMap(header, data) };
+  REGIMP = { header, data, map: regimpAutoMap(header, data), edits: {}, removed: new Set(), page: 0 };
   $('#regimp-datefmt').value = regimpGuessDayFirst(data, REGIMP.map.createdAt) ? 'dmy' : 'mdy';
   $('#regimp-filename').textContent = `${file.name} · ${data.length} row${data.length === 1 ? '' : 's'}`;
   $('#regimp-step2').classList.remove('hidden');
   regimpRender();
 });
-['#regimp-tz', '#regimp-existing', '#regimp-datefmt'].forEach(s => $(s).addEventListener('change', () => REGIMP && regimpPreview()));
+['#regimp-tz', '#regimp-datefmt'].forEach(s => $(s).addEventListener('change', () => REGIMP && regimpPreview()));
+$('#regimp-existing').addEventListener('change', () => REGIMP && regimpStatus());
 $('#regimp-reset').addEventListener('click', regimpReset);
 $('#regimp-go').addEventListener('click', async () => {
   if (!REGIMP) return;
@@ -1633,7 +1672,7 @@ $('#regimp-go').addEventListener('click', async () => {
   btn.disabled = true; msg.className = 'msg'; msg.textContent = 'Importing…';
   try {
     const seen = new Set(); let preSkipped = 0; const errors = [];
-    const rows = regimpRows().map(({ createdRaw, ...r }) => r).filter(r => {
+    const rows = regimpRows().map(({ createdRaw, idx, ...r }) => r).filter(r => {
       const ok = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(r.email) && !seen.has(r.email);
       if (!ok) { preSkipped++; if (errors.length < 20) errors.push(`Row ${r.line}: ${r.email ? r.email + (seen.has(r.email) ? ' appears twice in the file, kept the first' : ' is not a valid email') : 'no email'}`); }
       seen.add(r.email); return ok;
@@ -2690,6 +2729,18 @@ function ebEmailPanel() {
       <p class="hint">Your company name, mailing address and the unsubscribe link are added under it automatically.</p></div>`;
 }
 
+const EB_SECTIONS = [
+  ['register', 'Registration form'], ['hero', 'Top of page'], ['vision', 'Vision'], ['homes', 'The Homes'],
+  ['setting', 'The Setting'], ['map', 'Amenities map'], ['community', 'The Community'],
+];
+
+function ebLinkField(b) {
+  const opts = EB_SECTIONS.map(([id, name]) => { const url = location.origin + '/#' + id; return `<option value="${url}" ${b.link === url ? 'selected' : ''}>${name}</option>`; }).join('');
+  return `<div class="field"><label>Link</label><input data-b="link" value="${escapeHtml(b.link)}" placeholder="https://" ${ebDis()}>
+      <select data-eb-section style="margin-top:0.4rem;" ${ebDis()}><option value="">Link to a section of the site…</option>${opts}</select>
+      <p class="hint">Pick a section to send people straight to it, or type any web address above.</p></div>`;
+}
+
 function ebBlockPanel() {
   const b = EB_DRAFT.blocks[EB_SEL];
   if (!b) return `<p class="muted">Click a block in the email to edit it. Hover between blocks to add PDF strips, images, text, buttons or space.</p>`;
@@ -2701,7 +2752,7 @@ function ebBlockPanel() {
     <img src="${escapeHtml(b.url)}" alt="" class="eb-side-img">
     <div class="field"><label>Alt text (required)</label><textarea data-b="alt" rows="3" placeholder="What the image says, e.g. From the $900's · Up to 2,427 sq. ft." ${ebDis()}>${escapeHtml(b.alt)}</textarea>
       <p class="hint">Shown when an inbox blocks images, and it helps keep the email out of spam.</p></div>
-    <div class="field"><label>Link</label><input data-b="link" value="${escapeHtml(b.link)}" placeholder="https://" ${ebDis()}></div>
+    ${ebLinkField(b)}
     ${ebColour('data-b', 'bg', b.bg, 'Background behind image')}
     ${EB_READONLY ? '' : `<div class="toolbar" style="margin:0 0 0.75rem;"><button type="button" class="btn" data-replace>Replace image</button><button type="button" class="btn" data-replace-gallery>From gallery</button></div>`}
     <div class="field"><label>Hosted at</label><div class="eb-colour"><input readonly value="${escapeHtml(new URL(b.url, location.origin).href)}"><button type="button" class="btn" data-copyurl>Copy</button></div>
@@ -2714,7 +2765,7 @@ function ebBlockPanel() {
     ${ebColour('data-b', 'color', b.color, 'Text colour', '#333333')}${ebColour('data-b', 'bg', b.bg, 'Background')}`;
   if (b.type === 'button') return tools + `
     <div class="field"><label>Label</label><input data-b="text" value="${escapeHtml(b.text)}" ${ebDis()}></div>
-    <div class="field"><label>Link</label><input data-b="link" value="${escapeHtml(b.link)}" placeholder="https://" ${ebDis()}></div>
+    ${ebLinkField(b)}
     ${ebColour('data-b', 'color', b.color, 'Button colour', '#B4712F')}${ebColour('data-b', 'textColor', b.textColor, 'Label colour', '#ffffff')}${ebColour('data-b', 'bg', b.bg, 'Background')}
     <p class="hint">A real HTML button: it shows even when images are blocked, and Outlook draws it too.</p>`;
   if (b.type === 'spacer') return tools + `
@@ -2771,6 +2822,12 @@ function ebBindPanel(p) {
   }));
   bindValues('data-s', () => EB_DRAFT.settings);
   bindValues('data-b', () => EB_DRAFT.blocks[EB_SEL]);
+  $$('[data-eb-section]', p).forEach(el => el.addEventListener('change', () => {
+    const input = $('input[data-b="link"]', p);
+    if (!el.value || !input) return;
+    input.value = el.value;
+    input.dispatchEvent(new Event('input'));
+  }));
   $$('[data-mv]', p).forEach(el => el.addEventListener('click', () => {
     const to = EB_SEL + Number(el.dataset.mv);
     if (to < 0 || to >= EB_DRAFT.blocks.length) return;

@@ -1,6 +1,16 @@
-export const CMS_VERSION = '2.12.1';
+export const CMS_VERSION = '2.12.2';
 
 export const CHANGELOG = [
+  {
+    version: '2.12.2',
+    date: '2026-10-23',
+    title: 'Section links for eblasts, editable import preview',
+    changes: [
+      'New: Eblast buttons and images have a list of the site\'s sections (Registration form, The Homes, The Setting and more) to link to in one click.',
+      'Changed: Registrations > Import lets you edit every field of every row in the preview, or leave a row out, before you press Import.',
+      'Fixed: The "View the Homes" link on the homepage now goes to The Homes instead of the registration form.',
+    ],
+  },
   {
     version: '2.12.1',
     date: '2026-10-21',
