@@ -2,10 +2,10 @@ import { logError } from './errors.js';
 
 export function itracFields(lead) {
   return {
-    FirstName: lead.firstName,
-    LastName: lead.lastName,
-    Email: lead.email,
-    Phone: lead.phone,
+    firstname: lead.firstName,
+    lastname: lead.lastName,
+    email: lead.email,
+    mobilephone: lead.phone,
     Realtor: lead.broker === 'yes' ? 'Yes' : lead.broker === 'no' ? 'No' : '',
     HowDidYouHear: lead.hearAbout,
     Comments: lead.comments,
