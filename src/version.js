@@ -8,6 +8,7 @@ export const CHANGELOG = [
     changes: [
       'New: Eblast buttons and images have a list of the site\'s sections (Registration form, The Homes, The Setting and more) to link to in one click.',
       'Changed: Registrations > Import lets you edit every field of every row in the preview, or leave a row out, before you press Import. Tick rows to give them all the same value in one go.',
+      'Changed: Registrations sent to iTrac carry the iTrac form ID as a field as well as in the address, so they reach the right form either way.',
       'Fixed: The "View the Homes" link on the homepage now goes to The Homes instead of the registration form.',
     ],
   },

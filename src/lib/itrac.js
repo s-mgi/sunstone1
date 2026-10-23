@@ -25,6 +25,8 @@ export async function sendToItrac(env, lead) {
   try {
     const body = new URLSearchParams();
     for (const [k, v] of Object.entries(itracFields(lead))) body.append(k, v || '');
+    const uuid = new URL(url).searchParams.get('uuid');
+    if (uuid) body.append('uuid', uuid);
     const res = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
